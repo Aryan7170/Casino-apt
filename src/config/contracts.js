@@ -26,13 +26,13 @@ export const BLOCK_EXPLORERS = {
 // Token Contracts
 export const TOKEN_CONTRACTS = {
     [CHAIN_IDS.MANTLE_SEPOLIA]: {
-        address: "0xf6b4c0dd3355103523F031C8a1EAE944a8145180",
+        address: "0xfa671d1F2811fa725d8fe8eC4149B7594A9f3124",
         name: "APT-Casino",
         symbol: "APTC",
         decimals: 18
     },
     [CHAIN_IDS.PHAROS_DEVNET]: {
-        address: "0xf6b4c0dd3355103523F031C8a1EAE944a8145180",
+        address: "0xfa671d1F2811fa725d8fe8eC4149B7594A9f3124",
         name: "APT-Casino",
         symbol: "APTC",
         decimals: 18
@@ -43,11 +43,11 @@ export const TOKEN_CONTRACTS = {
 // Roulette Contracts
 export const ROULETTE_CONTRACTS = {
     [CHAIN_IDS.MANTLE_SEPOLIA]: {
-        address: "0x0BF9D7E4E7ee2d6c1e5B028EF14F1CBbaaC4856e",
-        treasuryAddress: "0xF7249B507F1f89Eaea5d694cEf5cb96F245Bc5b6"
+        address: "0xD2cfA0790CcE7dd980699F6F1F4A4f1D13cEBA9F",
+        treasuryAddress: "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199"
     },
     [CHAIN_IDS.PHAROS_DEVNET]: {
-        address: "0x0BF9D7E4E7ee2d6c1e5B028EF14F1CBbaaC4856e",
+        address: "0xD2cfA0790CcE7dd980699F6F1F4A4f1D13cEBA9F",
         treasuryAddress: "0xF7249B507F1f89Eaea5d694cEf5cb96F245Bc5b6"
     },
     // Add more chain configurations here as needed

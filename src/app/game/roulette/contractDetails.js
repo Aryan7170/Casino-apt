@@ -1,5 +1,5 @@
-export const rouletteContractAddress = '0x0BF9D7E4E7ee2d6c1e5B028EF14F1CBbaaC4856e';
-export const tokenContractAddress = '0xf6b4c0dd3355103523F031C8a1EAE944a8145180';
+export const rouletteContractAddress = '0xD2cfA0790CcE7dd980699F6F1F4A4f1D13cEBA9F';
+export const tokenContractAddress = '0xfa671d1F2811fa725d8fe8eC4149B7594A9f3124';
 export const treasuryAddress = '0xF7249B507F1f89Eaea5d694cEf5cb96F245Bc5b6';
 
 export const rouletteABI = [

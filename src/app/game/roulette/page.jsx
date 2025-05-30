@@ -37,8 +37,15 @@ import StrategyGuide from './components/StrategyGuide';
 import RoulettePayout from './components/RoulettePayout';
 import WinProbabilities from './components/WinProbabilities';
 import RouletteHistory from './components/RouletteHistory';
+import { useAccount, useConfig, usePublicClient, useWalletClient, useContractWrite, useWaitForTransaction } from 'wagmi';
+import { writeContract, waitForTransactionReceipt } from '@wagmi/core';
+import contractAbi from '../../../contracts/Roulette.json'
+
 
 // Debug imports
+
+
+
 console.log("ViemClient:", ViemClient);
 console.log("publicPharosSepoliaClient:", ViemClient.publicPharosSepoliaClient);
 
@@ -81,6 +88,7 @@ const BetType = {
   CORNER: 8,    // Four numbers (8:1)
   LINE: 9       // Six numbers (5:1)
 };
+
 
 function BetBox({ betValue = 0, betType = "", position = "top-right", ...props }) {
   // Calculate position based on the position prop
@@ -916,8 +924,11 @@ export default function GameRoulette() {
   const [error, setError] = useState(null);
 
   // Get wallet status and balance
-  const { address, isConnected } = useWalletStatus();
+  const { address, isConnected } = useAccount();
   const { balance } = useToken(address);
+  const { config: wagmiConfig } = useConfig();
+  const publicClient = usePublicClient();
+  const { data: walletClient } = useWalletClient();
 
   // Sound refs
   const spinSoundRef = useRef(null);
@@ -1396,7 +1407,7 @@ export default function GameRoulette() {
     }
 
     if (!correctNetwork) {
-      alert("Please switch to Pharos Sepolia network");
+      alert("Please switch to Mantle Sepolia network");
       return;
     }
 
@@ -1416,41 +1427,49 @@ export default function GameRoulette() {
       });
 
       // Convert the bets into the format expected by the contract
-      let betType, betValue, betAmount;
+      let betType, betValue, betAmount, numbers;
       
       // Handle different bet types
       if (red > 0) {
         betType = BetType.COLOR;
         betValue = 1; // Red
         betAmount = red;
+        numbers = [];
       } else if (black > 0) {
         betType = BetType.COLOR;
         betValue = 0; // Black
         betAmount = black;
+        numbers = [];
       } else if (odd > 0) {
         betType = BetType.ODDEVEN;
         betValue = 1; // Odd
         betAmount = odd;
+        numbers = [];
       } else if (even > 0) {
         betType = BetType.ODDEVEN;
         betValue = 0; // Even
         betAmount = even;
+        numbers = [];
       } else if (over > 0) {
         betType = BetType.HIGHLOW;
         betValue = 1; // High (19-36)
         betAmount = over;
+        numbers = [];
       } else if (under > 0) {
         betType = BetType.HIGHLOW;
         betValue = 0; // Low (1-18)
         betAmount = under;
+        numbers = [];
       } else if (dozens.some(d => d > 0)) {
         betType = BetType.DOZEN;
         betValue = dozens.findIndex(d => d > 0);
         betAmount = dozens[betValue];
+        numbers = [];
       } else if (columns.some(c => c > 0)) {
         betType = BetType.COLUMN;
         betValue = columns.findIndex(c => c > 0);
         betAmount = columns[betValue];
+        numbers = [];
       } else {
         // Handle straight up bets
         const straightUpIndex = inside.findIndex(val => val > 0);
@@ -1458,6 +1477,7 @@ export default function GameRoulette() {
           betType = BetType.NUMBER;
           betValue = Math.floor(straightUpIndex / 4); // Convert to actual number
           betAmount = inside[straightUpIndex];
+          numbers = []; // Add the number to the numbers array
         } else {
           alert("Invalid bet configuration");
           setSubmitDisabled(false);
@@ -1472,56 +1492,130 @@ export default function GameRoulette() {
         betType,
         betValue,
         amount: amount.toString(),
+        numbers,
         tokenAddress: tokenContractAddress,
         rouletteAddress: rouletteContractAddress,
         playerAddress: address
       });
 
-      // First approve the tokens
-      console.log("Requesting token approval...");
-      const approvalHash = await writeContract({
-        address: tokenContractAddress,
-        abi: tokenABI,
-        functionName: "approve",
-        args: [rouletteContractAddress, amount],
-      });
+      try {
+        // First check current allowance
+        const currentAllowance = await publicClient.readContract({
+          address: tokenContractAddress,
+          abi: tokenABI,
+          functionName: "allowance",
+          args: [address, rouletteContractAddress],
+        });
 
-      console.log("Token approval submitted, hash:", approvalHash);
-      const approvalHashStr = typeof approvalHash === 'object' && approvalHash.hash ? approvalHash.hash : approvalHash;
-      setWriteContractResult({ hash: approvalHashStr });
-      setNotificationIndex(notificationSteps.BET_PLACED);
+        console.log("Current allowance:", currentAllowance.toString());
 
-      // Wait for approval confirmation
-      console.log("Waiting for approval confirmation...");
-      const approvalReceipt = await waitForTransaction(approvalHashStr);
-      console.log("Approval confirmed:", approvalReceipt);
+        // If allowance is insufficient, request approval
+        if (BigInt(currentAllowance) < amount) {
+          console.log("Requesting token approval...");
+          const { request } = await publicClient.simulateContract({
+            address: tokenContractAddress,
+            abi: tokenABI,
+            functionName: "approve",
+            args: [rouletteContractAddress, amount],
+            account: address,
+          });
 
-      // Then place the bet
-      console.log("Placing bet...");
-      const betHash = await writeContract({
-        address: rouletteContractAddress,
-        abi: rouletteABI,
-        functionName: "placeBet",
-        args: [betType, betValue, amount, []],
-      });
+          const approvalHash = await walletClient.writeContract(request);
+          
+          if (!approvalHash) {
+            throw new Error("Approval transaction failed - no hash returned");
+          }
 
-      console.log("Bet placed, hash:", betHash);
-      const betHashStr = typeof betHash === 'object' && betHash.hash ? betHash.hash : betHash;
-      setWriteContractResult({ hash: betHashStr });
-      
-      // Wait for bet confirmation
-      console.log("Waiting for bet confirmation...");
-      const betReceipt = await waitForTransaction(betHashStr);
-      console.log("Bet confirmed:", betReceipt);
+          console.log("Token approval submitted, hash:", approvalHash);
+          setWriteContractResult({ hash: approvalHash });
+          setNotificationIndex(notificationSteps.BET_PLACED);
 
-      // Reset roll result for the new bet
-      setRollResult(-1);
+          // Wait for approval confirmation
+          console.log("Waiting for approval confirmation...");
+          const approvalReceipt = await publicClient.waitForTransactionReceipt({
+            hash: approvalHash,
+          });
 
+          if (!approvalReceipt) {
+            throw new Error("Approval transaction receipt not received");
+          }
+
+          console.log("Approval confirmed:", approvalReceipt);
+        }
+
+        // Then place the bet
+        console.log("Placing bet...");
+        const { request: betRequest } = await publicClient.simulateContract({
+          address: rouletteContractAddress,
+          abi: rouletteABI,
+          functionName: "placeBet",
+          args: [betType, betValue, amount, numbers],
+          account: address,
+        });
+
+        const betHash = await walletClient.writeContract(betRequest);
+
+        if (!betHash) {
+          throw new Error("Bet transaction failed - no hash returned");
+        }
+
+        console.log("Bet placed, hash:", betHash);
+        setWriteContractResult({ hash: betHash });
+        
+        // Wait for bet confirmation
+        console.log("Waiting for bet confirmation...");
+        const betReceipt = await publicClient.waitForTransactionReceipt({
+          hash: betHash,
+        });
+
+        if (!betReceipt) {
+          throw new Error("Bet transaction receipt not received");
+        }
+
+        console.log("Bet confirmed:", betReceipt);
+
+        // Reset roll result for the new bet
+        setRollResult(-1);
+
+        // Add a delay before allowing the next bet
+        setSubmitDisabled(true);
+        setTimeout(() => {
+          setSubmitDisabled(false);
+        }, 5000); // 5 second delay
+
+      } catch (error) {
+        console.error("Transaction failed:", error);
+        const errorMessage = error.message || error.toString();
+        console.error("Error details:", errorMessage);
+        
+        if (errorMessage.includes("Wallet client not initialized")) {
+          alert("Please ensure your wallet is connected and try again.");
+        } else if (errorMessage.includes("Below minimum bet")) {
+          alert("Bet amount is below the minimum requirement of 1 APTC");
+        } else if (errorMessage.includes("Bet exceeds wallet balance")) {
+          alert("Insufficient balance for this bet");
+        } else if (errorMessage.includes("Must wait 3 seconds between bets")) {
+          alert("Please wait 3 seconds between bets");
+        } else if (errorMessage.includes("Must wait at least 1 block between bets")) {
+          alert("Please wait a moment before placing another bet");
+        } else if (errorMessage.includes("Insufficient allowance")) {
+          alert("Please approve the token spending first");
+        } else if (errorMessage.includes("HTTP request failed")) {
+          alert("Network error. Please wait a moment and try again.");
+        } else {
+          alert(`Transaction failed: ${errorMessage}`);
+        }
+        
+        setError(errorMessage);
+        setShowNotification(false);
+        setWheelSpinning(false);
+      }
     } catch (error) {
-      console.error("Transaction failed:", error);
+      console.error("Error in lockBet:", error);
+      setError(error.message || error.toString());
       setShowNotification(false);
       setWheelSpinning(false);
-      alert(`Transaction failed: ${error.message}`);
+      alert(`Error: ${error.message || error.toString()}`);
     } finally {
       setSubmitDisabled(false);
     }
@@ -1574,34 +1668,11 @@ export default function GameRoulette() {
     }
   }, [playSound, winnings, reset]);
 
-  const writeContract = async (config) => {
-    if (isDev) {
-      // Simulate contract write in dev mode
-      setIsWaitingForTransaction(true);
-      
-      // Simulate a delay for the transaction
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const mockTxHash = '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
-          setWriteContractResult({ hash: mockTxHash });
-          setIsWaitingForTransaction(false);
-          resolve({ hash: mockTxHash });
-        }, 2000);
-      });
-    }
-    
-    try {
-      const { writeContract } = await import('wagmi');
-      const result = await writeContract(config);
-      setWriteContractResult(result);
-      return result;
-    } catch (error) {
-      console.error("Contract write error:", error);
-      setWriteContractError(error);
-      throw error;
-    }
-  };
+  const config = useConfig(); // this retrieves your wagmi config instance
 
+  const contractAddress = '0xbD8Ca722093d811bF314dDAB8438711a4caB2e73'; // ✅ FIX THIS
+
+  // Remove the custom writeContract function and use the imported one directly
   const waitForTransaction = async (hash) => {
     if (isDev) {
       // Simulate transaction confirmation in dev mode
@@ -1619,10 +1690,12 @@ export default function GameRoulette() {
     }
     
     try {
-      const { waitForTransactionReceipt } = await import('wagmi');
       // Ensure hash is a string, not an object
       const hashStr = typeof hash === 'object' && hash.hash ? hash.hash : hash;
-      const receipt = await waitForTransactionReceipt({ hash: hashStr });
+      const receipt = await waitForTransactionReceipt({ 
+        hash: hashStr,
+        chainId: 0x138b
+      });
       setTransactionReceipt(receipt);
       return receipt;
     } catch (error) {
@@ -2198,25 +2271,27 @@ export default function GameRoulette() {
               }}
             >
               <Box sx={{ display: 'flex', gap: 2 }}>
-              <Tooltip title={<Typography>Undo last bet</Typography>}>
-                <span>
-                  <IconButton
-                    disabled={events.length === 0 || submitDisabled}
-                    onClick={revertEvent}
-                  >
-                    <UndoIcon />
-                  </IconButton>
-                </span>
-              </Tooltip>
-              <Tooltip title={<Typography>Clear bet</Typography>}>
-                <IconButton
-                  disabled={submitDisabled}
-                    onClick={clearBet}
-                >
-                  <ClearIcon />
-                </IconButton>
-              </Tooltip>
-            </Box>
+                <Tooltip title={<Typography>Undo last bet</Typography>}>
+                  <span>
+                    <IconButton
+                      disabled={events.length === 0 || submitDisabled}
+                      onClick={revertEvent}
+                    >
+                      <UndoIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title={<Typography>Clear bet</Typography>}>
+                  <span>
+                    <IconButton
+                      disabled={submitDisabled}
+                      onClick={clearBet}
+                    >
+                      <ClearIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              </Box>
               
               <Box sx={{ mt: 3 }}>
               {rollResult >= 0 ? (
