@@ -1,7 +1,8 @@
 "use client";
 import React, { useState } from 'react';
-import { Box, Typography, Paper, Grid, Button, Tooltip, Stack, Fade } from '@mui/material';
+import { Box, Typography, Paper, Button, Tooltip, Stack, Fade } from '@mui/material';
 import { FaChartPie, FaInfoCircle, FaThumbsUp, FaDice, FaQuestion, FaChevronRight } from 'react-icons/fa';
+import Grid from "@mui/material/Unstable_Grid2";
 
 const probabilityData = [
   {
@@ -194,7 +195,7 @@ const WinProbabilities = () => {
               transitionDelay: `${index * 50}ms`
             }}
           >
-            <Grid item xs={12} sm={6} md={6}>
+            <Grid xs={12} sm={6} md={6}>
               <Box 
                 sx={{ 
                   p: 2, 

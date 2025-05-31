@@ -1,6 +1,7 @@
 "use client";
 import React from 'react';
-import { Box, Typography, Paper, Grid, Chip, Divider } from '@mui/material';
+import { Box, Typography, Paper, Chip, Divider } from '@mui/material';
+import Grid from "@mui/material/Unstable_Grid2";
 import { FaCoins, FaExclamationTriangle } from 'react-icons/fa';
 
 const payoutData = [
@@ -158,19 +159,19 @@ const RoulettePayout = () => {
             background: 'linear-gradient(90deg, rgba(104, 29, 219, 0.2), rgba(216, 38, 51, 0.2))',
             mb: 1
           }}>
-            <Grid item xs={2.5}>
+            <Grid xs={2.5}>
               <Typography fontWeight="bold" fontSize="0.85rem" color="white">Bet Type</Typography>
             </Grid>
-            <Grid item xs={3}>
+            <Grid xs={3}>
               <Typography fontWeight="bold" fontSize="0.85rem" color="white">Description</Typography>
             </Grid>
-            <Grid item xs={1.5} sx={{ textAlign: 'center' }}>
+            <Grid xs={1.5} sx={{ textAlign: 'center' }}>
               <Typography fontWeight="bold" fontSize="0.85rem" color="white">Payout</Typography>
             </Grid>
-            <Grid item xs={1.5} sx={{ textAlign: 'center' }}>
+            <Grid xs={1.5} sx={{ textAlign: 'center' }}>
               <Typography fontWeight="bold" fontSize="0.85rem" color="white">Win %</Typography>
             </Grid>
-            <Grid item xs={3.5} sx={{ textAlign: 'center' }}>
+            <Grid xs={3.5} sx={{ textAlign: 'center' }}>
               <Typography fontWeight="bold" fontSize="0.85rem" color="white">Examples</Typography>
             </Grid>
           </Grid>
@@ -189,7 +190,7 @@ const RoulettePayout = () => {
                   transform: 'translateX(4px)'
                 }
               }}>
-                <Grid item xs={2.5}>
+                <Grid xs={2.5}>
                   <Typography 
                     fontWeight="medium" 
                     color="white" 
@@ -211,10 +212,10 @@ const RoulettePayout = () => {
                     {item.betType}
                   </Typography>
                 </Grid>
-                <Grid item xs={3}>
+                <Grid xs={3}>
                   <Typography variant="body2" color="rgba(255,255,255,0.8)">{item.description}</Typography>
                 </Grid>
-                <Grid item xs={1.5} sx={{ textAlign: 'center' }}>
+                <Grid xs={1.5} sx={{ textAlign: 'center' }}>
                   <Chip 
                     label={item.payout} 
                     size="small"
@@ -228,7 +229,7 @@ const RoulettePayout = () => {
                     }}
                   />
                 </Grid>
-                <Grid item xs={1.5} sx={{ textAlign: 'center' }}>
+                <Grid xs={1.5} sx={{ textAlign: 'center' }}>
                   <Typography 
                     variant="body2" 
                     fontWeight="medium"
@@ -243,7 +244,7 @@ const RoulettePayout = () => {
                     {item.probability}%
                   </Typography>
                 </Grid>
-                <Grid item xs={3.5}>
+                <Grid xs={3.5}>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 0.5 }}>
                     {item.examples.map((example, idx) => (
                       <Chip 

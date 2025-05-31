@@ -691,6 +691,9 @@ export default function GameRoulette() {
   // Add a ref for scrolling past navbar
   const contentRef = useRef(null);
   
+  // Add development mode flag - set to true to bypass network check
+  const [devMode, setDevMode] = useState(false);
+  
   // Add smooth scrolling to the entire document
   useEffect(() => {
     // Apply smooth scrolling to the html element
@@ -1705,96 +1708,162 @@ export default function GameRoulette() {
   };
 
   const checkNetwork = async () => {
-    if (typeof window !== "undefined" && window.ethereum) {
+    // Ensure we're running in the browser
+    if (typeof window === "undefined") return;
+    
+    // Add debug message
+    console.log("Checking network...");
+    
+    // Delay check to ensure ethereum provider is fully initialized
+    setTimeout(async () => {
       try {
-        const chainId = await window.ethereum.request({ method: "eth_chainId" });
-        // Support both Mantle Sepolia (0x138b) and Pharos Devnet (0xc352)
-        setCorrectNetwork(chainId === "0x138b" || chainId === "0xc352");
+        // Only check if ethereum provider exists
+        if (window.ethereum && typeof window.ethereum.request === 'function') {
+          console.log("Ethereum provider found, requesting chain ID...");
+          const chainId = await window.ethereum.request({ method: "eth_chainId" });
+          console.log("Current chain ID:", chainId);
+          
+          // Support both Mantle Sepolia (0x138b) and Pharos Devnet (0xc352)
+          const isCorrectNetwork = chainId === "0x138b" || chainId === "0xc352";
+          console.log("Is correct network:", isCorrectNetwork);
+          setCorrectNetwork(isCorrectNetwork);
+          
+          // For development purposes, you can temporarily force the correct network to true
+          // Uncomment the next line during development/testing
+          // setCorrectNetwork(true);
+        } else {
+          console.log("Ethereum provider not available or not fully initialized");
+          setCorrectNetwork(false);
+        }
       } catch (error) {
         console.error("Error checking network:", error);
         setCorrectNetwork(false);
       }
-    }
+    }, 500); // Add a delay to ensure the provider is fully loaded
   };
   
   useEffect(() => {
-    checkNetwork();
-    
-    if (window.ethereum) {
-      window.ethereum.on("chainChanged", checkNetwork);
-      return () => {
-        window.ethereum.removeListener("chainChanged", checkNetwork);
+    // Only check when component mounts
+    if (typeof window !== "undefined") {
+      checkNetwork();
+      
+      // Setup event listener if provider exists
+      const setupListeners = () => {
+        if (window.ethereum && typeof window.ethereum.on === 'function') {
+          window.ethereum.on("chainChanged", checkNetwork);
+          return () => {
+            if (window.ethereum && typeof window.ethereum.removeListener === 'function') {
+              window.ethereum.removeListener("chainChanged", checkNetwork);
+            }
+          };
+        }
       };
+      
+      return setupListeners();
     }
   }, []);
 
   const switchNetwork = async () => {
-    if (typeof window !== "undefined") {
-      try {
-        // Try Mantle Sepolia first
-        await window.ethereum.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: "0x138b" }],
-        });
-      } catch (switchError) {
-        // If Mantle Sepolia fails, try Pharos Devnet
-        if (switchError.code === 4902) {
+    // Ensure we're running in the browser
+    if (typeof window === "undefined") return;
+    
+    // Check if ethereum provider exists
+    if (!window.ethereum || typeof window.ethereum.request !== 'function') {
+      alert("No Ethereum wallet detected. Please install a wallet like MetaMask.");
+      return;
+    }
+    
+    try {
+      // Try Mantle Sepolia first
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: "0x138b" }],
+      });
+      
+      // Reload after successful switch
+      window.location.reload();
+      return;
+    } catch (switchError) {
+      console.log("Switch network error:", switchError);
+      
+      // If network doesn't exist in wallet (error code 4902), try adding it
+      if (switchError.code === 4902) {
+        try {
+          await window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [
+              {
+                chainId: "0x138b",
+                chainName: "Mantle Sepolia",
+                nativeCurrency: {
+                  name: "Mantle",
+                  symbol: "MNT",
+                  decimals: 18,
+                },
+                rpcUrls: ["https://rpc.sepolia.mantle.xyz"],
+                blockExplorerUrls: ["https://sepolia.mantlescan.xyz"],
+              },
+            ],
+          });
+          
+          // Try switching again after adding
+          try {
+            await window.ethereum.request({
+              method: "wallet_switchEthereumChain",
+              params: [{ chainId: "0x138b" }],
+            });
+            
+            // Reload after successful switch
+            window.location.reload();
+            return;
+          } catch (error) {
+            console.error("Error switching to Mantle after adding:", error);
+          }
+        } catch (addError) {
+          console.error("Failed to add Mantle Sepolia:", addError);
+          
+          // If Mantle Sepolia fails, try Pharos Devnet as fallback
           try {
             await window.ethereum.request({
               method: "wallet_addEthereumChain",
               params: [
                 {
-                  chainId: "0x138b",
-                  chainName: "Mantle Sepolia",
+                  chainId: "0xc352",
+                  chainName: "Pharos Devnet",
                   nativeCurrency: {
-                    name: "Mantle",
-                    symbol: "MNT",
+                    name: "Pharos",
+                    symbol: "PHR",
                     decimals: 18,
                   },
-                  rpcUrls: ["https://rpc.sepolia.mantle.xyz"],
-                  blockExplorerUrls: ["https://sepolia.mantlescan.xyz"],
+                  rpcUrls: ["https://devnet.dplabs-internal.com"],
+                  blockExplorerUrls: ["https://pharosscan.xyz"],
                 },
               ],
             });
-            // After adding Mantle Sepolia, switch to it
-            await window.ethereum.request({
-              method: "wallet_switchEthereumChain",
-              params: [{ chainId: "0x138b" }],
-            });
-          } catch (addError) {
-            console.error("Failed to add Mantle Sepolia:", addError);
-            // If Mantle Sepolia fails, try Pharos Devnet
+            
+            // Try switching to Pharos
             try {
-              await window.ethereum.request({
-                method: "wallet_addEthereumChain",
-                params: [
-                  {
-                    chainId: "0xc352",
-                    chainName: "Pharos Devnet",
-                    nativeCurrency: {
-                      name: "Pharos",
-                      symbol: "PHR",
-                      decimals: 18,
-                    },
-                    rpcUrls: ["https://devnet.dplabs-internal.com"],
-                    blockExplorerUrls: ["https://pharosscan.xyz"],
-                  },
-                ],
-              });
-              // After adding Pharos Devnet, switch to it
               await window.ethereum.request({
                 method: "wallet_switchEthereumChain",
                 params: [{ chainId: "0xc352" }],
               });
-            } catch (pharosError) {
-              console.error("Failed to add Pharos Devnet:", pharosError);
+              
+              // Reload after successful switch
+              window.location.reload();
+              return;
+            } catch (error) {
+              console.error("Error switching to Pharos after adding:", error);
             }
+          } catch (pharosError) {
+            console.error("Failed to add Pharos Devnet:", pharosError);
+            alert("Unable to switch to required networks. Please try adding Mantle Sepolia manually.");
           }
-        } else {
-          console.error("Failed to switch network:", switchError);
         }
+      } else {
+        // Handle other errors
+        console.error("Failed to switch network:", switchError);
+        alert("Failed to switch network. Please try again or add Mantle Sepolia manually.");
       }
-      window.location.reload();
     }
   };
 
@@ -2331,24 +2400,35 @@ export default function GameRoulette() {
                       )}
                   </Box>
                 </Box>
-              ) : correctNetwork ? (
+              ) : (devMode || correctNetwork) ? (
                 <Box sx={{ display: "flex", flexDirection: "column" }}>
                   <Button
                     disabled={total === 0}
                     loading={submitDisabled}
-                      onClick={lockBet}
+                    onClick={lockBet}
                   >
                     Submit Bet
                   </Button>
                   {submitDisabled && rollResult < 0 && (
-                      <Typography color="white" sx={{ opacity: 0.8 }}>
+                    <Typography color="white" sx={{ opacity: 0.8 }}>
                       Die being rolled, please wait...
                     </Typography>
                   )}
                 </Box>
               ) : (
                 <Box sx={{ display: "flex", flexDirection: "column" }}>
-                    <Button onClick={() => switchNetwork()}>Switch Network</Button>
+                  <Button onClick={() => switchNetwork()}>Switch Network</Button>
+                  {/* Add development mode toggle button */}
+                  {process.env.NODE_ENV === 'development' && (
+                    <Button 
+                      onClick={() => setDevMode(!devMode)} 
+                      variant="outlined"
+                      size="small"
+                      sx={{ mt: 1, fontSize: '0.7rem' }}
+                    >
+                      {devMode ? 'Disable Dev Mode' : 'Enable Dev Mode'}
+                    </Button>
+                  )}
                 </Box>
               )}
             </Box>
@@ -2459,7 +2539,7 @@ export default function GameRoulette() {
             {/* Video and Description Section */}
             <Grid container spacing={4} sx={{ mb: 7 }}>
               {/* Video on left */}
-              <Grid item xs={12} md={6}>
+              <Grid xs={12} md={6}>
                 <Box
                   sx={{
                     position: 'relative',
@@ -2531,7 +2611,7 @@ export default function GameRoulette() {
               </Grid>
               
               {/* Description on right */}
-              <Grid item xs={12} md={6}>
+              <Grid xs={12} md={6}>
                                  <Box
                    sx={{
                      background: 'linear-gradient(135deg, rgba(9, 0, 5, 0.6) 0%, rgba(9, 0, 5, 0.3) 100%)',
@@ -2603,19 +2683,19 @@ export default function GameRoulette() {
 
             {/* First row - Strategy Guide and Win Probabilities (most important for players) */}
             <Grid container spacing={4} sx={{ mb: 6, pt: 4 }}>
-              <Grid item xs={12} md={7}>
+              <Grid xs={12} md={7}>
                 <div id="strategy" className="scroll-mt-16">
                   <StrategyGuide />
                 </div>
               </Grid>
-              <Grid item xs={12} md={5}>
+              <Grid xs={12} md={5}>
                 <WinProbabilities />
               </Grid>
             </Grid>
             
             {/* Second row - Roulette Payout (full width for clarity) */}
             <Grid container spacing={4} sx={{ mb: 6, pt: 4 }}>
-              <Grid item xs={12}>
+              <Grid xs={12}>
                 <div id="payouts" className="scroll-mt-16">
                   <RoulettePayout />
                 </div>
@@ -2624,12 +2704,12 @@ export default function GameRoulette() {
             
             {/* Third row - Roulette History and Leaderboard */}
             <Grid container spacing={4} sx={{ mb: 6, pt: 4 }}>
-              <Grid item xs={12} md={7}>
+              <Grid xs={12} md={7}>
                 <div id="history" className="scroll-mt-16">
                   <RouletteHistory />
                 </div>
               </Grid>
-              <Grid item xs={12} md={5}>
+              <Grid xs={12} md={5}>
                 <RouletteLeaderboard />
               </Grid>
             </Grid>
