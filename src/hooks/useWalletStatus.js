@@ -1,186 +1,162 @@
-"use client";
-import { useState, useEffect, createContext, useContext, useCallback } from 'react';
+'use client';
 
-// Create context to share wallet state throughout the app
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from 'react';
+import {
+  useAccount,
+  useDisconnect,
+  useChainId,
+} from 'wagmi';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
+
 const WalletStatusContext = createContext(null);
 
-// Provider component to wrap the app with
 export function WalletStatusProvider({ children }) {
-  const [isConnected, setIsConnected] = useState(false);
-  const [address, setAddress] = useState(null);
-  const [chain, setChain] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const isDev = process.env.NODE_ENV === 'development';
+
+  const { isConnected, address } = useAccount();
+  const chainId = useChainId();
+  const { disconnect } = useDisconnect();
+  const { openConnectModal } = useConnectModal();
+
+  const getChainFromId = (id) => {
+    if (!id) return null;
+    switch (id) {
+      case 1:
+        return { id: 1, name: 'Ethereum' };
+      case 137:
+        return { id: 137, name: 'Polygon' };
+      case 5003:
+        return { id: 5003, name: 'Mantle Sepolia' };
+      default:
+        return { id, name: `Chain ${id}` };
+    }
+  };
+
+  const [devWallet, setDevWallet] = useState({
+    isConnected: false,
+    address: null,
+    chain: null,
+  });
+
   const [error, setError] = useState(null);
-  const [isDev, setIsDev] = useState(false);
-  
+
   useEffect(() => {
-    setIsDev(process.env.NODE_ENV === 'development');
-    
-    const initialize = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      // In development mode, create a simulated wallet
-      if (process.env.NODE_ENV === 'development') {
-        // Simulate connection state from localStorage
-        const savedState = localStorage.getItem('dev-wallet-state');
-        if (savedState === 'connected') {
-          setIsConnected(true);
-          setAddress('0x1234...6789'); // Fake address
-          setChain({ id: 5003, name: 'Mantle Sepolia' });
-        } else {
-          setIsConnected(false);
-          setAddress(null);
-          setChain(null);
-        }
-        
-        setIsLoading(false);
-        
-        // Set up event listener for toggling wallet in dev mode
-        const handleDevWalletToggle = () => {
-          setIsConnected(prev => {
-            const newState = !prev;
-            localStorage.setItem('dev-wallet-state', newState ? 'connected' : 'disconnected');
-            
-            if (newState) {
-              setAddress('0x1234...6789');
-              setChain({ id: 5003, name: 'Mantle Sepolia' });
-              
-              // Dispatch global event that wallet was connected
-              window.dispatchEvent(new Event('wallet-connected'));
-            } else {
-              setAddress(null);
-              setChain(null);
+    if (!isDev) return;
+
+    const savedState = localStorage.getItem('dev-wallet-state');
+    if (savedState === 'connected') {
+      setDevWallet({
+        isConnected: true,
+        address: '0x1234...dev',
+        chain: { id: 5003, name: 'Mantle Sepolia' },
+      });
+    }
+
+    const handleToggle = () => {
+      setDevWallet((prev) => {
+        const newState = !prev.isConnected;
+        localStorage.setItem(
+          'dev-wallet-state',
+          newState ? 'connected' : 'disconnected'
+        );
+
+        return newState
+          ? {
+              isConnected: true,
+              address: '0x1234...dev',
+              chain: { id: 5003, name: 'Mantle Sepolia' },
             }
-            
-            return newState;
-          });
-        };
-        
-        window.addEventListener('dev-wallet-toggle', handleDevWalletToggle);
-        return () => {
-          window.removeEventListener('dev-wallet-toggle', handleDevWalletToggle);
-        };
-      }
-      
-      // In production mode, use real wallet connection
-      try {
-        const { useAccount, useNetwork } = await import('wagmi');
-        
-        // Get account status
-        const accountData = useAccount();
-        if (accountData) {
-          setIsConnected(accountData.isConnected || false);
-          setAddress(accountData.address || null);
-        }
-        
-        // Get network/chain info
-        const networkData = useNetwork();
-        if (networkData && networkData.chain) {
-          setChain(networkData.chain);
-        }
-        
-        setIsLoading(false);
-      } catch (err) {
-        console.error('Failed to initialize wallet:', err);
-        setError('Failed to connect to wallet provider');
-        setIsLoading(false);
-      }
+          : {
+              isConnected: false,
+              address: null,
+              chain: null,
+            };
+      });
     };
-    
-    initialize();
-  }, []);
-  
-  // Function to connect wallet
-  const connectWallet = useCallback(async () => {
+
+    window.addEventListener('dev-wallet-toggle', handleToggle);
+    return () => {
+      window.removeEventListener('dev-wallet-toggle', handleToggle);
+    };
+  }, [isDev]);
+
+  const connectWallet = useCallback(() => {
     if (isDev) {
-      // In dev mode, simulate connection
-      setIsConnected(true);
-      setAddress('0x1234...6789');
-      setChain({ id: 5003, name: 'Mantle Sepolia' });
       localStorage.setItem('dev-wallet-state', 'connected');
-      return true;
+      setDevWallet({
+        isConnected: true,
+        address: '0x1234...dev',
+        chain: { id: 5003, name: 'Mantle Sepolia' },
+      });
+      return;
     }
-    
-    try {
-      // In production, use RainbowKit
-      const { useConnectModal } = await import('@rainbow-me/rainbowkit');
-      const { openConnectModal } = useConnectModal();
-      
-      if (openConnectModal) {
-        openConnectModal();
-        return true;
-      }
-      
-      return false;
-    } catch (err) {
-      console.error('Failed to open connect modal:', err);
-      setError('Failed to open wallet connection dialog');
-      return false;
+
+    if (openConnectModal) {
+      openConnectModal();
+    } else {
+      setError('Wallet connection modal not available');
     }
-  }, [isDev]);
-  
-  // Function to disconnect wallet
-  const disconnectWallet = useCallback(async () => {
+  }, [openConnectModal, isDev]);
+
+  const disconnectWallet = useCallback(() => {
     if (isDev) {
-      // In dev mode, simulate disconnection
-      setIsConnected(false);
-      setAddress(null);
-      setChain(null);
       localStorage.setItem('dev-wallet-state', 'disconnected');
-      return true;
+      setDevWallet({
+        isConnected: false,
+        address: null,
+        chain: null,
+      });
+      return;
     }
-    
-    try {
-      // In production, use Wagmi
-      const { useDisconnect } = await import('wagmi');
-      const { disconnect } = useDisconnect();
-      
-      if (disconnect) {
-        disconnect();
-        return true;
-      }
-      
-      return false;
-    } catch (err) {
-      console.error('Failed to disconnect wallet:', err);
-      setError('Failed to disconnect wallet');
-      return false;
-    }
-  }, [isDev]);
-  
-  // Reset any errors
+
+    disconnect();
+  }, [disconnect, isDev]);
+
   const resetError = useCallback(() => {
     setError(null);
   }, []);
-  
-  // The value we'll provide to consumers
-  const value = {
-    isConnected,
-    address,
-    chain,
-    isLoading,
-    error,
-    isDev,
-    connectWallet,
-    disconnectWallet,
-    resetError
-  };
-  
+
+  const currentStatus = isDev
+    ? devWallet
+    : {
+        isConnected,
+        address,
+        chain: getChainFromId(chainId),
+      };
+
+  useEffect(() => {
+    console.log('🔌 Wallet connection changed:');
+    console.log('Connected:', currentStatus.isConnected);
+    console.log('Address:', currentStatus.address);
+    console.log('Chain:', currentStatus.chain);
+  }, [currentStatus]);
+
   return (
-    <WalletStatusContext.Provider value={value}>
+    <WalletStatusContext.Provider
+      value={{
+        ...currentStatus,
+        isDev,
+        connectWallet,
+        disconnectWallet,
+        resetError,
+        error,
+      }}
+    >
       {children}
     </WalletStatusContext.Provider>
   );
 }
 
-// Hook for components to consume
 export default function useWalletStatus() {
   const context = useContext(WalletStatusContext);
-  
   if (!context) {
     throw new Error('useWalletStatus must be used within a WalletStatusProvider');
   }
-  
   return context;
-} 
+}

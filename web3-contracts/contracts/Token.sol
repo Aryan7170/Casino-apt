@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
 contract Token is ERC20, Ownable, Pausable {
     address public treasury;
@@ -15,7 +15,7 @@ contract Token is ERC20, Ownable, Pausable {
     event TokensMinted(address indexed to, uint256 amount);
 
     constructor() ERC20("APT-Casino", "APTC") Ownable(msg.sender) {
-        treasury = 0xF7249B507F1f89Eaea5d694cEf5cb96F245Bc5b6;
+        treasury = 0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199;
         // 1 billion tokens with 18 decimals = 1_000_000_000 * 10^18
         _mint(msg.sender, 1_000_000_000 * 10**decimals()); // Initial supply to deployer
     }
