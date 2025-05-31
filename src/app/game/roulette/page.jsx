@@ -923,7 +923,6 @@ export default function GameRoulette() {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [bettingHistory, setBettingHistory] = useState([]);
-  const [isDev, setIsDev] = useState(false);
   const [error, setError] = useState(null);
 
   // Get wallet status and balance
@@ -1051,9 +1050,8 @@ export default function GameRoulette() {
   }, [isMuted]);
 
   useEffect(() => {
-    // Force production mode for contract interactions
-    setIsDev(false);
-    console.log('Development mode:', process.env.NODE_ENV);
+    // Remove the dev mode setting
+    console.log('Environment:', process.env.NODE_ENV);
   }, []);
 
   useEffect(() => {
@@ -1677,21 +1675,6 @@ export default function GameRoulette() {
 
   // Remove the custom writeContract function and use the imported one directly
   const waitForTransaction = async (hash) => {
-    if (isDev) {
-      // Simulate transaction confirmation in dev mode
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const mockReceipt = {
-            blockNumber: 12345678,
-            status: 'success',
-            transactionHash: hash
-          };
-          setTransactionReceipt(mockReceipt);
-          resolve(mockReceipt);
-        }, 3000);
-      });
-    }
-    
     try {
       // Ensure hash is a string, not an object
       const hashStr = typeof hash === 'object' && hash.hash ? hash.hash : hash;
@@ -1707,53 +1690,85 @@ export default function GameRoulette() {
     }
   };
 
+  // Update the checkNetwork function to focus on correct wallet detection
   const checkNetwork = async () => {
     // Ensure we're running in the browser
     if (typeof window === "undefined") return;
     
-    // Add debug message
     console.log("Checking network...");
     
-    // Delay check to ensure ethereum provider is fully initialized
-    setTimeout(async () => {
-      try {
-        // Only check if ethereum provider exists
+    try {
+      // First check if user is connected via wagmi
+      if (isConnected && address) {
+        console.log("Wallet connected via wagmi:", address);
+        setCorrectNetwork(true);
+        return;
+      }
+      
+      // Fall back to window.ethereum check with retry
+      const checkWithRetry = async (attempts = 3) => {
         if (window.ethereum && typeof window.ethereum.request === 'function') {
           console.log("Ethereum provider found, requesting chain ID...");
-          const chainId = await window.ethereum.request({ method: "eth_chainId" });
-          console.log("Current chain ID:", chainId);
-          
-          // Support both Mantle Sepolia (0x138b) and Pharos Devnet (0xc352)
-          const isCorrectNetwork = chainId === "0x138b" || chainId === "0xc352";
-          console.log("Is correct network:", isCorrectNetwork);
-          setCorrectNetwork(isCorrectNetwork);
-          
-          // For development purposes, you can temporarily force the correct network to true
-          // Uncomment the next line during development/testing
-          // setCorrectNetwork(true);
+          try {
+            const chainId = await window.ethereum.request({ method: "eth_chainId" });
+            console.log("Current chain ID:", chainId);
+            
+            // Support both Mantle Sepolia (0x138b) and Pharos Devnet (0xc352)
+            const isCorrectNetwork = chainId === "0x138b" || chainId === "0xc352";
+            console.log("Is correct network:", isCorrectNetwork);
+            setCorrectNetwork(isCorrectNetwork);
+          } catch (error) {
+            console.error("Error checking chain ID:", error);
+            if (attempts > 1) {
+              console.log(`Retrying... (${attempts-1} attempts left)`);
+              setTimeout(() => checkWithRetry(attempts - 1), 500);
+            } else {
+              setCorrectNetwork(false);
+            }
+          }
         } else {
           console.log("Ethereum provider not available or not fully initialized");
-          setCorrectNetwork(false);
+          if (attempts > 1) {
+            console.log(`Retrying... (${attempts-1} attempts left)`);
+            setTimeout(() => checkWithRetry(attempts - 1), 500);
+          } else {
+            setCorrectNetwork(false);
+          }
         }
-      } catch (error) {
-        console.error("Error checking network:", error);
-        setCorrectNetwork(false);
-      }
-    }, 500); // Add a delay to ensure the provider is fully loaded
+      };
+      
+      // Start the retry process
+      checkWithRetry();
+    } catch (error) {
+      console.error("Error in checkNetwork:", error);
+      setCorrectNetwork(false);
+    }
   };
   
   useEffect(() => {
-    // Only check when component mounts
+    // Only check when component mounts or when wallet connection changes
     if (typeof window !== "undefined") {
+      console.log("Wallet connection state changed, checking network...");
+      console.log("isConnected:", isConnected, "address:", address);
+      
       checkNetwork();
       
       // Setup event listener if provider exists
       const setupListeners = () => {
         if (window.ethereum && typeof window.ethereum.on === 'function') {
-          window.ethereum.on("chainChanged", checkNetwork);
+          window.ethereum.on("chainChanged", () => {
+            console.log("Chain changed, rechecking network");
+            checkNetwork();
+          });
+          window.ethereum.on("accountsChanged", () => {
+            console.log("Accounts changed, rechecking network");
+            checkNetwork();
+          });
+          
           return () => {
             if (window.ethereum && typeof window.ethereum.removeListener === 'function') {
               window.ethereum.removeListener("chainChanged", checkNetwork);
+              window.ethereum.removeListener("accountsChanged", checkNetwork);
             }
           };
         }
@@ -1761,109 +1776,131 @@ export default function GameRoulette() {
       
       return setupListeners();
     }
-  }, []);
+  }, [isConnected, address]); // Add dependencies to run when wallet connection changes
 
   const switchNetwork = async () => {
     // Ensure we're running in the browser
     if (typeof window === "undefined") return;
     
-    // Check if ethereum provider exists
-    if (!window.ethereum || typeof window.ethereum.request !== 'function') {
-      alert("No Ethereum wallet detected. Please install a wallet like MetaMask.");
-      return;
-    }
-    
     try {
-      // Try Mantle Sepolia first
-      await window.ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: "0x138b" }],
-      });
+      // Check if wallet is connected first
+      if (!isConnected) {
+        console.log("Wallet not connected, please connect wallet first");
+        alert("Please connect your wallet first using the connect button in the top right corner");
+        return;
+      }
       
-      // Reload after successful switch
-      window.location.reload();
-      return;
-    } catch (switchError) {
-      console.log("Switch network error:", switchError);
+      // Check if ethereum provider exists
+      if (!window.ethereum || typeof window.ethereum.request !== 'function') {
+        alert("No Ethereum wallet detected. Please install a wallet like MetaMask.");
+        return;
+      }
       
-      // If network doesn't exist in wallet (error code 4902), try adding it
-      if (switchError.code === 4902) {
-        try {
-          await window.ethereum.request({
-            method: "wallet_addEthereumChain",
-            params: [
-              {
-                chainId: "0x138b",
-                chainName: "Mantle Sepolia",
-                nativeCurrency: {
-                  name: "Mantle",
-                  symbol: "MNT",
-                  decimals: 18,
-                },
-                rpcUrls: ["https://rpc.sepolia.mantle.xyz"],
-                blockExplorerUrls: ["https://sepolia.mantlescan.xyz"],
-              },
-            ],
-          });
-          
-          // Try switching again after adding
+      console.log("Attempting to switch to Mantle Sepolia network");
+      
+      try {
+        // Try Mantle Sepolia first
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: "0x138b" }],
+        });
+        
+        console.log("Successfully switched to Mantle Sepolia");
+        // Set network to correct and reload after short delay
+        setCorrectNetwork(true);
+        setTimeout(() => window.location.reload(), 1000);
+        return;
+      } catch (switchError) {
+        console.log("Switch network error:", switchError);
+        
+        // If network doesn't exist in wallet (error code 4902), try adding it
+        if (switchError.code === 4902) {
           try {
-            await window.ethereum.request({
-              method: "wallet_switchEthereumChain",
-              params: [{ chainId: "0x138b" }],
-            });
-            
-            // Reload after successful switch
-            window.location.reload();
-            return;
-          } catch (error) {
-            console.error("Error switching to Mantle after adding:", error);
-          }
-        } catch (addError) {
-          console.error("Failed to add Mantle Sepolia:", addError);
-          
-          // If Mantle Sepolia fails, try Pharos Devnet as fallback
-          try {
+            console.log("Adding Mantle Sepolia to wallet");
             await window.ethereum.request({
               method: "wallet_addEthereumChain",
               params: [
                 {
-                  chainId: "0xc352",
-                  chainName: "Pharos Devnet",
+                  chainId: "0x138b",
+                  chainName: "Mantle Sepolia",
                   nativeCurrency: {
-                    name: "Pharos",
-                    symbol: "PHR",
+                    name: "Mantle",
+                    symbol: "MNT",
                     decimals: 18,
                   },
-                  rpcUrls: ["https://devnet.dplabs-internal.com"],
-                  blockExplorerUrls: ["https://pharosscan.xyz"],
+                  rpcUrls: ["https://rpc.sepolia.mantle.xyz"],
+                  blockExplorerUrls: ["https://sepolia.mantlescan.xyz"],
                 },
               ],
             });
             
-            // Try switching to Pharos
+            // Try switching again after adding
             try {
               await window.ethereum.request({
                 method: "wallet_switchEthereumChain",
-                params: [{ chainId: "0xc352" }],
+                params: [{ chainId: "0x138b" }],
               });
               
-              // Reload after successful switch
-              window.location.reload();
+              console.log("Successfully switched to Mantle Sepolia after adding");
+              // Set network to correct and reload after short delay
+              setCorrectNetwork(true);
+              setTimeout(() => window.location.reload(), 1000);
               return;
             } catch (error) {
-              console.error("Error switching to Pharos after adding:", error);
+              console.error("Error switching to Mantle after adding:", error);
             }
-          } catch (pharosError) {
-            console.error("Failed to add Pharos Devnet:", pharosError);
-            alert("Unable to switch to required networks. Please try adding Mantle Sepolia manually.");
+          } catch (addError) {
+            console.error("Failed to add Mantle Sepolia:", addError);
+            
+            // If Mantle Sepolia fails, try Pharos Devnet as fallback
+            try {
+              console.log("Adding Pharos Devnet to wallet");
+              await window.ethereum.request({
+                method: "wallet_addEthereumChain",
+                params: [
+                  {
+                    chainId: "0xc352",
+                    chainName: "Pharos Devnet",
+                    nativeCurrency: {
+                      name: "Pharos",
+                      symbol: "PHR",
+                      decimals: 18,
+                    },
+                    rpcUrls: ["https://devnet.dplabs-internal.com"],
+                    blockExplorerUrls: ["https://pharosscan.xyz"],
+                  },
+                ],
+              });
+              
+              // Try switching to Pharos
+              try {
+                await window.ethereum.request({
+                  method: "wallet_switchEthereumChain",
+                  params: [{ chainId: "0xc352" }],
+                });
+                
+                console.log("Successfully switched to Pharos Devnet");
+                // Set network to correct and reload after short delay
+                setCorrectNetwork(true);
+                setTimeout(() => window.location.reload(), 1000);
+                return;
+              } catch (error) {
+                console.error("Error switching to Pharos after adding:", error);
+              }
+            } catch (pharosError) {
+              console.error("Failed to add Pharos Devnet:", pharosError);
+              alert("Unable to switch to required networks. Please try adding Mantle Sepolia manually.");
+            }
           }
+        } else {
+          // Handle other errors
+          console.error("Failed to switch network:", switchError);
+          alert("Failed to switch network. Please try again or add Mantle Sepolia manually.");
         }
-      } else {
-        // Handle other errors
-        console.error("Failed to switch network:", switchError);
-        alert("Failed to switch network. Please try again or add Mantle Sepolia manually.");
       }
+    } catch (error) {
+      console.error("Error in switchNetwork:", error);
+      alert("An error occurred while switching networks. Please refresh and try again.");
     }
   };
 
@@ -2400,7 +2437,7 @@ export default function GameRoulette() {
                       )}
                   </Box>
                 </Box>
-              ) : (devMode || correctNetwork) ? (
+              ) : isConnected && correctNetwork ? (
                 <Box sx={{ display: "flex", flexDirection: "column" }}>
                   <Button
                     disabled={total === 0}
@@ -2415,20 +2452,21 @@ export default function GameRoulette() {
                     </Typography>
                   )}
                 </Box>
+              ) : !isConnected ? (
+                <Box sx={{ display: "flex", flexDirection: "column" }}>
+                  <Button onClick={() => document.getElementById('wallet-connect-button')?.click()}>
+                    Connect Wallet
+                  </Button>
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, textAlign: 'center' }}>
+                    Connect your wallet to place bets
+                  </Typography>
+                </Box>
               ) : (
                 <Box sx={{ display: "flex", flexDirection: "column" }}>
                   <Button onClick={() => switchNetwork()}>Switch Network</Button>
-                  {/* Add development mode toggle button */}
-                  {process.env.NODE_ENV === 'development' && (
-                    <Button 
-                      onClick={() => setDevMode(!devMode)} 
-                      variant="outlined"
-                      size="small"
-                      sx={{ mt: 1, fontSize: '0.7rem' }}
-                    >
-                      {devMode ? 'Disable Dev Mode' : 'Enable Dev Mode'}
-                    </Button>
-                  )}
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, textAlign: 'center' }}>
+                    Switch to Mantle Sepolia network
+                  </Typography>
                 </Box>
               )}
             </Box>
