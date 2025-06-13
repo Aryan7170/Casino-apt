@@ -60,6 +60,7 @@
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",
     "styled-components": "^6.1.8",
+    "tailwind-merge": "^3.3.1",
     "tailwindcss": "3.4.3",
     "three": "^0.176.0",
     "viem": "^2.29.0",
