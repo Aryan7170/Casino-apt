@@ -101,8 +101,3 @@ All though started as a idea but now we are thinking to carry forward as a busin
 - Having a inbuilt live streaming for gameplay, allow players to do streaming within the application.
 
 **Be the biggest gamefi/ gambling / games hub centre of the gaming industry.**
-
-## Team Details
-**Amaan Sayyad (CEO):** A Growth Hacker, Blockchain Dev, Developer Advocate, and Budding Entrepreneur. 26x Hackathons, 17x Communities, 14x Speaker, 8x Companies, 2x Startup, 3x Publications, 2x Copyrights 1x Grantee. Expertise in partnership, KOLs, tokenomics, listing, liquidity, and market capitalization.
-
-**Neeraj Choubsia (CTO):** Full Stack Blockchain Developer. 26x Hackathons, 10x Communities, 4x Companies, 1x Grantee. A hyper-active developer.
