@@ -53,6 +53,14 @@ const GameCategoriesGrid = () => {
       background: '/images/games/crash-bg.jpg',
       gameCount: 6
     },
+    { 
+      id: 7, 
+      name: 'Spin the Wheel', 
+      description: 'Fast-paced multiplier crash games for quick wins', 
+      icon: '/images/games/spin_the_wheel.png', 
+      background: '/images/games/crash-bg.jpg',
+      gameCount: 6
+    },
   ];
   
   const [hoveredId, setHoveredId] = useState(null);
