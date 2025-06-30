@@ -160,3 +160,41 @@ body {
   background-size: 200% 200%;
   animation: gradient-background 3s ease infinite;
 }
+
+
+
+
+
+@layer utilities {
+  .gradient-border {
+    position: relative;
+    padding: 1px; /* Adjust border thickness */
+    background: linear-gradient(to right, #F1324D, #2414E3);
+    border-radius: 0.25rem; /* rounded-xl */
+  }
+
+  .gradient-border > .content {
+    background-color: #0f001a; /* or white, depending on use */
+    border-radius: 0.25rem;
+    width: 100%;
+    height: 100%;
+    padding: 1rem; /* p-4 */
+  }
+}
+
+@layer utilities {
+  .gradient-borderb {
+    position: relative;
+    padding: 1px; /* Adjust border thickness */
+    background: linear-gradient(to right, #F1324D, #2414E3);
+    border-radius: 1rem; /* rounded-xl */
+  }
+
+  .gradient-borderb > .content {
+    background-color: #0f001a; /* or white, depending on use */
+    border-radius: 1rem;
+    width: 100%;
+    height: 100%;
+    padding: 1rem; /* p-4 */
+  }
+}

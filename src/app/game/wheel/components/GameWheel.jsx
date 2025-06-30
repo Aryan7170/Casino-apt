@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useEffect, useRef, useMemo } from "react";
 import { cn } from "@/lib/utils.jsx";
-import arrow from "../../../public/arrow.svg";
 
 
 function selectSegmentIndexByProbability(wheelData) {
@@ -336,7 +335,7 @@ const GameWheel = ({
       <div className="relative flex h-[435px] w-[600px] sm:h-[525px] sm:w-[500px] lg:h-[625px] lg:w-[600px] items-center justify-center p-4">
 
         <Image
-          src={arrow}
+          src="/arrow.svg"
           width={50}
           height={50}
           alt="Pointer Arrow"

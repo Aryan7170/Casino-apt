@@ -1,4 +1,4 @@
-import { wheelDataByRisk } from "../app/game/wheel/components/GameWheel"; // Make sure this is exported
+import { wheelDataByRisk } from "../app/game/wheel/components/GameWheel.jsx"; // Updated path after restructuring
 
 export const calculateResult = (risk, noOfSegments) => {
   

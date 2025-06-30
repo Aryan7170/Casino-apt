@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import GameWheel from "../../../components/wheel/GameWheel";
-import BettingPanel from "../../../components/wheel/BettingPanel";
-import GameHistory from "../../../components/wheel/GameHistory";
+import GameWheel from "./components/GameWheel.jsx";
+import BettingPanel from "./components/BettingPanel.jsx";
+import GameHistory from "./components/GameHistory.jsx";
 import { calculateResult } from "../../../lib/gameLogic";
 import Image from "next/image";
 import coin from "../../../../public/coin.png";
@@ -337,12 +337,15 @@ export default function Home() {
               targetMultiplier={targetMultiplier}
               handleSelectMultiplier={handleSelectMultiplier}
               wheelPosition={wheelPosition}
+              setWheelPosition={setWheelPosition}
               hasSpun={hasSpun}
             />
           </div>
           <div className="w-full lg:w-1/3">
             <BettingPanel
               balance={balance}
+              gameMode={gameMode}
+              setGameMode={setGameMode}
               betAmount={betAmount}
               setBetAmount={setBetAmount}
               risk={risk}

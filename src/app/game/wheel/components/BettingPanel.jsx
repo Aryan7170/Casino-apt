@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { cn } from "../../lib/utils";
+import { cn } from "@/lib/utils.jsx";
 import Image from "next/image";
-import coin from "../../../public/coin.png";
 // import { wheelDataByRisk } from "./GameWheel"; // Make sure this is exported
 
 const BettingPanel = ({
@@ -88,7 +87,7 @@ const BettingPanel = ({
               placeholder="0.00000000000"
             />
             <Image
-                  src={coin}
+                  src="/coin.png"
                   width={20}
                   height={20}
                   alt="coin"
@@ -201,7 +200,7 @@ const BettingPanel = ({
             <div className="flex items-center bg-[#120521] p-2 py-3 rounded-sm">
               <input type="number" className="bg-transparent outline-none border-none text-white w-full" value={stopProfit} onChange={(e) => setStopProfit(e.target.value)} />
               <Image
-                  src={coin}
+                  src="/coin.png"
                   width={20}
                   height={20}
                   alt="coin"
@@ -218,7 +217,7 @@ const BettingPanel = ({
             <div className="flex items-center bg-[#120521] p-2 py-3 rounded-sm">
               <input type="number" className="bg-transparent outline-none border-none text-white w-full" value={stopLoss} onChange={(e) => setStopLoss(e.target.value)} />
               <Image
-                  src={coin}
+                  src="/coin.png"
                   width={20}
                   height={20}
                   alt="coin"
