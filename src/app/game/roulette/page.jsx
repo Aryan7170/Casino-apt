@@ -19,7 +19,7 @@ import {
   tokenContractAddress,
 } from "./contractDetails";
 import * as ViemClient from "./ViemClient";
-import { getContract, parseEther } from "viem";
+import { getContract, parseEther, waitForTransactionReceipt } from "viem";
 import { muiStyles } from "./styles";
 import Image from "next/image";
 import MuiAlert from "@mui/material/Alert";
@@ -29,23 +29,14 @@ import { gameData, bettingTableData } from "./config/gameDetail";
 import { useToken } from "@/hooks/useToken";
 import BettingHistory from '@/components/BettingHistory';
 import useWalletStatus from '@/hooks/useWalletStatus';
-import { FaVolumeMute, FaVolumeUp, FaChartLine, FaCoins, FaTrophy, FaDice, FaBalanceScale, FaRandom, FaPercentage, FaPlayCircle } from "react-icons/fa";
-import { GiCardRandom, GiDiceTarget, GiRollingDices, GiPokerHand } from "react-icons/gi";
-import { motion } from "framer-motion";
-import RouletteLeaderboard from './components/RouletteLeaderboard';
-import StrategyGuide from './components/StrategyGuide';
-import RoulettePayout from './components/RoulettePayout';
-import WinProbabilities from './components/WinProbabilities';
-import RouletteHistory from './components/RouletteHistory';
-import { useAccount, useConfig, usePublicClient, useWalletClient, useContractWrite, useWaitForTransaction } from 'wagmi';
-import { writeContract, waitForTransactionReceipt } from '@wagmi/core';
-import contractAbi from '../../../contracts/Roulette.json'
+import { FaVolumeMute, FaVolumeUp } from "react-icons/fa";
+import { TreasuryUI } from '../../../components/TreasuryUI';
+import { TreasuryTest } from '../../../components/TreasuryTest';
+import { TreasuryManager } from '../../../components/TreasuryManager';
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 
 
 // Debug imports
-
-
-
 console.log("ViemClient:", ViemClient);
 console.log("publicPharosSepoliaClient:", ViemClient.publicPharosSepoliaClient);
 
@@ -54,27 +45,8 @@ const TooltipWide = styled(({ className, ...props }) => (
 ))({
   [`& .${tooltipClasses.tooltip}`]: {
     maxWidth: 800,
-    padding: '8px 12px',
-    fontSize: '0.85rem',
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    backdropFilter: 'blur(5px)',
-    borderRadius: '8px',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)'
   },
 });
-
-const enhancedTooltip = {
-  tooltip: {
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    backdropFilter: 'blur(5px)',
-    padding: '8px 12px',
-    fontSize: '0.85rem',
-    borderRadius: '8px',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)'
-  }
-};
 
 const BetType = {
   NUMBER: 0,    // Single number (35:1)
@@ -88,7 +60,6 @@ const BetType = {
   CORNER: 8,    // Four numbers (8:1)
   LINE: 9       // Six numbers (5:1)
 };
-
 
 function BetBox({ betValue = 0, betType = "", position = "top-right", ...props }) {
   // Calculate position based on the position prop
@@ -114,13 +85,6 @@ function BetBox({ betValue = 0, betType = "", position = "top-right", ...props }
           {betType}: {betValue}
         </Typography>
       }
-      arrow
-      placement="top"
-      componentsProps={{
-        tooltip: {
-          sx: enhancedTooltip.tooltip
-        }
-      }}
     >
       <Box
         sx={{
@@ -171,34 +135,16 @@ function GridInside({
   isWinner = false,
   ...props
 }) {
-  // Calculate corner bet numbers
-  const getCornerNumbers = () => {
-    // For numbers on the left edge of the grid, we need to handle differently
-    const isLeftEdge = [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34].includes(insideNumber);
-    
-    if (isLeftEdge) {
-      return `Corner (${insideNumber}-${insideNumber+1}-${insideNumber+3}-${insideNumber+4})`;
-    }
-    
-    // For non-left edge numbers
-    return `Corner (${insideNumber-1}-${insideNumber}-${insideNumber+2}-${insideNumber+3})`;
-  };
-  
   return (
     <ParentSize {...props}>
       {({ width }) => (
         <Box
           sx={{
-            position: "relative",
             display: "flex",
             alignItems: "stretch",
             width: width,
             height: topEdge ? width + 10 : width,
             ...(red && { backgroundColor: (theme) => theme.palette.game.red }),
-            ...(isWinner && {
-              boxShadow: "0 0 15px 5px rgba(255, 215, 0, 0.7)",
-              zIndex: 3,
-            }),
             transition: "all 0.2s ease",
             "&:hover": {
               transform: "scale(1.02)",
@@ -232,7 +178,7 @@ function GridInside({
               {splitleft > 0 && (
                 <BetBox
                   betValue={splitleft}
-                  betType={`Split (${insideNumber-1}/${insideNumber})`}
+                  betType={"Split"}
                   position="top-right"
                   onClick={(e) =>
                     placeBet(e, "inside", (insideNumber - 1) * 4 + 2)
@@ -253,7 +199,7 @@ function GridInside({
               {corner > 0 && (
                 <BetBox
                   betValue={corner}
-                  betType={getCornerNumbers()}
+                  betType={"Corner"}
                   position="bottom-right"
                   onClick={(e) =>
                     placeBet(e, "inside", (insideNumber - 1) * 4 + 4)
@@ -325,7 +271,7 @@ function GridInside({
               {splitbottom > 0 && (
                 <BetBox
                   betValue={splitbottom}
-                  betType={`Split (${insideNumber}/${insideNumber+3})`}
+                  betType={"Split"}
                   position="bottom-right"
                   onClick={(e) =>
                     placeBet(e, "inside", (insideNumber - 1) * 4 + 3)
@@ -685,208 +631,7 @@ const BettingStats = ({ history }) => {
   );
 };
 
-// Roulette Header Component moved inside the main component
-
 export default function GameRoulette() {
-  // Add a ref for scrolling past navbar
-  const contentRef = useRef(null);
-  
-  // Add development mode flag - set to true to bypass network check
-  const [devMode, setDevMode] = useState(false);
-  
-  // Add smooth scrolling to the entire document
-  useEffect(() => {
-    // Apply smooth scrolling to the html element
-    document.documentElement.style.scrollBehavior = 'smooth';
-    
-    return () => {
-      // Clean up when component unmounts
-      document.documentElement.style.scrollBehavior = '';
-    };
-  }, []);
-  
-  // Scroll past navbar on initial load
-  useEffect(() => {
-    const scrollPastNavbar = () => {
-      if (contentRef.current) {
-        // Add a small delay to ensure DOM is fully loaded
-        setTimeout(() => {
-          window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-          });
-        }, 100);
-      }
-    };
-    
-    scrollPastNavbar();
-  }, []);
-
-  // Smooth scroll to element function
-  const scrollToElement = (elementId) => {
-    const element = document.getElementById(elementId);
-    if (element) {
-      // Add offset to account for fixed elements and prevent cutoff
-      const yOffset = -80; 
-      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      
-      window.scrollTo({
-        top: y,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  // Roulette Header Component inside the main component to access scrollToElement
-  const RouletteHeader = () => {
-    // Sample statistics
-    const gameStatistics = {
-      totalBets: '1,856,342',
-      totalVolume: '8.3M APTC',
-      maxWin: '243,500 APTC'
-    };
-    
-    return (
-      <div className="relative text-white px-4 md:px-8 lg:px-20 mb-8 pt-20 md:pt-24 mt-4">
-        {/* Background Elements */}
-        <div className="absolute top-5 -right-32 w-64 h-64 bg-red-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute top-28 left-1/3 w-32 h-32 bg-green-500/10 rounded-full blur-2xl"></div>
-        <div className="absolute -bottom-20 left-1/4 w-48 h-48 bg-purple-500/5 rounded-full blur-3xl"></div>
-        
-        <div className="relative">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6">
-            {/* Left Column - Game Info */}
-            <div className="md:w-1/2">
-              <div className="flex items-center">
-                <div className="mr-3 p-3 bg-gradient-to-br from-red-900/40 to-red-700/10 rounded-lg shadow-lg shadow-red-900/10 border border-red-800/20">
-                  <GiRollingDices className="text-3xl text-red-300" />
-                </div>
-                <div>
-                  <motion.div 
-                    className="flex items-center gap-2"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <p className="text-sm text-gray-400 font-sans">Games / Roulette</p>
-                    <span className="text-xs px-2 py-0.5 bg-red-900/30 rounded-full text-red-300 font-display">Classic</span>
-                    <span className="text-xs px-2 py-0.5 bg-green-900/30 rounded-full text-green-300 font-display">Live</span>
-                  </motion.div>
-                  <motion.h1 
-                    className="text-3xl md:text-4xl font-bold font-display bg-gradient-to-r from-red-300 to-amber-300 bg-clip-text text-transparent"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: 0.1 }}
-                  >
-                    European Roulette
-                  </motion.h1>
-                </div>
-              </div>
-              <motion.p 
-                className="text-white/70 mt-2 max-w-xl font-sans"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
-                Place your bets and experience the thrill of the spinning wheel. From simple red/black bets to complex number combinations, the choice is yours.
-              </motion.p>
-              
-              {/* Game highlights */}
-              <motion.div 
-                className="flex flex-wrap gap-4 mt-4"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <div className="flex items-center text-sm bg-gradient-to-r from-red-900/30 to-red-800/10 px-3 py-1.5 rounded-full">
-                  <FaPercentage className="mr-1.5 text-amber-400" />
-                  <span className="font-sans">2.7% house edge</span>
-                </div>
-                <div className="flex items-center text-sm bg-gradient-to-r from-red-900/30 to-red-800/10 px-3 py-1.5 rounded-full">
-                  <GiPokerHand className="mr-1.5 text-blue-400" />
-                  <span className="font-sans">Multiple betting options</span>
-                </div>
-                <div className="flex items-center text-sm bg-gradient-to-r from-red-900/30 to-red-800/10 px-3 py-1.5 rounded-full">
-                  <FaBalanceScale className="mr-1.5 text-green-400" />
-                  <span className="font-sans">Provably fair gaming</span>
-                </div>
-              </motion.div>
-            </div>
-            
-            {/* Right Column - Stats and Controls */}
-            <div className="md:w-1/2">
-              <div className="bg-gradient-to-br from-red-900/20 to-red-800/5 rounded-xl p-4 border border-red-800/20 shadow-lg shadow-red-900/10">
-                {/* Quick stats in top row */}
-                <motion.div 
-                  className="grid grid-cols-3 gap-2 mb-4"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.4 }}
-                >
-                  <div className="flex flex-col items-center p-2 bg-black/20 rounded-lg">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600/20 mb-1">
-                      <FaChartLine className="text-blue-400" />
-                    </div>
-                    <div className="text-xs text-white/50 font-sans text-center">Total Bets</div>
-                    <div className="text-white font-display text-sm md:text-base">{gameStatistics.totalBets}</div>
-                  </div>
-                  
-                  <div className="flex flex-col items-center p-2 bg-black/20 rounded-lg">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-600/20 mb-1">
-                      <FaCoins className="text-yellow-400" />
-                    </div>
-                    <div className="text-xs text-white/50 font-sans text-center">Volume</div>
-                    <div className="text-white font-display text-sm md:text-base">{gameStatistics.totalVolume}</div>
-                  </div>
-                  
-                  <div className="flex flex-col items-center p-2 bg-black/20 rounded-lg">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-red-600/20 mb-1">
-                      <FaTrophy className="text-yellow-500" />
-                    </div>
-                    <div className="text-xs text-white/50 font-sans text-center">Max Win</div>
-                    <div className="text-white font-display text-sm md:text-base">{gameStatistics.maxWin}</div>
-                  </div>
-                </motion.div>
-                
-                {/* Quick actions */}
-                <motion.div
-                  className="flex flex-wrap justify-between gap-2"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
-                >
-                  <button 
-                    onClick={() => scrollToElement('strategy')}
-                    className="flex items-center justify-center px-4 py-2 bg-gradient-to-r from-red-800/40 to-red-900/20 rounded-lg text-white font-medium text-sm hover:from-red-700/40 hover:to-red-800/20 transition-all duration-300"
-                  >
-                    <GiCardRandom className="mr-2" />
-                    Strategy Guide
-                  </button>
-                  <button 
-                    onClick={() => scrollToElement('payouts')}
-                    className="flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-800/40 to-blue-900/20 rounded-lg text-white font-medium text-sm hover:from-blue-700/40 hover:to-blue-800/20 transition-all duration-300"
-                  >
-                    <FaCoins className="mr-2" />
-                    Payout Tables
-                  </button>
-                  <button 
-                    onClick={() => scrollToElement('history')}
-                    className="flex items-center justify-center px-4 py-2 bg-gradient-to-r from-purple-800/40 to-purple-900/20 rounded-lg text-white font-medium text-sm hover:from-purple-700/40 hover:to-purple-800/20 transition-all duration-300"
-                  >
-                    <FaChartLine className="mr-2" />
-                    Game History
-                  </button>
-                </motion.div>
-              </div>
-            </div>
-          </div>
-
-          <div className="w-full h-0.5 bg-gradient-to-r from-red-600 via-blue-500/30 to-transparent mt-6"></div>
-        </div>
-      </div>
-    );
-  };
-
   const [events, dispatchEvents] = useReducer(eventReducer, []);
   const [bet, setBet] = useState(0);
   const [inside, dispatchInside] = useReducer(arrayReducer, new Array(145).fill(0));
@@ -912,10 +657,6 @@ export default function GameRoulette() {
   ]);
   const [selectedNumbers, setSelectedNumbers] = useState([]);
   const [currentBetType, setCurrentBetType] = useState(null);
-  const [writeContractResult, setWriteContractResult] = useState(null);
-  const [writeContractError, setWriteContractError] = useState(null);
-  const [isWaitingForTransaction, setIsWaitingForTransaction] = useState(false);
-  const [transactionReceipt, setTransactionReceipt] = useState(null);
   const [wheelSpinning, setWheelSpinning] = useState(false);
   const [showBettingStats, setShowBettingStats] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -923,14 +664,42 @@ export default function GameRoulette() {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [bettingHistory, setBettingHistory] = useState([]);
+  const [isDev, setIsDev] = useState(false);
   const [error, setError] = useState(null);
+  const [pendingBets, setPendingBets] = useState([]);
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
+  const { address, isConnected } = useWalletStatus();
+
+  const { data: hash, isPending, writeContract: wagmiWriteContract } = useWriteContract();
+
+  const checkTransactionStatus = async (hash) => {
+    try {
+      const receipt = await ViemClient.publicPharosSepoliaClient.waitForTransactionReceipt({ hash });
+      return receipt.status; // 'success' or 'reverted'
+    } catch (error) {
+      console.error("Error checking transaction status:", error);
+      return 'failed';
+    }
+  };
+
+  
 
   // Get wallet status and balance
-  const { address, isConnected } = useAccount();
   const { balance } = useToken(address);
-  const { config: wagmiConfig } = useConfig();
-  const publicClient = usePublicClient();
-  const { data: walletClient } = useWalletClient();
+
+  // Add wagmi hooks for contract interactions
+  const { writeContractAsync, data: wagmiWriteResult, error: wagmiWriteError, isPending: wagmiIsPending } = useWriteContract();
+  const { data: wagmiTransactionReceipt } = useWaitForTransactionReceipt({ hash: wagmiWriteResult?.hash });
+
+  // Add debug logging for wallet state
+  useEffect(() => {
+    console.log('Wallet Status:', {
+      isConnected,
+      address,
+      balance,
+      correctNetwork
+    });
+  }, [isConnected, address, balance, correctNetwork]);
 
   // Sound refs
   const spinSoundRef = useRef(null);
@@ -1050,8 +819,9 @@ export default function GameRoulette() {
   }, [isMuted]);
 
   useEffect(() => {
-    // Remove the dev mode setting
-    console.log('Environment:', process.env.NODE_ENV);
+    // Force production mode for contract interactions
+    setIsDev(false);
+    console.log('Development mode:', process.env.NODE_ENV);
   }, []);
 
   useEffect(() => {
@@ -1069,9 +839,9 @@ export default function GameRoulette() {
       const winningsListener = ViemClient.publicPharosSepoliaClient.watchContractEvent({
       address: rouletteContractAddress,
       abi: rouletteABI,
-      eventName: "RandomNumberGenerated",
+      eventName: "RandomGenerated",
       onLogs: (logs) => {
-          console.log('RandomNumberGenerated event received:', logs);
+          console.log('RandomGenerated event received:', logs);
           try {
             // Safely parse the random number
             const randomNumberRaw = logs[0]?.args?.randomNumber;
@@ -1257,6 +1027,7 @@ export default function GameRoulette() {
   }, [events, playSound, menuClickRef]);
 
   // Update the placeBet function to accumulate bets
+  // Update the placeBet function to accumulate bets
   const placeBet = useCallback((e, type, ind = 0, newVal = bet, revert = false) => {
     if (e) {
     e.preventDefault();
@@ -1272,6 +1043,10 @@ export default function GameRoulette() {
     }
 
     let oldVal = 0;
+    let betType = 0;
+    let betValue = 0;
+    let numbers = [];
+
     switch (type) {
       case "red":
         oldVal = red;
@@ -1281,6 +1056,13 @@ export default function GameRoulette() {
             dispatchEvents({ type: "update", payload: [...events, { type, oldVal, newVal: updatedRed, ind }] });
           }
           setRed(updatedRed);
+          // Add to pending bets for red
+          if (!revert && newVal > 0) {
+            betType = 1; // COLOR
+            betValue = 0; // Red
+            numbers = []; // Simple bets have empty numbers array
+            setPendingBets(prev => [...prev, { betType, betValue, amount: newVal, numbers, id: Date.now() }]);
+          }
         }
         break;
       case "black":
@@ -1291,6 +1073,13 @@ export default function GameRoulette() {
             dispatchEvents({ type: "update", payload: [...events, { type, oldVal, newVal: updatedBlack, ind }] });
           }
           setBlack(updatedBlack);
+          // Add to pending bets for black
+          if (!revert && newVal > 0) {
+            betType = 1; // COLOR
+            betValue = 1; // Black
+            numbers = []; // Simple bets have empty numbers array
+            setPendingBets(prev => [...prev, { betType, betValue, amount: newVal, numbers, id: Date.now() }]);
+          }
         }
         break;
       case "odd":
@@ -1301,6 +1090,13 @@ export default function GameRoulette() {
             dispatchEvents({ type: "update", payload: [...events, { type, oldVal, newVal: updatedOdd, ind }] });
           }
           setOdd(updatedOdd);
+          // Add to pending bets for odd
+          if (!revert && newVal > 0) {
+            betType = 2; // ODDEVEN
+            betValue = 1; // Odd
+            numbers = []; // Simple bets have empty numbers array
+            setPendingBets(prev => [...prev, { betType, betValue, amount: newVal, numbers, id: Date.now() }]);
+          }
         }
         break;
       case "even":
@@ -1311,6 +1107,13 @@ export default function GameRoulette() {
             dispatchEvents({ type: "update", payload: [...events, { type, oldVal, newVal: updatedEven, ind }] });
           }
           setEven(updatedEven);
+          // Add to pending bets for even
+          if (!revert && newVal > 0) {
+            betType = 2; // ODDEVEN
+            betValue = 0; // Even
+            numbers = []; // Simple bets have empty numbers array
+            setPendingBets(prev => [...prev, { betType, betValue, amount: newVal, numbers, id: Date.now() }]);
+          }
         }
         break;
       case "over":
@@ -1321,6 +1124,13 @@ export default function GameRoulette() {
             dispatchEvents({ type: "update", payload: [...events, { type, oldVal, newVal: updatedOver, ind }] });
           }
           setOver(updatedOver);
+          // Add to pending bets for over
+          if (!revert && newVal > 0) {
+            betType = 3; // HIGHLOW
+            betValue = 1; // High (19-36)
+            numbers = []; // Simple bets have empty numbers array
+            setPendingBets(prev => [...prev, { betType, betValue, amount: newVal, numbers, id: Date.now() }]);
+          }
         }
         break;
       case "under":
@@ -1331,6 +1141,13 @@ export default function GameRoulette() {
             dispatchEvents({ type: "update", payload: [...events, { type, oldVal, newVal: updatedUnder, ind }] });
           }
           setUnder(updatedUnder);
+          // Add to pending bets for under
+          if (!revert && newVal > 0) {
+            betType = 3; // HIGHLOW
+            betValue = 0; // Low (1-18)
+            numbers = []; // Simple bets have empty numbers array
+            setPendingBets(prev => [...prev, { betType, betValue, amount: newVal, numbers, id: Date.now() }]);
+          }
         }
         break;
       case "dozens":
@@ -1341,6 +1158,13 @@ export default function GameRoulette() {
             dispatchEvents({ type: "update", payload: [...events, { type, oldVal, newVal: updatedDozen, ind }] });
           }
           dispatchDozens({ type: "update", ind, val: updatedDozen });
+          // Add to pending bets for dozens
+          if (!revert && newVal > 0) {
+            betType = 4; // DOZEN
+            betValue = ind; // 0, 1, or 2 for first, second, third dozen
+            numbers = []; // Simple bets have empty numbers array
+            setPendingBets(prev => [...prev, { betType, betValue, amount: newVal, numbers, id: Date.now() }]);
+          }
         }
         break;
       case "columns":
@@ -1351,6 +1175,13 @@ export default function GameRoulette() {
             dispatchEvents({ type: "update", payload: [...events, { type, oldVal, newVal: updatedColumn, ind }] });
           }
           dispatchColumns({ type: "update", ind, val: updatedColumn });
+          // Add to pending bets for columns
+          if (!revert && newVal > 0) {
+            betType = 5; // COLUMN
+            betValue = ind; // 0, 1, or 2 for first, second, third column
+            numbers = []; // Simple bets have empty numbers array
+            setPendingBets(prev => [...prev, { betType, betValue, amount: newVal, numbers, id: Date.now() }]);
+          }
         }
         break;
       case "inside":
@@ -1361,11 +1192,47 @@ export default function GameRoulette() {
             dispatchEvents({ type: "update", payload: [...events, { type, oldVal, newVal: updatedInside, ind }] });
         }
           dispatchInside({ type: "update", ind, val: updatedInside });
+          // Add to pending bets for inside bets
+          if (!revert && newVal > 0) {
+            // Determine the type of inside bet based on the index
+            if (ind === 0) {
+              betType = 0; // NUMBER (straight up)
+              betValue = 0; // Number 0
+              numbers = []; // Empty array for NUMBER bet type
+            } else {
+              // For other numbers, determine bet type based on position
+              const number = Math.floor((ind - 1) / 4) + 1;
+              const position = (ind - 1) % 4;
+              
+              switch (position) {
+                case 0: // Straight up
+                  betType = 0; // NUMBER
+                  betValue = number;
+                  numbers = []; // Empty array for NUMBER bet type
+                  break;
+                case 1: // Split left
+                  betType = 6; // SPLIT
+                  betValue = 0;
+                  numbers = [number, number - 1];
+                  break;
+                case 2: // Split bottom
+                  betType = 6; // SPLIT
+                  betValue = 0;
+                  numbers = [number, number + 3];
+                  break;
+                case 3: // Corner
+                  betType = 8; // CORNER
+                  betValue = 0;
+                  numbers = [number, number + 1, number + 3, number + 4];
+                  break;
+              }
+            }
+            setPendingBets(prev => [...prev, { betType, betValue, amount: newVal, numbers, id: Date.now() }]);
+          }
       }
         break;
     }
   }, [bet, events, red, black, odd, even, over, under, dozens, columns, inside, playSound, chipPlaceRef]);
-
   // reset all the bets
   const reset = useCallback((e) => {
     if (e) e.preventDefault();
@@ -1382,6 +1249,7 @@ export default function GameRoulette() {
     dispatchEvents({ type: "reset" });
     setRollResult(-1);
     setWinnings(-1);
+    setPendingBets([]); // Clear pending bets
   }, [playSound, menuClickRef]);
 
   // updating the bet size
@@ -1396,9 +1264,54 @@ export default function GameRoulette() {
     setNotificationIndex(0);
   };
 
+  const treasury = TreasuryManager();
+
+  const approveTokens = async (amount) => {
+    try {
+      setNotification({ open: true, message: 'Checking allowance...', severity: 'info' });
+
+      // 1. Check current allowance
+      const currentAllowance = await ViemClient.publicPharosSepoliaClient.readContract({
+        address: tokenContractAddress,
+        abi: tokenABI,
+        functionName: 'allowance',
+        args: [address, rouletteContractAddress],
+      });
+
+      // 2. Compare with the required amount
+      if (currentAllowance < amount) {
+        // 3. If allowance is insufficient, request approval
+        setNotification({ open: true, message: 'Requesting approval to place bet...', severity: 'info' });
+        const hash = await writeContractAsync({
+          address: tokenContractAddress,
+          abi: tokenABI,
+          functionName: 'approve',
+          args: [rouletteContractAddress, amount],
+        });
+        await ViemClient.publicPharosSepoliaClient.waitForTransactionReceipt({ hash });
+        setNotification({ open: true, message: 'Approval successful!', severity: 'success' });
+      } else {
+        // 4. If allowance is sufficient, do nothing.
+        setNotification({ open: true, message: 'Allowance confirmed.', severity: 'info' });
+      }
+      return true;
+    } catch (error) {
+      console.error("Error in approveTokens function:", error);
+      setNotification({ open: true, message: `Approval failed: ${error.shortMessage || error.message}`, severity: 'error' });
+      return false;
+    }
+  };
+
+  // Modify the lockBet function to include approval
   const lockBet = async () => {
-    if (!address) {
+    if (!isConnected || !address) {
+      console.error('Wallet connection check failed:', { isConnected, address });
       alert("Please connect your wallet first");
+      return;
+    }
+
+    if (!correctNetwork) {
+      alert("Please switch to the correct network");
       return;
     }
 
@@ -1407,218 +1320,240 @@ export default function GameRoulette() {
       return;
     }
 
-    if (!correctNetwork) {
-      alert("Please switch to Mantle Sepolia network");
+    // Check if there are pending bets
+    if (pendingBets.length === 0) {
+      alert("No bets to place. Please add some bets first.");
       return;
     }
 
-    setSubmitDisabled(true);
-    setNotificationIndex(notificationSteps.PLACING_BET);
-    setShowNotification(true);
-    setWheelSpinning(true);
-
     try {
-      setError(null);
-      console.log('Placing bet with configuration:', {
-        address,
-        betType: currentBetType,
-        betAmount: total,
-        tokenAddress: tokenContractAddress,
-        rouletteAddress: rouletteContractAddress
+      console.log('Starting lockBet process...');
+      console.log('Total bet amount:', total);
+      console.log('User address:', address);
+      console.log('Roulette contract address:', rouletteContractAddress);
+      console.log('Pending bets:', pendingBets);
+      console.log('Wagmi hooks state:', {
+        writeContractAsync: typeof writeContractAsync,
+        wagmiWriteError,
+        wagmiIsPending
       });
-
-      // Convert the bets into the format expected by the contract
-      let betType, betValue, betAmount, numbers;
       
-      // Handle different bet types
-      if (red > 0) {
-        betType = BetType.COLOR;
-        betValue = 1; // Red
-        betAmount = red;
-        numbers = [];
-      } else if (black > 0) {
-        betType = BetType.COLOR;
-        betValue = 0; // Black
-        betAmount = black;
-        numbers = [];
-      } else if (odd > 0) {
-        betType = BetType.ODDEVEN;
-        betValue = 1; // Odd
-        betAmount = odd;
-        numbers = [];
-      } else if (even > 0) {
-        betType = BetType.ODDEVEN;
-        betValue = 0; // Even
-        betAmount = even;
-        numbers = [];
-      } else if (over > 0) {
-        betType = BetType.HIGHLOW;
-        betValue = 1; // High (19-36)
-        betAmount = over;
-        numbers = [];
-      } else if (under > 0) {
-        betType = BetType.HIGHLOW;
-        betValue = 0; // Low (1-18)
-        betAmount = under;
-        numbers = [];
-      } else if (dozens.some(d => d > 0)) {
-        betType = BetType.DOZEN;
-        betValue = dozens.findIndex(d => d > 0);
-        betAmount = dozens[betValue];
-        numbers = [];
-      } else if (columns.some(c => c > 0)) {
-        betType = BetType.COLUMN;
-        betValue = columns.findIndex(c => c > 0);
-        betAmount = columns[betValue];
-        numbers = [];
-      } else {
-        // Handle straight up bets
-        const straightUpIndex = inside.findIndex(val => val > 0);
-        if (straightUpIndex >= 0) {
-          betType = BetType.NUMBER;
-          betValue = Math.floor(straightUpIndex / 4); // Convert to actual number
-          betAmount = inside[straightUpIndex];
-          numbers = []; // Add the number to the numbers array
-        } else {
-          alert("Invalid bet configuration");
-          setSubmitDisabled(false);
-          setShowNotification(false);
+      // Check if wagmi hooks are properly loaded
+      if (!writeContractAsync) {
+        console.error('writeContractAsync is not available');
+        alert("Wallet connection not ready. Please refresh the page and try again.");
+        return;
+      }
+      
+      // Additional wallet connection checks
+      if (typeof window !== "undefined" && window.ethereum) {
+        try {
+          // Check if wallet is connected and chain ID is available
+          const accounts = await window.ethereum.request({ method: "eth_accounts" });
+          const chainId = await window.ethereum.request({ method: "eth_chainId" });
+          
+          console.log('Wallet connection details:', {
+            accounts,
+            chainId,
+            isConnected: accounts.length > 0
+          });
+          
+          if (accounts.length === 0) {
+            throw new Error('No accounts found');
+          }
+          
+          if (!chainId) {
+            throw new Error('Chain ID not available');
+          }
+          
+        } catch (walletError) {
+          console.error('Wallet connection check failed:', walletError);
+          alert("Wallet connection issue. Please reconnect your wallet and try again.");
           return;
         }
       }
+      
+      // Check token balance before proceeding
+      console.log('Checking token balance...');
+      console.log('Total bet amount:', total);
+      console.log('User address:', address);
+      
+      // Note: We'll rely on the contract to handle insufficient balance errors
+      // The contract will revert if the user doesn't have enough tokens
+      
+      // First, prepare the bet amounts in the correct format (wei)
+      const amountsInWei = pendingBets.map(bet => parseEther(bet.amount.toString()));
+      const totalAmountInWei = amountsInWei.reduce((acc, curr) => acc + curr, BigInt(0));
 
-      const amount = parseEther(betAmount.toString());
-
-      console.log("Preparing transaction with:", {
-        betType,
-        betValue,
-        amount: amount.toString(),
-        numbers,
-        tokenAddress: tokenContractAddress,
-        rouletteAddress: rouletteContractAddress,
-        playerAddress: address
-      });
-
-      try {
-        // First check current allowance
-        const currentAllowance = await publicClient.readContract({
-          address: tokenContractAddress,
-          abi: tokenABI,
-          functionName: "allowance",
-          args: [address, rouletteContractAddress],
-        });
-
-        console.log("Current allowance:", currentAllowance.toString());
-
-        // If allowance is insufficient, request approval
-        if (BigInt(currentAllowance) < amount) {
-          console.log("Requesting token approval...");
-          const { request } = await publicClient.simulateContract({
-            address: tokenContractAddress,
-            abi: tokenABI,
-            functionName: "approve",
-            args: [rouletteContractAddress, amount],
-            account: address,
-          });
-
-          const approvalHash = await walletClient.writeContract(request);
-          
-          if (!approvalHash) {
-            throw new Error("Approval transaction failed - no hash returned");
-          }
-
-          console.log("Token approval submitted, hash:", approvalHash);
-          setWriteContractResult({ hash: approvalHash });
-          setNotificationIndex(notificationSteps.BET_PLACED);
-
-          // Wait for approval confirmation
-          console.log("Waiting for approval confirmation...");
-          const approvalReceipt = await publicClient.waitForTransactionReceipt({
-            hash: approvalHash,
-          });
-
-          if (!approvalReceipt) {
-            throw new Error("Approval transaction receipt not received");
-          }
-
-          console.log("Approval confirmed:", approvalReceipt);
-        }
-
-        // Then place the bet
-        console.log("Placing bet...");
-        const { request: betRequest } = await publicClient.simulateContract({
-          address: rouletteContractAddress,
-          abi: rouletteABI,
-          functionName: "placeBet",
-          args: [betType, betValue, amount, numbers],
-          account: address,
-        });
-
-        const betHash = await walletClient.writeContract(betRequest);
-
-        if (!betHash) {
-          throw new Error("Bet transaction failed - no hash returned");
-        }
-
-        console.log("Bet placed, hash:", betHash);
-        setWriteContractResult({ hash: betHash });
-        
-        // Wait for bet confirmation
-        console.log("Waiting for bet confirmation...");
-        const betReceipt = await publicClient.waitForTransactionReceipt({
-          hash: betHash,
-        });
-
-        if (!betReceipt) {
-          throw new Error("Bet transaction receipt not received");
-        }
-
-        console.log("Bet confirmed:", betReceipt);
-
-        // Reset roll result for the new bet
-        setRollResult(-1);
-
-        // Add a delay before allowing the next bet
-        setSubmitDisabled(true);
-        setTimeout(() => {
-          setSubmitDisabled(false);
-        }, 5000); // 5 second delay
-
-      } catch (error) {
-        console.error("Transaction failed:", error);
-        const errorMessage = error.message || error.toString();
-        console.error("Error details:", errorMessage);
-        
-        if (errorMessage.includes("Wallet client not initialized")) {
-          alert("Please ensure your wallet is connected and try again.");
-        } else if (errorMessage.includes("Below minimum bet")) {
-          alert("Bet amount is below the minimum requirement of 1 APTC");
-        } else if (errorMessage.includes("Bet exceeds wallet balance")) {
-          alert("Insufficient balance for this bet");
-        } else if (errorMessage.includes("Must wait 3 seconds between bets")) {
-          alert("Please wait 3 seconds between bets");
-        } else if (errorMessage.includes("Must wait at least 1 block between bets")) {
-          alert("Please wait a moment before placing another bet");
-        } else if (errorMessage.includes("Insufficient allowance")) {
-          alert("Please approve the token spending first");
-        } else if (errorMessage.includes("HTTP request failed")) {
-          alert("Network error. Please wait a moment and try again.");
-        } else {
-          alert(`Transaction failed: ${errorMessage}`);
-        }
-        
-        setError(errorMessage);
-        setShowNotification(false);
-        setWheelSpinning(false);
+      // Now, approve the total amount
+      console.log('Approving tokens for total amount:', totalAmountInWei.toString());
+      const approvalSuccessful = await approveTokens(totalAmountInWei);
+      if (!approvalSuccessful) {
+        console.error('Token approval failed. Aborting bet placement.');
+        setNotification({ open: true, message: 'Token approval failed. Please try again.', severity: 'error' });
+        return;
       }
+      console.log('Token approval successful');
+      
+      // Prepare the rest of the bet parameters
+      const betTypes = pendingBets.map(bet => bet.betType);
+      const betValues = pendingBets.map(bet => bet.betValue);
+      const amountsAsStrings = amountsInWei.map(a => a.toString()); // For contract call
+      const betNumbers = pendingBets.map(bet => bet.numbers || []);
+      
+      console.log('=== MANUAL BET PARAMETERS ===');
+      console.log('Bet parameters:', {
+        betTypes,
+        betValues,
+        amounts: amountsAsStrings,
+        betNumbers
+      });
+      
+      // Compare with test transaction parameters
+      console.log('=== COMPARISON WITH TEST TRANSACTION ===');
+      const testParams = {
+        betTypes: [1], // COLOR
+        betValues: [0], // Red
+        amounts: [parseEther("1").toString()], // 1 token
+        betNumbers: [[]] // empty array
+      };
+      console.log('Test transaction parameters:', testParams);
+      console.log('Manual bet parameters:', {
+        betTypes,
+        betValues,
+        amounts: amountsAsStrings,
+        betNumbers
+      });
+      
+      // Check if there are any invalid bet types or values
+      console.log('=== VALIDATION CHECKS ===');
+      const validBetTypes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; // NUMBER, COLOR, ODDEVEN, HIGHLOW, DOZEN, COLUMN, SPLIT, STREET, CORNER, LINE
+      const invalidBetTypes = betTypes.filter(type => !validBetTypes.includes(type));
+      console.log('Invalid bet types:', invalidBetTypes);
+      
+      // Check for zero amounts
+      const hasZeroAmounts = amountsAsStrings.some(amount => amount === parseEther("0").toString());
+      console.log('Has zero amounts:', hasZeroAmounts);
+      
+      // Check for empty bet arrays
+      const emptyBetArrays = betNumbers.filter(numbers => !numbers || numbers.length === 0);
+      console.log('Empty bet arrays:', emptyBetArrays);
+      
+      console.log('=== END COMPARISON ===');
+      
+      // Check if writeContractAsync is available
+      if (typeof writeContractAsync !== 'function') {
+        throw new Error('writeContractAsync is not available. Please check wallet connection.');
+      }
+      
+      // Place multiple bets using placeMultipleBets function
+      console.log('Calling writeContractAsync...');
+      
+      // Log the exact parameters being sent
+      const contractConfig = {
+        address: rouletteContractAddress,
+        abi: rouletteABI,
+        functionName: 'placeMultipleBets',
+        args: [betTypes, betValues, amountsAsStrings, betNumbers],
+      };
+      
+      console.log('Contract config:', JSON.stringify(contractConfig, (key, value) =>
+        typeof value === 'bigint' ? value.toString() : value, 2)
+      );
+      console.log('Contract address:', rouletteContractAddress);
+      console.log('ABI function exists:', rouletteABI.find(f => f.name === 'placeMultipleBets'));
+      
+      const hash = await writeContractAsync(contractConfig);
+      
+      console.log('Bet transaction hash:', hash);
+      console.log('Bet transaction submitted successfully');
+      
+      // Wait for transaction confirmation and check for failures
+      console.log('Waiting for transaction confirmation...');
+      try {
+        // Use ViemClient directly to wait for transaction
+        const receipt = await ViemClient.publicPharosSepoliaClient.waitForTransactionReceipt({ hash });
+        console.log('Transaction receipt:', receipt);
+        
+        if (receipt.status === 'success') {
+          console.log('Transaction confirmed successfully');
+          // Clear pending bets after successful placement
+          setPendingBets([]);
+          console.log("Bets placed successfully:", hash);
+          setWheelSpinning(true);
+          playSound(spinSoundRef);
+        } else {
+          throw new Error('Transaction failed on-chain');
+        }
+      } catch (receiptError) {
+        console.error('Transaction confirmation failed:', receiptError);
+        
+        // Check transaction status for more details
+        const txStatus = await checkTransactionStatus(hash);
+        console.log('Transaction status:', txStatus);
+        
+        // Provide more specific error information
+        let errorMessage = 'Transaction failed';
+        if (receiptError.message.includes('execution reverted')) {
+          errorMessage = 'Transaction reverted on-chain. This could be due to insufficient token balance, invalid bet parameters, or contract state issues.';
+        } else if (receiptError.message.includes('out of gas')) {
+          errorMessage = 'Transaction ran out of gas. Please try again with higher gas limit.';
+        } else if (receiptError.message.includes('nonce')) {
+          errorMessage = 'Transaction nonce issue. Please try again.';
+        } else if (receiptError.message.includes('not found')) {
+          errorMessage = 'Transaction not found. It may have been dropped or failed to be included in a block.';
+        } else {
+          errorMessage = `Transaction failed: ${receiptError.message}`;
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
     } catch (error) {
-      console.error("Error in lockBet:", error);
-      setError(error.message || error.toString());
-      setShowNotification(false);
-      setWheelSpinning(false);
-      alert(`Error: ${error.message || error.toString()}`);
-    } finally {
-      setSubmitDisabled(false);
+      console.error("Error locking bet:", error);
+      setNotification({ open: true, message: `Error placing bet: ${error.shortMessage || error.message}`, severity: 'error' });
+      
+      // Clear pending bets on failure to prevent accumulation
+      setPendingBets([]);
+
+      // Additional logging for debugging
+      console.error("Error details:", error);
+      if (error.cause) {
+        console.error("Cause:", error.cause);
+      }
+      
+      // Log additional debugging info
+      console.error("Debug info:", {
+        pendingBets,
+        total,
+        address,
+        rouletteContractAddress,
+        correctNetwork,
+        isConnected,
+        betTypes: pendingBets.map(bet => bet.betType),
+        betValues: pendingBets.map(bet => bet.betValue),
+        amounts: pendingBets.map(bet => parseEther(bet.amount.toString()).toString()),
+        betNumbers: pendingBets.map(bet => bet.numbers || [])
+      });
+      
+      // Provide more specific error messages
+      if (error.message.includes('getChainId')) {
+        alert("Wallet connection issue. Please refresh the page and reconnect your wallet.");
+      } else if (error.message.includes('user rejected')) {
+        alert("Transaction was rejected by user.");
+      } else if (error.message.includes('insufficient funds')) {
+        alert("Insufficient funds for transaction.");
+      } else if (error.message.includes('execution reverted')) {
+        alert("Transaction reverted. This could be due to insufficient token balance, invalid bet parameters, or contract state issues.");
+      } else if (error.message.includes('nonce')) {
+        alert("Transaction nonce issue. Please try again.");
+      } else if (error.message.includes('gas')) {
+        alert("Gas estimation failed. This could be due to invalid contract parameters or network issues.");
+      } else if (error.message.includes('network')) {
+        alert("Network error. Please check your connection and try again.");
+      } else {
+        alert(`Failed to lock bet: ${error.message}`);
+      }
     }
   };
 
@@ -1637,28 +1572,16 @@ export default function GameRoulette() {
 
       reset(e); // Reset the state after withdrawing
 
-      // Simulate the contract interaction
-      const withdrawSimulation =
-        await ViemClient.publicPharosSepoliaClient.simulateContract({
-          address: rouletteContractAddress,
-          abi: rouletteABI,
-          functionName: "withdrawTokens",
-          args: [amount],
-          account: address,
-        });
-
-      // Execute the contract transaction
-      const withdrawResponse = await ViemClient.getWalletClient().writeContract(
-        withdrawSimulation.request
-      );
+      // Use wagmi writeContractAsync instead of ViemClient
+      const withdrawResponse = await writeContractAsync({
+        address: rouletteContractAddress,
+        abi: rouletteABI,
+        functionName: "withdrawTokens",
+        args: [amount.toString()], // Convert BigInt to string
+      });
 
       if (withdrawResponse) {
-        // Extract hash from response if it's an object
-        const responseHash = typeof withdrawResponse === 'object' ? 
-          (withdrawResponse.hash || String(withdrawResponse)) : 
-          withdrawResponse;
-          
-        console.log("Winnings withdrawn successfully:", responseHash);
+        console.log("Winnings withdrawn successfully:", withdrawResponse);
         alert("Winnings withdrawn successfully!");
       } else {
         throw new Error("Withdrawal transaction failed.");
@@ -1667,22 +1590,50 @@ export default function GameRoulette() {
       console.error("Error withdrawing winnings:", error);
       alert(`Failed to withdraw winnings: ${error.message}`);
     }
-  }, [playSound, winnings, reset]);
+  }, [playSound, winnings, reset, writeContractAsync]);
 
-  const config = useConfig(); // this retrieves your wagmi config instance
+  const writeContract = async (config) => {
+    if (isDev) {
+      // Simulate contract write in dev mode
+      // Note: wagmiIsPending is handled by the hook automatically
+      
+      // Simulate a delay for the transaction
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const mockTxHash = '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+          resolve({ hash: mockTxHash });
+        }, 2000);
+      });
+    }
+    
+    try {
+      const result = await writeContractAsync(config);
+      return result;
+    } catch (error) {
+      console.error("Contract write error:", error);
+      throw error;
+    }
+  };
 
-  const contractAddress = '0xbD8Ca722093d811bF314dDAB8438711a4caB2e73'; // ✅ FIX THIS
-
-  // Remove the custom writeContract function and use the imported one directly
   const waitForTransaction = async (hash) => {
+    if (isDev) {
+      // Simulate transaction confirmation in dev mode
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const mockReceipt = {
+            blockNumber: 12345678,
+            status: 'success',
+            transactionHash: hash
+          };
+          resolve(mockReceipt);
+        }, 3000);
+      });
+    }
+    
     try {
       // Ensure hash is a string, not an object
       const hashStr = typeof hash === 'object' && hash.hash ? hash.hash : hash;
-      const receipt = await waitForTransactionReceipt({ 
-        hash: hashStr,
-        chainId: 0x138b
-      });
-      setTransactionReceipt(receipt);
+      const receipt = await ViemClient.publicPharosSepoliaClient.waitForTransactionReceipt({ hash: hashStr });
       return receipt;
     } catch (error) {
       console.error("Wait for transaction error:", error);
@@ -1690,217 +1641,85 @@ export default function GameRoulette() {
     }
   };
 
-  // Update the checkNetwork function to focus on correct wallet detection
   const checkNetwork = async () => {
-    // Ensure we're running in the browser
-    if (typeof window === "undefined") return;
-    
-    console.log("Checking network...");
-    
-    try {
-      // First check if user is connected via wagmi
-      if (isConnected && address) {
-        console.log("Wallet connected via wagmi:", address);
-        setCorrectNetwork(true);
-        return;
+    if (typeof window !== "undefined" && window.ethereum) {
+      try {
+        const chainId = await window.ethereum.request({ method: "eth_chainId" });
+        // Support Mantle Sepolia (0x138b) and Local Hardhat (0x7a69)
+        // Comment out Pharos Devnet (0xc352) - using Mantle Sepolia instead
+        setCorrectNetwork(chainId === "0x138b" || chainId === "0x7a69");
+      } catch (error) {
+        console.error("Error checking network:", error);
+        setCorrectNetwork(false);
       }
-      
-      // Fall back to window.ethereum check with retry
-      const checkWithRetry = async (attempts = 3) => {
-        if (window.ethereum && typeof window.ethereum.request === 'function') {
-          console.log("Ethereum provider found, requesting chain ID...");
-          try {
-            const chainId = await window.ethereum.request({ method: "eth_chainId" });
-            console.log("Current chain ID:", chainId);
-            
-            // Support both Mantle Sepolia (0x138b) and Pharos Devnet (0xc352)
-            const isCorrectNetwork = chainId === "0x138b" || chainId === "0xc352";
-            console.log("Is correct network:", isCorrectNetwork);
-            setCorrectNetwork(isCorrectNetwork);
-          } catch (error) {
-            console.error("Error checking chain ID:", error);
-            if (attempts > 1) {
-              console.log(`Retrying... (${attempts-1} attempts left)`);
-              setTimeout(() => checkWithRetry(attempts - 1), 500);
-            } else {
-              setCorrectNetwork(false);
-            }
-          }
-        } else {
-          console.log("Ethereum provider not available or not fully initialized");
-          if (attempts > 1) {
-            console.log(`Retrying... (${attempts-1} attempts left)`);
-            setTimeout(() => checkWithRetry(attempts - 1), 500);
-          } else {
-            setCorrectNetwork(false);
-          }
-        }
-      };
-      
-      // Start the retry process
-      checkWithRetry();
-    } catch (error) {
-      console.error("Error in checkNetwork:", error);
-      setCorrectNetwork(false);
     }
   };
   
   useEffect(() => {
-    // Only check when component mounts or when wallet connection changes
-    if (typeof window !== "undefined") {
-      console.log("Wallet connection state changed, checking network...");
-      console.log("isConnected:", isConnected, "address:", address);
-      
-      checkNetwork();
-      
-      // Setup event listener if provider exists
-      const setupListeners = () => {
-        if (window.ethereum && typeof window.ethereum.on === 'function') {
-          window.ethereum.on("chainChanged", () => {
-            console.log("Chain changed, rechecking network");
-            checkNetwork();
-          });
-          window.ethereum.on("accountsChanged", () => {
-            console.log("Accounts changed, rechecking network");
-            checkNetwork();
-          });
-          
-          return () => {
-            if (window.ethereum && typeof window.ethereum.removeListener === 'function') {
-              window.ethereum.removeListener("chainChanged", checkNetwork);
-              window.ethereum.removeListener("accountsChanged", checkNetwork);
-            }
-          };
-        }
+    checkNetwork();
+    
+    if (window.ethereum) {
+      window.ethereum.on("chainChanged", checkNetwork);
+      return () => {
+        window.ethereum.removeListener("chainChanged", checkNetwork);
       };
-      
-      return setupListeners();
     }
-  }, [isConnected, address]); // Add dependencies to run when wallet connection changes
+  }, []);
 
   const switchNetwork = async () => {
-    // Ensure we're running in the browser
-    if (typeof window === "undefined") return;
-    
-    try {
-      // Check if wallet is connected first
-      if (!isConnected) {
-        console.log("Wallet not connected, please connect wallet first");
-        alert("Please connect your wallet first using the connect button in the top right corner");
-        return;
-      }
-      
-      // Check if ethereum provider exists
-      if (!window.ethereum || typeof window.ethereum.request !== 'function') {
-        alert("No Ethereum wallet detected. Please install a wallet like MetaMask.");
-        return;
-      }
-      
-      console.log("Attempting to switch to Mantle Sepolia network");
-      
+    if (typeof window !== "undefined") {
       try {
-        // Try Mantle Sepolia first
+        // Try switching to Local Hardhat first
         await window.ethereum.request({
           method: "wallet_switchEthereumChain",
-          params: [{ chainId: "0x138b" }],
+          params: [{ chainId: "0x7a69" }],
         });
-        
-        console.log("Successfully switched to Mantle Sepolia");
-        // Set network to correct and reload after short delay
-        setCorrectNetwork(true);
-        setTimeout(() => window.location.reload(), 1000);
-        return;
       } catch (switchError) {
-        console.log("Switch network error:", switchError);
-        
-        // If network doesn't exist in wallet (error code 4902), try adding it
+        // If Local Hardhat is not added, add it
         if (switchError.code === 4902) {
           try {
-            console.log("Adding Mantle Sepolia to wallet");
             await window.ethereum.request({
               method: "wallet_addEthereumChain",
               params: [
                 {
-                  chainId: "0x138b",
-                  chainName: "Mantle Sepolia",
+                  chainId: "0x7a69",
+                  chainName: "Local Hardhat",
                   nativeCurrency: {
-                    name: "Mantle",
-                    symbol: "MNT",
+                    name: "Ethereum",
+                    symbol: "ETH",
                     decimals: 18,
                   },
-                  rpcUrls: ["https://rpc.sepolia.mantle.xyz"],
-                  blockExplorerUrls: ["https://sepolia.mantlescan.xyz"],
+                  rpcUrls: ["http://127.0.0.1:8545"],
+                  blockExplorerUrls: ["http://localhost:8545"],
                 },
               ],
             });
-            
-            // Try switching again after adding
+          } catch (addError) {
+            console.error("Failed to add Local Hardhat:", addError);
+            // If Local Hardhat fails, try Mantle Sepolia
             try {
               await window.ethereum.request({
                 method: "wallet_switchEthereumChain",
                 params: [{ chainId: "0x138b" }],
               });
-              
-              console.log("Successfully switched to Mantle Sepolia after adding");
-              // Set network to correct and reload after short delay
-              setCorrectNetwork(true);
-              setTimeout(() => window.location.reload(), 1000);
-              return;
-            } catch (error) {
-              console.error("Error switching to Mantle after adding:", error);
-            }
-          } catch (addError) {
-            console.error("Failed to add Mantle Sepolia:", addError);
-            
-            // If Mantle Sepolia fails, try Pharos Devnet as fallback
-            try {
-              console.log("Adding Pharos Devnet to wallet");
-              await window.ethereum.request({
-                method: "wallet_addEthereumChain",
-                params: [
-                  {
-                    chainId: "0xc352",
-                    chainName: "Pharos Devnet",
-                    nativeCurrency: {
-                      name: "Pharos",
-                      symbol: "PHR",
-                      decimals: 18,
-                    },
-                    rpcUrls: ["https://devnet.dplabs-internal.com"],
-                    blockExplorerUrls: ["https://pharosscan.xyz"],
-                  },
-                ],
-              });
-              
-              // Try switching to Pharos
-              try {
-                await window.ethereum.request({
-                  method: "wallet_switchEthereumChain",
-                  params: [{ chainId: "0xc352" }],
-                });
-                
-                console.log("Successfully switched to Pharos Devnet");
-                // Set network to correct and reload after short delay
-                setCorrectNetwork(true);
-                setTimeout(() => window.location.reload(), 1000);
-                return;
-              } catch (error) {
-                console.error("Error switching to Pharos after adding:", error);
-              }
-            } catch (pharosError) {
-              console.error("Failed to add Pharos Devnet:", pharosError);
-              alert("Unable to switch to required networks. Please try adding Mantle Sepolia manually.");
+            } catch (mantleError) {
+              // Comment out Pharos Devnet fallback - using Mantle Sepolia instead
+              // try {
+              //   await window.ethereum.request({
+              //     method: "wallet_switchEthereumChain",
+              //     params: [{ chainId: "0xc352" }],
+              //   });
+              // } catch (pharosError) {
+              //   console.error("Failed to switch to any network:", pharosError);
+              // }
+              console.error("Failed to switch to Mantle Sepolia:", mantleError);
             }
           }
         } else {
-          // Handle other errors
           console.error("Failed to switch network:", switchError);
-          alert("Failed to switch network. Please try again or add Mantle Sepolia manually.");
         }
       }
-    } catch (error) {
-      console.error("Error in switchNetwork:", error);
-      alert("An error occurred while switching networks. Please refresh and try again.");
+      window.location.reload();
     }
   };
 
@@ -1935,33 +1754,80 @@ export default function GameRoulette() {
     dispatchEvents({ type: "reset" });
   }, [playSound, menuClickRef]);
 
+  //  Wrap treasury operations in useEffect
+  // useEffect(() => {
+  //   const handleTreasuryOperations = async () => {
+  //     try {
+  //       await treasury.sendTokensToUser(address, total);
+  //     } catch (error) {
+  //       console.error("Failed to send tokens:", error.message);
+  //     }
+
+  //     try {
+  //       await treasury.handleGameResult(address, total, rollResult, winnings > 0);
+  //     } catch (error) {
+  //       console.error("Failed to handle game result:", error.message);
+  //     }
+  //   };
+
+  //   if (address && total > 0) {
+  //     handleTreasuryOperations();
+  //   }
+  // }, [address, total, rollResult, winnings]);
+
+  const { data: playerBalance, isError, isLoading: isBalanceLoading } = useReadContract({
+    address: tokenContractAddress,
+    abi: tokenABI,
+    functionName: 'balanceOf',
+    args: [address],
+    enabled: Boolean(address),
+    watch: true,
+    onSuccess: (data) => console.log('Balance data:', data),
+    onError: (error) => console.error('Balance error:', error)
+  });
+
+  // Test contract connection
+  const testContractConnection = async () => {
+    try {
+      console.log('Testing contract connection...');
+      
+      const contract = getContract({
+        address: rouletteContractAddress,
+        abi: rouletteABI,
+        client: ViemClient.publicPharosSepoliaClient,
+      });
+      
+      // Try to call a simple view function
+      const currentRound = await contract.read.currentRound();
+      console.log('Contract connection successful. Current round:', currentRound.toString());
+      alert('Contract connection successful!');
+      
+    } catch (error) {
+      console.error('Contract connection failed:', error);
+      alert(`Contract connection failed: ${error.message}`);
+    }
+  };
+
   return (
     <ThemeProvider theme={theme}>
-      <div ref={contentRef} className="font-sans" style={{ backgroundColor: "#080005", minHeight: "100vh", overflowX: 'hidden', paddingTop: "30px" }}>
+      <div className="font-sans" style={{ backgroundColor: "#080005", minHeight: "100vh", overflowX: 'hidden' }}>
         {/* Audio elements */}
         <audio ref={spinSoundRef} src="/sounds/ball-spin.mp3" preload="auto" />
         <audio ref={winSoundRef} src="/sounds/win-chips.mp3" preload="auto" />
-        <audio ref={chipSelectRef} src="/sounds/chip-select.mp3" preload="auto" />
+     //   <audio ref={chipSelectRef} src="/sounds/chip-select.mp3" preload="auto" />
         <audio ref={chipPlaceRef} src="/sounds/chip-put.mp3" preload="auto" />
         <audio ref={menuClickRef} src="/sounds/menu.mp3" preload="auto" />
         <audio ref={backgroundMusicRef} src="/sounds/background-music.mp3" preload="auto" loop />
         <audio ref={ambientSoundsRef} src="/sounds/ambient-sounds.mp3" preload="auto" loop />
 
-        {/* Page Header */}
-        <RouletteHeader />
-        
         <Box
           sx={{
             display: "flex",
             flexDirection: "column",
             alignItems: "stretch",
-            pt: { xs: 0, md: 1 },
-            position: "relative",
-            zIndex: 1,
+            pt: { xs: 12, md: 14 },
           }}
         >
-
-
           {/* Recent Results Bar */}
           <Box 
             sx={{ 
@@ -1969,28 +1835,22 @@ export default function GameRoulette() {
               alignItems: 'center', 
               justifyContent: 'center', 
               overflowX: 'auto',
-              py: 0.75,
-              mt: 1,
-              mb: 2,
-              backgroundColor: 'rgba(0,0,0,0.3)',
-              border: '1px solid rgba(255,255,255,0.05)',
-              borderRadius: '8px',
-              gap: 1,
-              maxWidth: '90%',
-              mx: 'auto'
+              py: 1,
+              backgroundColor: 'rgba(0,0,0,0.2)',
+              borderBottom: '1px solid rgba(255,255,255,0.05)',
+              gap: 1
             }}
           >
             <Typography 
               variant="body2" 
               sx={{ 
-                mr: 1.5, 
+                mr: 2, 
                 whiteSpace: 'nowrap',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                minHeight: '20px',
+                minHeight: '24px',
                 color: 'white',
-                fontWeight: 'bold'
               }}
             >
               Recent Results:
@@ -2003,8 +1863,8 @@ export default function GameRoulette() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  minHeight: '20px',
-                  opacity: 0.8
+                  minHeight: '24px',
+                  opacity: 0.7
                 }}
               >
                 No results yet
@@ -2020,10 +1880,9 @@ export default function GameRoulette() {
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'center',
-                    fontSize: '0.7rem',
+                    fontSize: '0.75rem',
                     backgroundColor: num === 0 ? 'game.green' : 
-                      [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36].includes(num) ? 'game.red' : 'dark.bg',
-                    border: '1px solid rgba(255,255,255,0.2)'
+                      [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36].includes(num) ? 'game.red' : 'dark.bg'
                   }}
                 >
                   {num}
@@ -2031,11 +1890,49 @@ export default function GameRoulette() {
               ))
             )}
           </Box>
-          
+
+          {/* Play Button */}
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              mt: 2,
+              mb: 2
+            }}
+          >
+            <Button
+              onClick={lockBet}
+              disabled={submitDisabled || total <= 0}
+              sx={{
+                backgroundColor: 'game.green',
+                color: 'white',
+                fontSize: '1.2rem',
+                fontWeight: 'bold',
+                padding: '12px 48px',
+                borderRadius: '25px',
+                '&:hover': {
+                  backgroundColor: 'game.green',
+                  opacity: 0.9
+                },
+                '&:disabled': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  color: 'rgba(255, 255, 255, 0.5)'
+                }
+              }}
+            >
+              {submitDisabled ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                'PLAY'
+              )}
+            </Button>
+          </Box>
+
           {/* Responsive Grid Layout */}
           <Grid 
             container 
-            sx={{ mt: { xs: 1.5, md: 4 }, mx: { xs: 1, sm: 5, md: 10 } }}
+            sx={{ mt: { xs: 2, md: 10 }, mx: { xs: 1, sm: 5, md: 10 } }}
             columns={isSmallScreen ? 7 : 14}
           >
             <Grid md={1}>
@@ -2262,8 +2159,6 @@ export default function GameRoulette() {
             />
           </Grid>
 
-
-
           <Box
             sx={{
               mt: 2,
@@ -2377,27 +2272,25 @@ export default function GameRoulette() {
               }}
             >
               <Box sx={{ display: 'flex', gap: 2 }}>
-                <Tooltip title={<Typography>Undo last bet</Typography>}>
-                  <span>
-                    <IconButton
-                      disabled={events.length === 0 || submitDisabled}
-                      onClick={revertEvent}
-                    >
-                      <UndoIcon />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-                <Tooltip title={<Typography>Clear bet</Typography>}>
-                  <span>
-                    <IconButton
-                      disabled={submitDisabled}
-                      onClick={clearBet}
-                    >
-                      <ClearIcon />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-              </Box>
+              <Tooltip title={<Typography>Undo last bet</Typography>}>
+                <span>
+                  <IconButton
+                    disabled={events.length === 0 || submitDisabled}
+                    onClick={revertEvent}
+                  >
+                    <UndoIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
+              <Tooltip title={<Typography>Clear bet</Typography>}>
+                <IconButton
+                  disabled={submitDisabled}
+                    onClick={clearBet}
+                >
+                  <ClearIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
               
               <Box sx={{ mt: 3 }}>
               {rollResult >= 0 ? (
@@ -2437,36 +2330,24 @@ export default function GameRoulette() {
                       )}
                   </Box>
                 </Box>
-              ) : isConnected && correctNetwork ? (
+              ) : correctNetwork ? (
                 <Box sx={{ display: "flex", flexDirection: "column" }}>
                   <Button
                     disabled={total === 0}
                     loading={submitDisabled}
-                    onClick={lockBet}
+                      onClick={lockBet}
                   >
                     Submit Bet
                   </Button>
                   {submitDisabled && rollResult < 0 && (
-                    <Typography color="white" sx={{ opacity: 0.8 }}>
+                      <Typography color="white" sx={{ opacity: 0.8 }}>
                       Die being rolled, please wait...
                     </Typography>
                   )}
                 </Box>
-              ) : !isConnected ? (
-                <Box sx={{ display: "flex", flexDirection: "column" }}>
-                  <Button onClick={() => document.getElementById('wallet-connect-button')?.click()}>
-                    Connect Wallet
-                  </Button>
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, textAlign: 'center' }}>
-                    Connect your wallet to place bets
-                  </Typography>
-                </Box>
               ) : (
                 <Box sx={{ display: "flex", flexDirection: "column" }}>
-                  <Button onClick={() => switchNetwork()}>Switch Network</Button>
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, textAlign: 'center' }}>
-                    Switch to Mantle Sepolia network
-                  </Typography>
+                    <Button onClick={() => switchNetwork()}>Switch Network</Button>
                 </Box>
               )}
             </Box>
@@ -2550,237 +2431,10 @@ export default function GameRoulette() {
             </Box>
           )}
           
-          {/* New enhanced sections */}
-          <Box sx={{ 
-            mt: 8, 
-            px: { xs: 2, md: 8 },
-            mx: 'auto',
-            maxWidth: '1600px'
-          }}>
-            {/* Section Header */}
-            <Typography 
-              variant="h4" 
-              sx={{ 
-                mb: 5, 
-                textAlign: 'center', 
-                fontWeight: 'bold',
-                background: 'linear-gradient(90deg, #d82633, #681DDB)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                letterSpacing: '1px',
-                textShadow: '0 4px 8px rgba(0,0,0,0.5)'
-              }}
-            >
-              Master European Roulette
-            </Typography>
-
-            {/* Video and Description Section */}
-            <Grid container spacing={4} sx={{ mb: 7 }}>
-              {/* Video on left */}
-              <Grid xs={12} md={6}>
-                <Box
-                  sx={{
-                    position: 'relative',
-                    width: '100%',
-                    paddingTop: { xs: '56.25%', md: '56.25%' },
-                    borderRadius: '16px',
-                    overflow: 'hidden',
-                    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
-                    border: '2px solid rgba(104, 29, 219, 0.4)',
-                    transition: 'all 0.3s ease-in-out',
-                    '&:hover': {
-                      transform: 'scale(1.02)',
-                      boxShadow: '0 25px 50px rgba(0, 0, 0, 0.7)',
-                      border: '2px solid rgba(216, 38, 51, 0.5)',
-                    },
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: '-3px',
-                      left: '-3px',
-                      right: '-3px',
-                      bottom: '-3px',
-                      borderRadius: '20px',
-                      background: 'linear-gradient(45deg, #d82633, #681DDB, #14D854, #d82633)',
-                      backgroundSize: '400% 400%',
-                      zIndex: -1,
-                      filter: 'blur(10px)',
-                      opacity: 0.7,
-                      animation: 'gradient 15s ease infinite',
-                      '@keyframes gradient': {
-                        '0%': { backgroundPosition: '0% 50%' },
-                        '50%': { backgroundPosition: '100% 50%' },
-                        '100%': { backgroundPosition: '0% 50%' }
-                      }
-                    }
-                  }}
-                >
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      py: 1.5,
-                      background: 'linear-gradient(to bottom, rgba(9, 0, 5, 0.8), rgba(9, 0, 5, 0))',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      zIndex: 2
-                    }}
-                  >
-                  </Box>
-                  <iframe
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '100%',
-                      border: 'none',
-                      zIndex: 1
-                    }}
-                    src={gameData.youtube}
-                    title="Roulette Masterclass Tutorial"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </Box>
-              </Grid>
-              
-              {/* Description on right */}
-              <Grid xs={12} md={6}>
-                                 <Box
-                   sx={{
-                     background: 'linear-gradient(135deg, rgba(9, 0, 5, 0.6) 0%, rgba(9, 0, 5, 0.3) 100%)',
-                     backdropFilter: 'blur(10px)',
-                     borderRadius: '16px',
-                     p: { xs: 2.5, md: 3 },
-                     minHeight: '280px',
-                     display: 'flex',
-                     flexDirection: 'column',
-                     justifyContent: 'center',
-                    border: '1px solid rgba(104, 29, 219, 0.2)',
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '5px',
-                      height: '100%',
-                      background: 'linear-gradient(to bottom, #d82633, #681DDB)',
-                    }
-                  }}
-                >
-                                     <Typography 
-                     variant="h6" 
-                     sx={{ 
-                       mb: 2,
-                       fontWeight: 'bold',
-                       background: 'linear-gradient(90deg, #FFFFFF, #FFA500)',
-                       WebkitBackgroundClip: 'text',
-                       WebkitTextFillColor: 'transparent',
-                       display: 'inline-block'
-                     }}
-                   >
-                     European Roulette
-                   </Typography>
-                  
-                                     {/* Only show first two paragraphs with condensed content */}
-                   <Typography 
-                     variant="body1" 
-                     sx={{ 
-                       mb: 2.5,
-                       lineHeight: 1.8,
-                       fontSize: '1rem',
-                       color: 'rgba(255, 255, 255, 0.92)',
-                       textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                     }}
-                   >
-                     European Roulette with a single zero and just 2.7% house edge - better odds than traditional casinos. Provably fair and powered by blockchain technology.
-                   </Typography>
-                   
-                   <Typography 
-                     variant="body1" 
-                     sx={{ 
-                       mb: 1,
-                       lineHeight: 1.8,
-                       fontSize: '1rem',
-                       color: 'rgba(255, 255, 255, 0.92)',
-                       textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                     }}
-                   >
-                     Bet on numbers, colors, or combinations for payouts up to 35:1. Every spin is secure and transparent on the blockchain.
-                   </Typography>
-                </Box>
-              </Grid>
-            </Grid>
-
-            {/* First row - Strategy Guide and Win Probabilities (most important for players) */}
-            <Grid container spacing={4} sx={{ mb: 6, pt: 4 }}>
-              <Grid xs={12} md={7}>
-                <div id="strategy" className="scroll-mt-16">
-                  <StrategyGuide />
-                </div>
-              </Grid>
-              <Grid xs={12} md={5}>
-                <WinProbabilities />
-              </Grid>
-            </Grid>
-            
-            {/* Second row - Roulette Payout (full width for clarity) */}
-            <Grid container spacing={4} sx={{ mb: 6, pt: 4 }}>
-              <Grid xs={12}>
-                <div id="payouts" className="scroll-mt-16">
-                  <RoulettePayout />
-                </div>
-              </Grid>
-            </Grid>
-            
-            {/* Third row - Roulette History and Leaderboard */}
-            <Grid container spacing={4} sx={{ mb: 6, pt: 4 }}>
-              <Grid xs={12} md={7}>
-                <div id="history" className="scroll-mt-16">
-                  <RouletteHistory />
-                </div>
-              </Grid>
-              <Grid xs={12} md={5}>
-                <RouletteLeaderboard />
-              </Grid>
-            </Grid>
-            
-            {/* Decorative elements */}
-            <Box
-              sx={{
-                position: 'absolute',
-                top: '400px',
-                left: '-50px',
-                width: '200px',
-                height: '200px',
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(104, 29, 219, 0.4) 0%, rgba(104, 29, 219, 0) 70%)',
-                filter: 'blur(50px)',
-                zIndex: -1,
-              }}
-            />
-            <Box
-              sx={{
-                position: 'absolute',
-                top: '800px',
-                right: '-100px',
-                width: '350px',
-                height: '350px',
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(216, 38, 51, 0.3) 0%, rgba(216, 38, 51, 0) 70%)',
-                filter: 'blur(70px)',
-                zIndex: -1,
-              }}
-            />
-          </Box>
+          <GameDetail gameData={gameData} bettingTableData={bettingTableData} />
         </Box>
+<TreasuryUI />
+<TreasuryTest />
 
         <Snackbar
           open={showNotification}

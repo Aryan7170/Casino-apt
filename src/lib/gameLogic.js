@@ -1,4 +1,4 @@
-import { wheelDataByRisk } from "../components/wheel/GameWheel"; // Make sure this is exported
+import { wheelDataByRisk } from "../app/game/wheel/components/GameWheel"; // Make sure this is exported
 
 export const calculateResult = (risk, noOfSegments) => {
   

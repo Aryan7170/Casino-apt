@@ -1,16 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import TabButton from "./TabButton";
 
-const Tabs = ({ tabs, onTabChange }) => {
+const Tabs = ({ tabs }) => {
   const [activeTab, setActiveTab] = useState(tabs[0].label || "");
-
-  // Notify parent when tab changes
-  const handleTabChange = (label) => {
-    setActiveTab(label);
-    if (onTabChange && typeof onTabChange === 'function') {
-      onTabChange(label);
-    }
-  };
 
   return (
     <div className="w-full">
@@ -21,7 +13,7 @@ const Tabs = ({ tabs, onTabChange }) => {
             key={index}
             label={tab.label}
             isActive={activeTab === tab.label}
-            onClick={() => handleTabChange(tab.label)}
+            onClick={() => setActiveTab(tab.label)}
           >
             {tab.label}
           </TabButton>

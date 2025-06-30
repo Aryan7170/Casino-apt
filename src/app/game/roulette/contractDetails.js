@@ -1,6 +1,6 @@
-export const rouletteContractAddress = '0xD2cfA0790CcE7dd980699F6F1F4A4f1D13cEBA9F';
-export const tokenContractAddress = '0xfa671d1F2811fa725d8fe8eC4149B7594A9f3124';
-export const treasuryAddress = '0xF7249B507F1f89Eaea5d694cEf5cb96F245Bc5b6';
+export const rouletteContractAddress = '0xfa339164994ea5d08fd898af81ffa8a5c4982974';
+export const tokenContractAddress = '0x60672ccafd719eb569858003ed3b0ac0f6e63954';
+export const treasuryAddress = '0xFfbfce3f171911044b6D91d700548AEd9A662420';
 
 export const rouletteABI = [
 	{
@@ -37,6 +37,11 @@ export const rouletteABI = [
 		"type": "error"
 	},
 	{
+		"inputs": [],
+		"name": "ReentrancyGuardReentrantCall",
+		"type": "error"
+	},
+	{
 		"anonymous": false,
 		"inputs": [
 			{
@@ -62,6 +67,12 @@ export const rouletteABI = [
 				"internalType": "uint8",
 				"name": "betValue",
 				"type": "uint8"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "round",
+				"type": "uint256"
 			}
 		],
 		"name": "BetPlaced",
@@ -92,6 +103,12 @@ export const rouletteABI = [
 				"indexed": false,
 				"internalType": "uint256",
 				"name": "winnings",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "round",
 				"type": "uint256"
 			}
 		],
@@ -124,6 +141,12 @@ export const rouletteABI = [
 				"indexed": false,
 				"internalType": "uint256",
 				"name": "randomNumber",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "round",
 				"type": "uint256"
 			}
 		],
@@ -198,6 +221,24 @@ export const rouletteABI = [
 				"internalType": "uint8",
 				"name": "betValue",
 				"type": "uint8"
+			},
+			{
+				"internalType": "uint256",
+				"name": "round",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "currentRound",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -290,48 +331,29 @@ export const rouletteABI = [
 	{
 		"inputs": [
 			{
-				"internalType": "enum Roulette.BetType",
-				"name": "betType",
-				"type": "uint8"
+				"internalType": "enum Roulette.BetType[]",
+				"name": "betTypes",
+				"type": "uint8[]"
 			},
 			{
-				"internalType": "uint8",
-				"name": "betValue",
-				"type": "uint8"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
+				"internalType": "uint8[]",
+				"name": "betValues",
+				"type": "uint8[]"
 			},
 			{
 				"internalType": "uint256[]",
-				"name": "numbers",
+				"name": "amounts",
 				"type": "uint256[]"
+			},
+			{
+				"internalType": "uint256[][]",
+				"name": "betNumbers",
+				"type": "uint256[][]"
 			}
 		],
-		"name": "placeBet",
+		"name": "placeMultipleBets",
 		"outputs": [],
 		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "playerBets",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -350,6 +372,19 @@ export const rouletteABI = [
 	{
 		"inputs": [],
 		"name": "renounceOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_maxBet",
+				"type": "uint256"
+			}
+		],
+		"name": "setMaxBet",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -498,6 +533,16 @@ export const tokenABI = [
 			}
 		],
 		"name": "ERC20InvalidSpender",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "EnforcedPause",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "ExpectedPause",
 		"type": "error"
 	},
 	{
@@ -1008,4 +1053,4 @@ export const tokenABI = [
 		"stateMutability": "nonpayable",
 		"type": "function"
 	}
-]
+];

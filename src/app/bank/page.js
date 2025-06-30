@@ -199,23 +199,22 @@ export default function Bank() {
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-sharp-black to-[#150012] text-white">
+      {showNetworkBanner && (
+        <div className="bg-gradient-to-r from-red-magic/80 to-blue-magic/80 py-2 px-4 text-center relative">
+          <p className="text-white text-sm">
+            Connected to {chainId === 5003 ? 'Mantle Sepolia Testnet' : chainId === 50002 ? 'Pharos Devnet' : 'Unknown Network'}. 
+            <button className="underline ml-2">Switch Network</button>
+          </p>
+          <button 
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white"
+            onClick={() => setShowNetworkBanner(false)}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+      
       <div className="container mx-auto px-4 lg:px-8 pt-32 pb-16">
-        {/* Network banner moved inside the container and positioned after the navbar */}
-        {showNetworkBanner && (
-          <div className="bg-gradient-to-r from-red-magic/80 to-blue-magic/80 py-2 px-4 text-center relative mb-8 rounded-lg">
-            <p className="text-white text-sm">
-              Connected to {chainId === 5003 ? 'Mantle Sepolia Testnet' : chainId === 50002 ? 'Pharos Devnet' : 'Unknown Network'}. 
-              <button className="underline ml-2">Switch Network</button>
-            </p>
-            <button 
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white"
-              onClick={() => setShowNetworkBanner(false)}
-            >
-              ✕
-            </button>
-          </div>
-        )}
-        
         <div className="mb-10 text-center">
           <HeaderText
             header="APT Casino Bank" 

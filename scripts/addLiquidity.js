@@ -3,8 +3,8 @@ const { ethers } = require("hardhat");
 async function main() {
   const amount = ethers.parseEther("1000"); // Add 1000 tokens
   
-  const tokenAddress = "0xf6b4c0dd3355103523F031C8a1EAE944a8145180";
-  const rouletteAddress = "0x0BF9D7E4E7ee2d6c1e5B028EF14F1CBbaaC4856e";
+  const tokenAddress = "0x60672ccafd719eb569858003ed3b0ac0f6e63954";
+  const rouletteAddress = "0xfa339164994ea5d08fd898af81ffa8a5c4982974";
 
   const Token = await ethers.getContractFactory("Token");
   const token = Token.attach(tokenAddress);

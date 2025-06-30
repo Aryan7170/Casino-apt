@@ -123,15 +123,6 @@ const MostPlayed = () => {
       isHot: true,
       winRate: "97.2%",
     },
-    { 
-      name: "Spin the Wheel", 
-      img: "/images/games/spin_the_wheel.png", 
-      link: "/game/wheel",
-      players: 320,
-      categories: ["instant"],
-      isHot: true,
-      winRate: "96.2%",
-    },
   ];
   
   const filters = [
