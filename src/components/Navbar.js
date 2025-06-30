@@ -198,11 +198,11 @@ export default function Navbar() {
       <div className="flex w-full items-center justify-between py-6 px-4 sm:px-10 md:px-20 lg:px-36">
         <div className="flex items-center">
           <a href="/" className="logo mr-6">
-          <Image
-            src="/PowerPlay.png"
-            alt="powerplay image"
-            width={172}
-            height={15}
+            <Image
+              src="/PowerPlay.png"
+              alt="powerplay image"
+              width={172}
+              height={15}
             />
           </a>
           
@@ -233,12 +233,12 @@ export default function Navbar() {
         <div className="hidden md:flex font-display gap-8 lg:gap-12 items-center">
           {navLinks.map(({ name, path, classes }, index) => (
             <div key={index} className="relative group">
-            <Link
+              <Link
                 className={`${path === pathname ? "text-transparent bg-clip-text bg-gradient-to-r from-red-magic to-blue-magic font-semibold" : classes} flex items-center gap-1 text-lg font-medium transition-all duration-200 hover:scale-105`}
-              href={path}
-            >
-              {name}
-            </Link>
+                href={path}
+              >
+                {name}
+              </Link>
             </div>
           ))}
         </div>
@@ -382,7 +382,7 @@ export default function Navbar() {
                   <div className="p-2 border-t border-purple-500/20 text-center">
                     <span className="text-xs text-white/50">
                       Press Enter to search for "{searchQuery}"
-                </span>
+                    </span>
                   </div>
                 )}
               </div>

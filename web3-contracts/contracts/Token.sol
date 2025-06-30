@@ -15,9 +15,8 @@ contract Token is ERC20, Ownable, Pausable {
     event TokensMinted(address indexed to, uint256 amount);
 
     constructor() ERC20("APT-Casino", "APTC") Ownable(msg.sender) {
-        treasury = 0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199;
-        // 1 billion tokens with 18 decimals = 1_000_000_000 * 10^18
-        _mint(msg.sender, 1_000_000_000 * 10**decimals()); // Initial supply to deployer
+        treasury = 0xFfbfce3f171911044b6D91d700548AEd9A662420;
+        _mint(msg.sender, 1_000_000_000 * 10**decimals()); // Initial supply
     }
 
     // Only owner can mint new tokens
@@ -53,13 +52,13 @@ contract Token is ERC20, Ownable, Pausable {
         _unpause();
     }
 
-    // Override transfer function to add pausable functionality
+    // Override transfer to add pausable
     function transfer(address to, uint256 value) public override whenNotPaused returns (bool) {
         require(to != address(0), "Cannot transfer to zero address");
         return super.transfer(to, value);
     }
 
-    // Override transferFrom function to add pausable functionality
+    // Override transferFrom to add pausable
     function transferFrom(address from, address to, uint256 value) public override whenNotPaused returns (bool) {
         require(to != address(0), "Cannot transfer to zero address");
         require(from != address(0), "Cannot transfer from zero address");

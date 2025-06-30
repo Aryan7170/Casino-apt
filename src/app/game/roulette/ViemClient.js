@@ -44,7 +44,7 @@ const pharosDevnet = {
 };
 
 // Configure transport with improved settings
-const configureTransport = (url) => http({
+const configureTransport = (url) => http(url, {
   batch: { batchSize: 1 },  // Disable batching for more reliable connections
   fetchOptions: {
     cache: 'no-store',
@@ -61,23 +61,27 @@ const configureTransport = (url) => http({
 
 export const publicMainnetClient = createPublicClient({
   chain: mainnet,
-  transport: configureTransport(mainnet.rpcUrls.default.http[0]),
+  transport: configureTransport('https://eth.llamarpc.com'),
 });
 
 export const publicPolygonClient = createPublicClient({
   chain: polygon,
-  transport: configureTransport(polygon.rpcUrls.default.http[0]),
+  transport: configureTransport('https://polygon.llamarpc.com'),
 });
 
 export const publicMantleSepoliaClient = createPublicClient({
   chain: mantleSepolia,
-  transport: configureTransport(mantleSepolia.rpcUrls.default.http[0]),
+  transport: configureTransport('https://rpc.sepolia.mantle.xyz'),
 });
 
-export const publicPharosSepoliaClient = createPublicClient({
-  chain: pharosDevnet,
-  transport: configureTransport(pharosDevnet.rpcUrls.default.http[0]),
-});
+// Comment out Pharos Devnet - using Mantle Sepolia instead
+// export const publicPharosSepoliaClient = createPublicClient({
+//   chain: pharosDevnet,
+//   transport: configureTransport('https://devnet.dplabs-internal.com'),
+// });
+
+// Use Mantle Sepolia as the primary client
+export const publicPharosSepoliaClient = publicMantleSepoliaClient;
 
 let walletClient = null;
 
@@ -93,8 +97,8 @@ export const getWalletClient = async () => {
     // Create wallet client if not already created
     if (!walletClient) {
       const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      // Prefer Pharos Devnet (0xc352), fallback to Mantle Sepolia
-      const chain = chainId === '0xc352' ? pharosDevnet : mantleSepolia;
+      // Prefer Mantle Sepolia (0x138b), fallback to Pharos Devnet
+      const chain = chainId === '0x138b' ? mantleSepolia : pharosDevnet;
       
       walletClient = createWalletClient({
         chain,
@@ -133,12 +137,12 @@ export const checkNetwork = async () => {
       try {
         await window.ethereum.request({
           method: 'wallet_switchEthereumChain',
-          params: [{ chainId: '0xc352' }], // Default to Pharos Devnet
+          params: [{ chainId: '0x138b' }], // Default to Mantle Sepolia
         });
       } catch (switchError) {
         if (switchError.code === 4902) {
           try {
-            // Add both networks
+            // Add Mantle Sepolia network
             await window.ethereum.request({
               method: 'wallet_addEthereumChain',
               params: [{
@@ -153,20 +157,22 @@ export const checkNetwork = async () => {
                 blockExplorerUrls: ['https://sepolia.mantlescan.xyz']
               }],
             });
-            await window.ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [{
-                chainId: '0xc352',
-                chainName: 'Pharos Devnet',
-                nativeCurrency: {
-                  name: 'Pharos',
-                  symbol: 'PHR',
-                  decimals: 18
-                },
-                rpcUrls: ['https://devnet.dplabs-internal.com'],
-                blockExplorerUrls: ['https://pharosscan.xyz']
-              }],
-            });
+            
+            // Comment out Pharos Devnet network addition
+            // await window.ethereum.request({
+            //   method: 'wallet_addEthereumChain',
+            //   params: [{
+            //     chainId: '0xc352',
+            //     chainName: 'Pharos Devnet',
+            //     nativeCurrency: {
+            //       name: 'Pharos',
+            //       symbol: 'PHR',
+            //       decimals: 18
+            //     },
+            //     rpcUrls: ['https://devnet.dplabs-internal.com'],
+            //     blockExplorerUrls: ['https://pharosscan.xyz']
+            //   }],
+            // });
           } catch (addError) {
             console.error('Error adding networks:', addError);
             return false;

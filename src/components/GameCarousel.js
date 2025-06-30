@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { FaArrowLeft, FaArrowRight, FaUsers, FaStar, FaBolt, FaFire, FaTrophy } from "react-icons/fa6";
 import HeaderText from "@/components/HeaderText";
-import GameStats from "@/components/GameStats";
+import { useRouter } from 'next/navigation';
 
 // Game data with more details
 const FEATURED_GAMES = [
@@ -87,6 +87,9 @@ const CATEGORIES = [
 ];
 
 const GameCarousel = () => {
+
+  const router = useRouter();
+
   const scrollContainerRef = useRef(null);
   const [activeCategory, setActiveCategory] = useState('all');
   const [visibleGames, setVisibleGames] = useState(FEATURED_GAMES);
@@ -159,59 +162,7 @@ const GameCarousel = () => {
     setIsDragging(false);
   };
 
-  // Game card component
-  const GameCard = ({ game }) => (
-    <div className="flex-shrink-0 w-[320px] sm:w-[400px] md:w-[520px] p-0.5 magic-gradient rounded-xl h-[300px] transform transition-all hover:scale-[1.02] shadow-lg hover:shadow-xl group">
-      <div className="bg-sharp-black flex p-6 md:p-8 w-full h-full rounded-xl relative overflow-hidden">
-        <div className="flex flex-col justify-between z-10 w-3/5">
-          {/* Game badge */}
-          {game.badge && (
-            <span className={`p-1.5 px-3 w-fit bg-gradient-to-r ${game.badgeColor} font-display text-white font-medium rounded-md flex items-center gap-1.5`}>
-              {game.isNew && <FaBolt className="text-xs" />}
-              {game.isHot && <FaFire className="text-xs" />}
-              {game.badge}
-            </span>
-          )}
-          
-          <div className="space-y-3 mt-3">
-            <h3 className="text-2xl md:text-3xl font-display font-bold text-white group-hover:text-gradient transition-all">
-              {game.title}
-            </h3>
-            <p className="text-xs md:text-sm text-white/80">{game.description}</p>
-            
-            {/* Live player count */}
-            <div className="flex items-center gap-2 text-white/70">
-              <FaUsers className="text-green-500" />
-              <span className="text-xs">{game.players} players online</span>
-            </div>
-          </div>
-          
-          <div className="w-full mt-4">
-            <Link href={game.path}>
-              <GradientBorderButton className="w-full">
-                Play Now
-              </GradientBorderButton>
-            </Link>
-          </div>
-        </div>
-        
-        <div className="absolute -right-2 bottom-0 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1">
-          <Image
-            src={game.image}
-            width={220}
-            height={250}
-            quality={100}
-            priority
-            alt={`${game.title} game`}
-            className="object-contain drop-shadow-lg"
-            style={{ objectFit: 'contain' }}
-          />
-        </div>
-        
-        <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent pointer-events-none"></div>
-      </div>
-    </div>
-  );
+ 
 
   return (
     <div className="pt-12 pb-6 container mx-auto px-4 relative">
@@ -219,16 +170,11 @@ const GameCarousel = () => {
       <div className="absolute -top-40 -left-20 w-80 h-80 rounded-full bg-red-magic/5 blur-[100px] z-0"></div>
       <div className="absolute top-1/3 right-1/4 w-60 h-60 rounded-full bg-blue-magic/5 blur-[80px] z-0"></div>
     
-      <div className="mb-12 flex flex-col md:flex-row items-center justify-between">
-        <div className="text-center md:text-left md:max-w-2xl">
-          <HeaderText
-            header="Featured Games"
-            description="Experience our premium selection of games with the highest payout rates and player counts"
-          />
-        </div>
-        <div className="mt-6 md:mt-0">
-          <GameStats />
-        </div>
+      <div className="mb-12 text-center max-w-3xl mx-auto">
+        <HeaderText
+          header="Featured Games"
+          description="Experience our premium selection of games with the highest payout rates and player counts"
+        />
       </div>
       
       {/* Category filters */}
@@ -286,7 +232,55 @@ const GameCarousel = () => {
             {visibleGames.length > 0 ? (
               visibleGames.map(game => (
                 <div key={game.id} className="snap-start">
-                  <GameCard game={game} />
+                <div className="flex-shrink-0 w-[320px] sm:w-[400px] md:w-[520px] p-0.5 magic-gradient rounded-xl h-[300px] transform transition-all hover:scale-[1.02] shadow-lg hover:shadow-xl group">
+      <div className="bg-sharp-black flex p-6 md:p-8 w-full h-full rounded-xl relative overflow-hidden "  >
+        <div className="flex flex-col justify-between z-10 w-3/5">
+          {/* Game badge */}
+          {game.badge && (
+            <span className={`p-1.5 px-3 w-fit bg-gradient-to-r ${game.badgeColor} font-display text-white font-medium rounded-md flex items-center gap-1.5`}>
+              {game.isNew && <FaBolt className="text-xs" />}
+              {game.isHot && <FaFire className="text-xs" />}
+              {game.badge}
+            </span>
+          )}
+          
+          <div className="space-y-3 mt-3">
+            <h3 className="text-2xl md:text-3xl font-display font-bold text-white group-hover:text-gradient transition-all">
+              {game.title}
+            </h3>
+            <p className="text-xs md:text-sm text-white/80">{game.description}</p>
+            
+            {/* Live player count */}
+            <div className="flex items-center gap-2 text-white/70">
+              <FaUsers className="text-green-500" />
+              <span className="text-xs">{game.players} players online</span>
+            </div>
+          </div>
+          
+          <GradientBorderButton
+          className="w-full"
+          onClick={() => router.push(game.path)}
+          >
+            Play Now
+          </GradientBorderButton>
+        </div>
+        
+        <div className="absolute -right-2 bottom-0 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1">
+          <Image
+            src={game.image}
+            width={220}
+            height={250}
+            quality={100}
+            priority
+            alt={`${game.title} game`}
+            className="object-contain drop-shadow-lg"
+            style={{ objectFit: 'contain' }}
+          />
+        </div>
+        
+        <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent pointer-events-none"></div>
+      </div>
+    </div>
                 </div>
               ))
             ) : (
@@ -324,7 +318,7 @@ const GameCarousel = () => {
       
       {/* View all games button */}
       <div className="text-center mt-10">
-        <Link href="/games">
+        <Link href="/game">
           <GradientBorderButton className="px-8">
             View All Games
           </GradientBorderButton>

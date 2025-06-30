@@ -20,6 +20,9 @@ export const useToken = (address) => {
     watch: true,
   });
 
+  // Get write contract function
+  const { writeContractAsync } = useWriteContract();
+
   // Update balance when data changes
   useEffect(() => {
     if (balanceData) {
@@ -36,24 +39,22 @@ export const useToken = (address) => {
     setError(null);
 
     try {
-      const { writeContract } = useWriteContract();
-      
-      await writeContract({
+      const hash = await writeContractAsync({
         address: tokenContractAddress,
         abi: tokenABI,
         functionName: 'transfer',
         args: [to, parseUnits(amount.toString(), 18)],
       });
       
-      return true;
+      return hash;
     } catch (err) {
       console.error('Transfer error:', err);
       setError(err.message);
-      return false;
+      return null;
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [writeContractAsync]);
 
   const refresh = useCallback(async () => {
     if (!address) return;

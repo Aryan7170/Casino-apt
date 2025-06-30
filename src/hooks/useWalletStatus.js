@@ -1,162 +1,123 @@
-'use client';
-
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-} from 'react';
-import {
-  useAccount,
-  useDisconnect,
-  useChainId,
-} from 'wagmi';
+"use client";
+import { useState, useEffect, createContext, useContext, useCallback } from 'react';
+import { useAccount } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 
+// Create context to share wallet state throughout the app
 const WalletStatusContext = createContext(null);
 
+// Provider component to wrap the app with
 export function WalletStatusProvider({ children }) {
-  const isDev = process.env.NODE_ENV === 'development';
-
-  const { isConnected, address } = useAccount();
-  const chainId = useChainId();
-  const { disconnect } = useDisconnect();
-  const { openConnectModal } = useConnectModal();
-
-  const getChainFromId = (id) => {
-    if (!id) return null;
-    switch (id) {
-      case 1:
-        return { id: 1, name: 'Ethereum' };
-      case 137:
-        return { id: 137, name: 'Polygon' };
-      case 5003:
-        return { id: 5003, name: 'Mantle Sepolia' };
-      default:
-        return { id, name: `Chain ${id}` };
-    }
-  };
-
-  const [devWallet, setDevWallet] = useState({
-    isConnected: false,
-    address: null,
-    chain: null,
-  });
-
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const [isDev] = useState(process.env.NODE_ENV === 'development');
+  const [currentChain, setCurrentChain] = useState(null);
+  
+  // Use wagmi hooks directly
+  const { address, isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
+  
+  // Check current chain
   useEffect(() => {
-    if (!isDev) return;
+    const checkChain = async () => {
+      if (typeof window !== "undefined" && window.ethereum) {
+        try {
+          const chainId = await window.ethereum.request({ method: "eth_chainId" });
+          setCurrentChain(chainId);
+        } catch (error) {
+          console.error("Error checking chain:", error);
+          setCurrentChain(null);
+        }
+      }
+    };
 
-    const savedState = localStorage.getItem('dev-wallet-state');
-    if (savedState === 'connected') {
-      setDevWallet({
-        isConnected: true,
-        address: '0x1234...dev',
-        chain: { id: 5003, name: 'Mantle Sepolia' },
-      });
+    checkChain();
+
+    // Listen for chain changes
+    if (window.ethereum) {
+      window.ethereum.on("chainChanged", checkChain);
+      return () => {
+        window.ethereum.removeListener("chainChanged", checkChain);
+      };
     }
-
-    const handleToggle = () => {
-      setDevWallet((prev) => {
-        const newState = !prev.isConnected;
-        localStorage.setItem(
-          'dev-wallet-state',
-          newState ? 'connected' : 'disconnected'
-        );
-
-        return newState
-          ? {
-              isConnected: true,
-              address: '0x1234...dev',
-              chain: { id: 5003, name: 'Mantle Sepolia' },
-            }
-          : {
-              isConnected: false,
-              address: null,
-              chain: null,
-            };
-      });
-    };
-
-    window.addEventListener('dev-wallet-toggle', handleToggle);
-    return () => {
-      window.removeEventListener('dev-wallet-toggle', handleToggle);
-    };
+  }, []);
+  
+  // Function to connect wallet
+  const connectWallet = useCallback(async () => {
+    if (isDev) {
+      return true;
+    }
+    
+    try {
+      if (openConnectModal) {
+        openConnectModal();
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Failed to open connect modal:', err);
+      setError('Failed to open wallet connection dialog');
+      return false;
+    }
+  }, [isDev, openConnectModal]);
+  
+  // Function to disconnect wallet
+  const disconnectWallet = useCallback(async () => {
+    if (isDev) {
+      return true;
+    }
+    
+    try {
+      const { disconnect } = await import('wagmi');
+      if (disconnect) {
+        disconnect();
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Failed to disconnect wallet:', err);
+      setError('Failed to disconnect wallet');
+      return false;
+    }
   }, [isDev]);
-
-  const connectWallet = useCallback(() => {
-    if (isDev) {
-      localStorage.setItem('dev-wallet-state', 'connected');
-      setDevWallet({
-        isConnected: true,
-        address: '0x1234...dev',
-        chain: { id: 5003, name: 'Mantle Sepolia' },
-      });
-      return;
-    }
-
-    if (openConnectModal) {
-      openConnectModal();
-    } else {
-      setError('Wallet connection modal not available');
-    }
-  }, [openConnectModal, isDev]);
-
-  const disconnectWallet = useCallback(() => {
-    if (isDev) {
-      localStorage.setItem('dev-wallet-state', 'disconnected');
-      setDevWallet({
-        isConnected: false,
-        address: null,
-        chain: null,
-      });
-      return;
-    }
-
-    disconnect();
-  }, [disconnect, isDev]);
-
+  
+  // Reset any errors
   const resetError = useCallback(() => {
     setError(null);
   }, []);
-
-  const currentStatus = isDev
-    ? devWallet
-    : {
-        isConnected,
-        address,
-        chain: getChainFromId(chainId),
-      };
-
+  
+  // Update loading state when connection state changes
   useEffect(() => {
-    console.log('🔌 Wallet connection changed:');
-    console.log('Connected:', currentStatus.isConnected);
-    console.log('Address:', currentStatus.address);
-    console.log('Chain:', currentStatus.chain);
-  }, [currentStatus]);
-
+    setIsLoading(false);
+  }, [isConnected]);
+  
+  // The value we'll provide to consumers
+  const value = {
+    isConnected,
+    address,
+    chain: currentChain,
+    isLoading,
+    error,
+    isDev,
+    connectWallet,
+    disconnectWallet,
+    resetError
+  };
+  
   return (
-    <WalletStatusContext.Provider
-      value={{
-        ...currentStatus,
-        isDev,
-        connectWallet,
-        disconnectWallet,
-        resetError,
-        error,
-      }}
-    >
+    <WalletStatusContext.Provider value={value}>
       {children}
     </WalletStatusContext.Provider>
   );
 }
 
+// Hook for components to consume
 export default function useWalletStatus() {
   const context = useContext(WalletStatusContext);
+  
   if (!context) {
     throw new Error('useWalletStatus must be used within a WalletStatusProvider');
   }
+  
   return context;
-}
+} 
