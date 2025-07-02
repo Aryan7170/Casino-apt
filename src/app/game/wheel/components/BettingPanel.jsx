@@ -34,11 +34,11 @@ const BettingPanel = ({
     setInputValue(newAmount.toString());
   };
 
-  const [numberOfBets, setNumberOfBets] = useState(10);
-  const [winIncrease, setWinIncrease] = useState(0);
-  const [lossIncrease, setLossIncrease] = useState(0);
-  const [stopProfit, setStopProfit] = useState(0);
-  const [stopLoss, setStopLoss] = useState(0);
+  // const [numberOfBets, setNumberOfBets] = useState(10);
+  // const [winIncrease, setWinIncrease] = useState(0);
+  // const [lossIncrease, setLossIncrease] = useState(0);
+  // const [stopProfit, setStopProfit] = useState(0);
+  // const [stopLoss, setStopLoss] = useState(0);
 
 
   return (
@@ -56,7 +56,7 @@ const BettingPanel = ({
             Manual
           </button>
         </div>
-        <div className={cn("w-1/2", gameMode === "auto" && "gradient-borderb")}>
+        {/* <div className={cn("w-1/2", gameMode === "auto" && "gradient-borderb")}>
           <button 
             className={cn(
               "flex-1 py-3 px-4 w-full text-center rounded-2xl transition-colors",
@@ -66,7 +66,7 @@ const BettingPanel = ({
           >
             Auto
           </button>
-        </div>
+        </div> */}
       </div>
 
       
@@ -139,9 +139,9 @@ const BettingPanel = ({
         </div>
       </div>
 
-      {gameMode === "auto" && (
+
+      {/* {gameMode === "auto" && (
         <>
-          {/* Number of Bets */}
           <div className="mb-4">
             <label className="block text-sm text-white mb-1">Numbers of bet</label>
             <div className="gradient-border">
@@ -149,7 +149,6 @@ const BettingPanel = ({
             </div>
           </div>
 
-          {/* On Win */}
           <div className="mb-4">
             <label className="block text-sm text-white mb-1">On win</label>
             <div className="flex gradient-border">
@@ -171,7 +170,6 @@ const BettingPanel = ({
             </div>
           </div>
 
-          {/* On Loss */}
           <div className="mb-4">
             <label className="block text-sm text-white mb-1">On Loss</label>
             <div className="flex gradient-border">
@@ -193,7 +191,6 @@ const BettingPanel = ({
             </div>
           </div>
 
-          {/* Stop on Profit */}
           <div className="mb-4">
             <label className="block text-sm text-white mb-1">Stop on profit</label>
             <div className="gradient-border">
@@ -210,7 +207,6 @@ const BettingPanel = ({
             </div>
           </div>
 
-          {/* Stop on Loss */}
           <div className="mb-4">
             <label className="block text-sm text-white mb-1">Stop on Loss</label>
             <div className="gradient-border">
@@ -227,7 +223,7 @@ const BettingPanel = ({
             </div>
           </div>
         </>
-      )}
+      )} */}
 
       {/* Start AutoBet Button */}
       <button
