@@ -136,6 +136,15 @@ body {
   }
 }
 
+@keyframes borderMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
@@ -159,6 +168,11 @@ body {
 .animate-gradient-background {
   background-size: 200% 200%;
   animation: gradient-background 3s ease infinite;
+}
+
+.animate-borderMove {
+  background-size: 200% 200%;
+  animation: borderMove 2s linear infinite;
 }
 
 
