@@ -18,17 +18,17 @@ function selectSegmentIndexByProbability(wheelData) {
 
 export const wheelDataByRisk = {
   low: [
-    { multiplier: 0.0, color: "#333947", probability: 0.7 },
     { multiplier: 1.2, color: "#D9D9D9", probability: 0.2 },
+    { multiplier: 0.0, color: "#333947", probability: 0.7 },
     { multiplier: 1.5, color: "#00E403", probability: 0.1 },
   ],
   medium: [
-    { multiplier: 0.0, color: "#333947", probability: 0.35 },
     { multiplier: 1.5, color: "#00E403", probability: 0.2 },
     { multiplier: 1.7, color: "#D9D9D9", probability: 0.15 },
     { multiplier: 2.0, color: "#FDE905", probability: 0.15 },
     { multiplier: 3.0, color: "#7F46FD", probability: 0.1 },
     { multiplier: 4.0, color: "#FCA32F", probability: 0.05 },
+    { multiplier: 0.0, color: "#333947", probability: 0.35 },
   ],
   high: (noOfSegments) => {
     const highProb = getHighRiskProbability(noOfSegments);
@@ -63,15 +63,13 @@ const GameWheel = ({
   setWheelPosition,
   risk = "medium",
   hasSpun = false,
-  // selectedSegmentIndex = null // <- ADDED
-  contractResult = null // ✅ Add this
+  contractResult = null
 }) => {
   const canvasRef = useRef(null);
 
   const baseWheelData = useMemo(() => {
     if (risk === "high") {
       const highData = wheelDataByRisk.high(noOfSegments);
-      const probabilities = highData.find(d => d.probability);
       let arr = [];
       let total = 0;
       const counts = highData.map((seg, idx) => {
@@ -85,49 +83,29 @@ const GameWheel = ({
       highData.forEach((seg, idx) => {
         for (let i = 0; i < counts[idx]; i++) arr.push({ ...seg });
       });
-      return arr.map(seg => ({ ...seg, probability: seg.probability }));
+      return arr;
     }
 
-    if (risk === "medium") {
-      const zeroSegment = wheelDataByRisk.medium.find(d => d.multiplier === 0.0);
-      const nonZeroSegments = wheelDataByRisk.medium.filter(d => d.multiplier !== 0.0);
-      let arr = [], nonZeroIdx = 0;
-      for (let i = 0; i < noOfSegments; i++) {
-        arr.push(i % 2 === 0 ? { ...zeroSegment } : { ...nonZeroSegments[nonZeroIdx++ % nonZeroSegments.length] });
-      }
-      return arr.map(seg => ({ ...seg, probability: seg.probability }));
-    }
+    const originalData = wheelDataByRisk[risk];
+    const zeroSegment = originalData.find(d => d.multiplier === 0.0);
+    const nonZeroSegments = originalData.filter(d => d.multiplier !== 0.0);
 
-    if (risk === "low") {
-      const onePointTwo = wheelDataByRisk.low.find(d => d.multiplier === 1.2);
-      const others = wheelDataByRisk.low.filter(d => d.multiplier !== 1.2);
-      let arr = [], otherIdx = 0;
-      for (let i = 0; i < noOfSegments; i++) {
-        arr.push(i % 2 === 0 ? { ...onePointTwo } : { ...others[otherIdx++ % others.length] });
-      }
-      return arr.map(seg => ({ ...seg, probability: seg.probability }));
-    }
-
-    return wheelDataByRisk[risk];
-  }, [risk, noOfSegments]);
-
-  const wheelData = useMemo(() => {
-    let arr = [];
+    let arr = [], nonZeroIdx = 0;
     for (let i = 0; i < noOfSegments; i++) {
-      arr.push(baseWheelData[i % baseWheelData.length]);
+      arr.push(i % 2 === 0 ? { ...nonZeroSegments[nonZeroIdx++ % nonZeroSegments.length] } : { ...zeroSegment });
     }
     return arr;
-  }, [baseWheelData, noOfSegments]);
+  }, [risk, noOfSegments]);
 
-  const segments = wheelData.length;
+  const segments = baseWheelData.length;
 
   const panelMultipliers = useMemo(() => {
-    let original = risk === "high" ? wheelDataByRisk.high(noOfSegments) : wheelDataByRisk[risk] || [];
+    let original = risk === "high" ? wheelDataByRisk.high(noOfSegments) : wheelDataByRisk[risk];
     return Array.from(new Set(original.map(d => d.multiplier)));
   }, [risk, noOfSegments]);
 
   const panelColorMap = useMemo(() => {
-    let original = risk === "high" ? wheelDataByRisk.high(noOfSegments) : wheelDataByRisk[risk] || [];
+    let original = risk === "high" ? wheelDataByRisk.high(noOfSegments) : wheelDataByRisk[risk];
     return Object.fromEntries(original.map(d => [d.multiplier, d.color]));
   }, [risk, noOfSegments]);
 
@@ -159,7 +137,7 @@ const GameWheel = ({
       ctx.arc(centerX, centerY, radius, start, end, false);
       ctx.arc(centerX, centerY, radius * 0.93, end, start, true);
       ctx.closePath();
-      ctx.fillStyle = wheelData[i].color;
+      ctx.fillStyle = baseWheelData[i].color;
       ctx.fill();
     }
 
@@ -171,13 +149,14 @@ const GameWheel = ({
     ctx.stroke();
 
     ctx.restore();
-  }, [wheelData, segments, wheelPosition]);
+  }, [baseWheelData, segments, wheelPosition]);
 
   useEffect(() => {
     if (!isSpinning || !canvasRef.current) return;
 
-    // Always use contractResult.segmentIndex if available
-    const selectedIndex = contractResult?.segmentIndex ?? selectSegmentIndexByProbability(wheelData);
+    // Only spin if contractResult is present
+    if (!contractResult) return;
+    const selectedIndex = contractResult.segmentIndex;
 
     const segmentAngle = (Math.PI * 2) / segments;
     const totalSpins = 5;
@@ -200,21 +179,21 @@ const GameWheel = ({
       if (progress < 1) {
         rafId = requestAnimationFrame(animate);
       } else {
-        const landedMultiplier = wheelData[selectedIndex].multiplier;
+        const landedMultiplier = baseWheelData[selectedIndex].multiplier;
         handleSelectMultiplier(landedMultiplier);
       }
     };
 
     rafId = requestAnimationFrame(animate);
     return () => { if (rafId) cancelAnimationFrame(rafId); };
-  }, [handleSelectMultiplier, isSpinning, segments, setWheelPosition, wheelData, wheelPosition, contractResult]);
+  }, [handleSelectMultiplier, isSpinning, segments, setWheelPosition, baseWheelData, wheelPosition, contractResult]);
 
   const getCurrentSegmentUnderPointer = () => {
     const normalized = wheelPosition % (Math.PI * 2);
     const angle = (Math.PI * 2) / segments;
     const offset = (normalized + Math.PI/2 + Math.PI) % (Math.PI * 2);
     const index = Math.floor(offset / angle) % segments;
-    return wheelData[index];
+    return baseWheelData[index];
   };
 
   const currentSegment = getCurrentSegmentUnderPointer();

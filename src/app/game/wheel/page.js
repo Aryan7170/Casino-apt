@@ -64,6 +64,7 @@ export default function Home() {
   const [cooldown, setCooldown] = useState(0);
   const [blockWaitMessage, setBlockWaitMessage] = useState("");
   const [blockCheckLoading, setBlockCheckLoading] = useState(false);
+  const [resultPopup, setResultPopup] = useState(null);
 
   // Wallet connection
   const { isConnected, address } = useWalletStatus();
@@ -254,44 +255,10 @@ export default function Home() {
 
   const manulBet = async () => {
     if (!canBet) return;
-    // Debug: log all relevant state and parameters
-    console.log('DEBUG: manulBet called with state:', {
-      isConnected,
-      chainId,
-      betAmount,
-      isSpinning,
-      cooldown,
-      canBet,
-      risk,
-      noOfSegments,
-      address,
-      currentRound,
-      roundData,
-      balance,
-    });
-    setIsSpinning(true);
+    setHasSpun(false);
     try {
       const amount = BigInt(Math.floor(betAmount * 1e18));
       const roundId = currentRound !== null ? currentRound : 0n;
-      // Log the exact values being sent to the contract
-      console.log('DEBUG: Contract call params:', {
-        risk: risk === 'low' ? 0 : risk === 'medium' ? 1 : 2,
-        noOfSegments,
-        amount: amount.toString(),
-        address,
-        balance,
-        minBet: 1 * 1e18,
-        betAmount,
-        amountInWei: amount.toString(),
-        balanceInWei: BigInt(Math.floor(balance * 1e18)).toString(),
-      });
-      // Warn if betAmount or balance is too low
-      if (amount < BigInt(1e18)) {
-        console.warn('WARNING: Bet amount in wei is less than minBet (1e18). This will cause a revert.');
-      }
-      if (BigInt(Math.floor(balance * 1e18)) < BigInt(1e18)) {
-        console.warn('WARNING: Wallet balance in wei is less than minBet (1e18). This will cause a revert.');
-      }
       await approveTokens(amount);
       let tx;
       try {
@@ -303,32 +270,36 @@ export default function Home() {
         });
       } catch (err) {
         setIsSpinning(false);
-        alert('Transaction failed: ' + (err?.message || JSON.stringify(err)));
+        setResultPopup({ win: false, error: true, message: 'Transaction failed: ' + (err?.message || JSON.stringify(err)) });
         return;
       }
-      console.log("Bet transaction sent:", tx);
-      setCooldown(3); // Start 3-second cooldown
-      // Wait 10 seconds before trying to fetch result
+      setCooldown(3);
       setTimeout(async () => {
         const result = await fetchContractResultWithRetry(roundId);
         if (result) {
           setContractResult(result);
+          setIsSpinning(true); // Start wheel spin
+          setTimeout(() => {
+            setIsSpinning(false); // End wheel spin after animation duration
+            setResultPopup({
+              win: result.isWin && result.multiplier > 0,
+              error: false,
+              message: result.isWin && result.multiplier > 0
+                ? `You won! Multiplier: ${result.multiplier}x`
+                : 'You lost this round.',
+              contractResult: result
+            });
+          }, 3200); // match wheel animation duration
           setWheelToContractResult(result.segmentIndex, result.multiplier);
-          if (result.isWin && result.multiplier > 0) {
-            alert(`You won! Multiplier: ${result.multiplier}x`);
-          } else {
-            alert("You lost this round.");
-          }
         } else {
-          alert("Failed to fetch contract result. Please try again later.");
+          setResultPopup({ win: false, error: true, message: 'Failed to fetch contract result. Please try again later.' });
         }
         refetchRound();
       }, 10000);
     } catch (err) {
       setIsSpinning(false);
-      alert("Bet failed: " + (err?.message || JSON.stringify(err)));
+      setResultPopup({ win: false, error: true, message: 'Bet failed: ' + (err?.message || JSON.stringify(err)) });
     }
-    setIsSpinning(false);
   };
 
   const autoBet = async ({
@@ -340,9 +311,7 @@ export default function Home() {
     if (isSpinning) return;
     let currentBet = initialBetAmount;
     for (let i = 0; i < numberOfBets; i++) {
-      setIsSpinning(true);
       setHasSpun(false);
-      // Wait for cooldown
       if (cooldown > 0) {
         await new Promise((resolve) => {
           const interval = setInterval(() => {
@@ -366,38 +335,38 @@ export default function Home() {
             args: [risk === 'low' ? 0 : risk === 'medium' ? 1 : 2, noOfSegments, amount],
           });
         } catch (err) {
-      setIsSpinning(false);
-          alert('Auto bet failed at bet #' + (i + 1) + ': ' + (err?.message || JSON.stringify(err)));
+          setIsSpinning(false);
+          setResultPopup({ win: false, error: true, message: 'Auto bet failed at bet #' + (i + 1) + ': ' + (err?.message || JSON.stringify(err)) });
           break;
         }
-        setCooldown(3); // Start 3-second cooldown
-        // Wait 10 seconds before trying to fetch result
+        setCooldown(3);
         await new Promise((resolve) => setTimeout(resolve, 10000));
         const result = await fetchContractResultWithRetry(roundId);
         if (result) {
           setContractResult(result);
+          setIsSpinning(true);
+          await new Promise((resolve) => setTimeout(resolve, 3200));
+          setIsSpinning(false);
+          setResultPopup({
+            win: result.isWin && result.multiplier > 0,
+            error: false,
+            message: result.isWin && result.multiplier > 0
+              ? `Auto bet #${i + 1}: You won! Multiplier: ${result.multiplier}x`
+              : `Auto bet #${i + 1}: You lost this round.`,
+            contractResult: result
+          });
           setWheelToContractResult(result.segmentIndex, result.multiplier);
-          if (result.isWin && result.multiplier > 0) {
-            alert(`Auto bet #${i + 1}: You won! Multiplier: ${result.multiplier}x`);
-          } else {
-            alert(`Auto bet #${i + 1}: You lost this round.`);
-          }
-      } else {
-          alert(`Auto bet #${i + 1}: Failed to fetch contract result. Stopping auto-bet.`);
+        } else {
+          setResultPopup({ win: false, error: true, message: `Auto bet #${i + 1}: Failed to fetch contract result. Stopping auto-bet.` });
           break;
         }
         refetchRound();
-        // Wait for cooldown to finish before next bet
-        while (cooldown > 0) {
-          await new Promise((resolve) => setTimeout(resolve, 500));
-        }
       } catch (err) {
         setIsSpinning(false);
-        alert('Auto bet failed: ' + (err?.message || JSON.stringify(err)));
+        setResultPopup({ win: false, error: true, message: 'Auto bet failed: ' + (err?.message || JSON.stringify(err)) });
         break;
       }
     }
-    setIsSpinning(false);
   };
 
   const handleSelectMultiplier = (value) => {
@@ -600,6 +569,23 @@ export default function Home() {
       {blockWaitMessage && (
         <div className="bg-yellow-200 text-yellow-900 p-2 rounded mb-2 text-center">
           {blockWaitMessage}
+        </div>
+      )}
+      {resultPopup && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60">
+          <div className="bg-[#1a1a1a] border border-[#333947] rounded-lg p-8 text-center shadow-xl">
+            <div className={`text-3xl font-bold mb-2 ${resultPopup.win ? 'text-green-400' : resultPopup.error ? 'text-red-400' : 'text-yellow-400'}`}>{resultPopup.message}</div>
+            {resultPopup.contractResult && (
+              <div className="mt-2 text-white/80">
+                Segment: <span className="font-mono">{resultPopup.contractResult.segmentIndex}</span><br/>
+                Multiplier: <span className="font-mono">{resultPopup.contractResult.multiplier}x</span><br/>
+                Win: <span className="font-mono">{resultPopup.contractResult.isWin ? 'Yes' : 'No'}</span>
+              </div>
+            )}
+            <button className="mt-6 px-6 py-2 rounded bg-gradient-to-r from-red-500 to-yellow-500 text-white font-bold" onClick={() => setResultPopup(null)}>
+              Close
+            </button>
+          </div>
         </div>
       )}
     </div>

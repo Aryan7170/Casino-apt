@@ -69,15 +69,15 @@ export const ROULETTE_CONTRACTS = {
 // Wheel Contracts
 export const WHEEL_CONTRACTS = {
   [CHAIN_IDS.LOCALHOST]: {
-      address: "0xaeb059256bb6b9f763a07ebb3f614e9fbcef942d", // Updated local roulette address
+      address: "0xab8527d3d9ee60319e7cd013cb1964bcc6b37286", // Updated local roulette address
       treasuryAddress: "0xFfbfce3f171911044b6D91d700548AEd9A662420"
   },
   [CHAIN_IDS.MANTLE_SEPOLIA]: {
-      address: "0xaeb059256bb6b9f763a07ebb3f614e9fbcef942d",
+      address: "0xab8527d3d9ee60319e7cd013cb1964bcc6b37286",
       treasuryAddress: "0xFfbfce3f171911044b6D91d700548AEd9A662420"
   },
   [CHAIN_IDS.PHAROS_DEVNET]: {
-      address: "0xaeb059256bb6b9f763a07ebb3f614e9fbcef942d",
+      address: "0xab8527d3d9ee60319e7cd013cb1964bcc6b37286",
       treasuryAddress: "0xFfbfce3f171911044b6D91d700548AEd9A662420"
   },
   // Add more chain configurations here as needed
@@ -992,7 +992,7 @@ PHAROS_DEVNET: {
     ]
   },
   wheel: {
-    address: '0xb8dd501b513c2babd845aaa68ef76a5fade36fca',
+    address: '0xab8527d3d9ee60319e7cd013cb1964bcc6b37286',
     abi: [
       {
         "inputs": [
