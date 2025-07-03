@@ -6,7 +6,6 @@ import Link from "next/link";
 import GradientBorderButton from "./GradientBorderButton";
 import { FaGlobe, FaChevronDown, FaChevronUp, FaMobileAlt, FaLock, FaShieldAlt, FaCoins } from "react-icons/fa";
 
-import { Button } from "./moving-border";
 
 export default function Footer() {
   const [email, setEmail] = useState("");
@@ -263,14 +262,6 @@ export default function Footer() {
         </div>
       </div>
 
-
-
-      {/* <Button
-        borderRadius="1.75rem"
-        className="bg-white dark:bg-slate-900 text-black dark:text-white border-neutral-200 dark:border-slate-800"
-      >
-        Borders are cool
-      </Button> */}
 
       {/* Bottom Divider and Legal */}
       <div className="max-w-[1200px] mx-auto px-6">
