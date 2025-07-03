@@ -255,7 +255,7 @@ export default function Footer() {
               className="w-full h-full object-contain"
             />
 
-            <span className="absolute inset-0 flex items-center justify-center text-5xl font-semibold z-10">
+            <span className="absolute inset-0 flex items-center text-white justify-center text-5xl font-semibold z-10">
               Launching Game AI Agent Soon
             </span>
 
