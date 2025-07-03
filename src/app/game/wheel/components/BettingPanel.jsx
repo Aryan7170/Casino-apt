@@ -17,7 +17,8 @@ const BettingPanel = ({
   setSegments,
   manulBet,
   autoBet,
-  isSpinning
+  isSpinning,
+  canBet
 }) => {
   
   const [inputValue, setInputValue] = useState('0');
@@ -34,7 +35,7 @@ const BettingPanel = ({
     setInputValue(newAmount.toString());
   };
 
-  // const [numberOfBets, setNumberOfBets] = useState(10);
+  const [numberOfBets, setNumberOfBets] = useState(10);
   // const [winIncrease, setWinIncrease] = useState(0);
   // const [lossIncrease, setLossIncrease] = useState(0);
   // const [stopProfit, setStopProfit] = useState(0);
@@ -56,7 +57,7 @@ const BettingPanel = ({
             Manual
           </button>
         </div>
-        {/* <div className={cn("w-1/2", gameMode === "auto" && "gradient-borderb")}>
+        <div className={cn("w-1/2", gameMode === "auto" && "gradient-borderb")}>
           <button 
             className={cn(
               "flex-1 py-3 px-4 w-full text-center rounded-2xl transition-colors",
@@ -66,7 +67,7 @@ const BettingPanel = ({
           >
             Auto
           </button>
-        </div> */}
+        </div>
       </div>
 
       
@@ -140,7 +141,7 @@ const BettingPanel = ({
       </div>
 
 
-      {/* {gameMode === "auto" && (
+      {gameMode === "auto" && (
         <>
           <div className="mb-4">
             <label className="block text-sm text-white mb-1">Numbers of bet</label>
@@ -149,7 +150,7 @@ const BettingPanel = ({
             </div>
           </div>
 
-          <div className="mb-4">
+          {/* <div className="mb-4">
             <label className="block text-sm text-white mb-1">On win</label>
             <div className="flex gradient-border">
               <div className="bg-[#09011C] p-1 rounded-sm flex w-full">
@@ -189,9 +190,9 @@ const BettingPanel = ({
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
 
-          <div className="mb-4">
+          {/* <div className="mb-4">
             <label className="block text-sm text-white mb-1">Stop on profit</label>
             <div className="gradient-border">
             <div className="flex items-center bg-[#120521] p-2 py-3 rounded-sm">
@@ -221,37 +222,50 @@ const BettingPanel = ({
                 />  
             </div>
             </div>
-          </div>
+          </div> */}
         </>
-      )} */}
+      )}
 
       {/* Start AutoBet Button */}
-      <button
-        onClick={() => {
-          if (gameMode === "auto") {
+      {gameMode === "auto" && (
+        <button
+          onClick={() => {
             autoBet({
               numberOfBets,
-              winIncrease: winIncrease / 100,
-              lossIncrease: lossIncrease / 100,
-              stopProfit,
-              stopLoss,
               betAmount,
               risk,
               noOfSegments,
             });
-          } else {
-            manulBet();
-          }
-        }}
-        disabled={isSpinning || betAmount <= 0 || betAmount > balance}
-        className={`py-3 mt-4 rounded-lg text-center font-semibold transition-all w-full ${
-          isSpinning || betAmount <= 0 || betAmount > balance
-            ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-            : "bg-gradient-to-r from-[#F1324D] to-[#2414E3] text-white hover:from-[#e82f49] hover:to-[#2112e1]"
-        }`}
-      >
-        {gameMode === "auto" ? "Start Autobet" : "Start Bet"}
-      </button>
+          }}
+          disabled={isSpinning || betAmount <= 0 || betAmount > balance}
+          className={`py-3 mt-4 rounded-lg text-center font-semibold transition-all w-full ${
+            isSpinning || betAmount <= 0 || betAmount > balance
+              ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+              : "bg-gradient-to-r from-[#F1324D] to-[#2414E3] text-white hover:from-[#e82f49] hover:to-[#2112e1]"
+          }`}
+        >
+          Start Autobet
+        </button>
+      )}
+
+      {/* Manual Bet Button */}
+      {gameMode === "manual" && (
+        <div className="relative w-full">
+          <button
+            className={`w-full py-3 mt-4 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl text-white font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed ${!canBet ? 'opacity-60 cursor-not-allowed' : ''}`}
+            onClick={manulBet}
+            disabled={!canBet}
+            title={!canBet ? 'You must wait for the next block to be mined before placing another bet.' : ''}
+          >
+            Place Bet
+          </button>
+          {!canBet && (
+            <div className="absolute left-0 right-0 -bottom-8 text-xs text-yellow-300 text-center">
+              You must wait for the next block to be mined before placing another bet.
+            </div>
+          )}
+        </div>
+      )}
 
     </div>
   );

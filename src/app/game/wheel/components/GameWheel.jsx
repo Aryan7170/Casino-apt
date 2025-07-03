@@ -2,8 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useMemo } from "react";
-import { cn } from "@/lib/utils.jsx";
-
+import { cn } from "@/lib/utils";
 
 function selectSegmentIndexByProbability(wheelData) {
   const rand = Math.random();
@@ -16,7 +15,6 @@ function selectSegmentIndexByProbability(wheelData) {
 
   return wheelData.length - 1; // fallback
 }
-
 
 export const wheelDataByRisk = {
   low: [
@@ -41,7 +39,6 @@ export const wheelDataByRisk = {
   },
 };
 
-
 function getHighRiskMultiplier(noOfSegments) {
   if (noOfSegments <= 10) return 9.90;
   if (noOfSegments <= 20) return 19.80;
@@ -51,13 +48,12 @@ function getHighRiskMultiplier(noOfSegments) {
 }
 
 function getHighRiskProbability(noOfSegments) {
-  if (noOfSegments <= 10) return 0.2;
-  if (noOfSegments <= 20) return 0.15;
-  if (noOfSegments <= 30) return 0.1;
-  if (noOfSegments <= 40) return 0.07;
-  return 0.05;
+  if (noOfSegments <= 10) return 0.10;
+  if (noOfSegments <= 20) return 0.08;
+  if (noOfSegments <= 30) return 0.06;
+  if (noOfSegments <= 40) return 0.04;
+  return 0.02;
 }
-
 
 const GameWheel = ({
   isSpinning,
@@ -67,197 +63,106 @@ const GameWheel = ({
   setWheelPosition,
   risk = "medium",
   hasSpun = false,
+  // selectedSegmentIndex = null // <- ADDED
+  contractResult = null // ✅ Add this
 }) => {
   const canvasRef = useRef(null);
-  // Dynamically generate segments based on noOfSegments and risk
-  const baseWheelData = useMemo(() => {
 
+  const baseWheelData = useMemo(() => {
     if (risk === "high") {
       const highData = wheelDataByRisk.high(noOfSegments);
-      // Distribute segments according to probability
+      const probabilities = highData.find(d => d.probability);
       let arr = [];
       let total = 0;
-      // Calculate segment counts for each entry
       const counts = highData.map((seg, idx) => {
-        if (idx === highData.length - 1) {
-          // Last segment: fill remaining
-          return noOfSegments - total;
-        }
+        if (idx === highData.length - 1) return noOfSegments - total;
         const count = Math.round(seg.probability * noOfSegments);
         total += count;
         return count;
       });
-      // If rounding error, adjust last
       const sum = counts.reduce((a, b) => a + b, 0);
-      if (sum !== noOfSegments) {
-        counts[counts.length - 1] += noOfSegments - sum;
-      }
-      // Build array
+      if (sum !== noOfSegments) counts[counts.length - 1] += noOfSegments - sum;
       highData.forEach((seg, idx) => {
-        for (let i = 0; i < counts[idx]; i++) {
-          arr.push({ ...seg });
-        }
+        for (let i = 0; i < counts[idx]; i++) arr.push({ ...seg });
       });
-      // Recalculate probability evenly
-      const prob = 1 / noOfSegments;
-      arr = arr.map(seg => ({ ...seg, probability: prob }));
-      return arr;
+      return arr.map(seg => ({ ...seg, probability: seg.probability }));
     }
 
     if (risk === "medium") {
-      // Separate 0.0 and non-0.0 segments
       const zeroSegment = wheelDataByRisk.medium.find(d => d.multiplier === 0.0);
       const nonZeroSegments = wheelDataByRisk.medium.filter(d => d.multiplier !== 0.0);
-      // We'll ignore original probabilities and distribute evenly
-      let arr = [];
-      let nonZeroIdx = 0;
+      let arr = [], nonZeroIdx = 0;
       for (let i = 0; i < noOfSegments; i++) {
-        if (i % 2 === 0) {
-          arr.push({ ...zeroSegment });
-        } else {
-          arr.push({ ...nonZeroSegments[nonZeroIdx % nonZeroSegments.length] });
-          nonZeroIdx++;
-        }
+        arr.push(i % 2 === 0 ? { ...zeroSegment } : { ...nonZeroSegments[nonZeroIdx++ % nonZeroSegments.length] });
       }
-      // Recalculate probability evenly
-      const prob = 1 / noOfSegments;
-      arr = arr.map(seg => ({ ...seg, probability: prob }));
-      return arr;
+      return arr.map(seg => ({ ...seg, probability: seg.probability }));
     }
 
     if (risk === "low") {
-      // Separate 1.2 and non-1.2 segments
-      const onePointTwoSegment = wheelDataByRisk.low.find(d => d.multiplier === 1.2);
-      const otherSegments = wheelDataByRisk.low.filter(d => d.multiplier !== 1.2);
-      let arr = [];
-      let otherIdx = 0;
+      const onePointTwo = wheelDataByRisk.low.find(d => d.multiplier === 1.2);
+      const others = wheelDataByRisk.low.filter(d => d.multiplier !== 1.2);
+      let arr = [], otherIdx = 0;
       for (let i = 0; i < noOfSegments; i++) {
-        if (i % 2 === 0) {
-          arr.push({ ...onePointTwoSegment });
-        } else {
-          arr.push({ ...otherSegments[otherIdx % otherSegments.length] });
-          otherIdx++;
-        }
+        arr.push(i % 2 === 0 ? { ...onePointTwo } : { ...others[otherIdx++ % others.length] });
       }
-      // Recalculate probability evenly
-      const prob = 1 / noOfSegments;
-      arr = arr.map(seg => ({ ...seg, probability: prob }));
-      return arr;
+      return arr.map(seg => ({ ...seg, probability: seg.probability }));
     }
+
     return wheelDataByRisk[risk];
   }, [risk, noOfSegments]);
 
   const wheelData = useMemo(() => {
-    // For medium risk, baseWheelData is already expanded
-    if (risk === "medium") return baseWheelData;
-    if (risk === "high") {
-      // Distribute segments according to probability
-      let arr = [];
-      let total = 0;
-      // Calculate segment counts for each entry
-      const counts = baseWheelData.map((seg, idx) => {
-        if (idx === baseWheelData.length - 1) {
-          // Last segment: fill remaining
-          return noOfSegments - total;
-        }
-        const count = Math.round(seg.probability * noOfSegments);
-        total += count;
-        return count;
-      });
-      // If rounding error, adjust last
-      const sum = counts.reduce((a, b) => a + b, 0);
-      if (sum !== noOfSegments) {
-        counts[counts.length - 1] += noOfSegments - sum;
-      }
-      // Build array
-      baseWheelData.forEach((seg, idx) => {
-        for (let i = 0; i < counts[idx]; i++) {
-          arr.push({ ...seg });
-        }
-      });
-      // Recalculate probability evenly
-      const prob = 1 / noOfSegments;
-      arr = arr.map(seg => ({ ...seg, probability: prob }));
-      return arr;
-    }
     let arr = [];
     for (let i = 0; i < noOfSegments; i++) {
       arr.push(baseWheelData[i % baseWheelData.length]);
     }
     return arr;
-  }, [baseWheelData, noOfSegments, risk]);
+  }, [baseWheelData, noOfSegments]);
 
   const segments = wheelData.length;
 
-  // For the bottom panel, always use unique multipliers from the original wheelDataByRisk
   const panelMultipliers = useMemo(() => {
-    let original = [];
-    if (risk === "high") {
-      original = wheelDataByRisk.high(noOfSegments);
-    } else {
-      original = wheelDataByRisk[risk] || [];
-    }
+    let original = risk === "high" ? wheelDataByRisk.high(noOfSegments) : wheelDataByRisk[risk] || [];
     return Array.from(new Set(original.map(d => d.multiplier)));
   }, [risk, noOfSegments]);
-  
+
   const panelColorMap = useMemo(() => {
-    let original = [];
-    if (risk === "high") {
-      original = wheelDataByRisk.high(noOfSegments);
-    } else {
-      original = wheelDataByRisk[risk] || [];
-    }
+    let original = risk === "high" ? wheelDataByRisk.high(noOfSegments) : wheelDataByRisk[risk] || [];
     return Object.fromEntries(original.map(d => [d.multiplier, d.color]));
   }, [risk, noOfSegments]);
-
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Set canvas dimensions
     const size = Math.min(canvas.parentElement.clientWidth, canvas.parentElement.clientHeight) - 40;
     canvas.width = size;
     canvas.height = size;
-    
-    // Draw wheel
+
     const centerX = size / 2;
     const centerY = size / 2;
     const radius = size / 2 - 10;
-    
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Save the current context state
-    ctx.save();
-    
-    // Move to center and rotate the entire wheel
-    ctx.translate(centerX, centerY);
-    ctx.rotate(-wheelPosition); // Negative for clockwise rotation
-    ctx.translate(-centerX, -centerY);
-    
-    // Draw segments - now each segment corresponds to wheelData[i]
-    const segmentAngle = (Math.PI * 2) / segments;
-    
-    for (let i = 0; i < segments; i++) {
-      const startAngle = i * segmentAngle;
-      const endAngle = (i + 1) * segmentAngle;
-      
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, startAngle, endAngle, false);
-      ctx.arc(centerX, centerY, radius * 0.93, endAngle, startAngle, true);
-      ctx.closePath();
 
-      // Use the color from wheelData[i], not from a generic array
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(-wheelPosition);
+    ctx.translate(-centerX, -centerY);
+
+    const segmentAngle = (Math.PI * 2) / segments;
+    for (let i = 0; i < segments; i++) {
+      const start = i * segmentAngle;
+      const end = (i + 1) * segmentAngle;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, start, end, false);
+      ctx.arc(centerX, centerY, radius * 0.93, end, start, true);
+      ctx.closePath();
       ctx.fillStyle = wheelData[i].color;
       ctx.fill();
-      
     }
-    
-    // Draw inner circle
+
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius * 0.4, 0, Math.PI * 2);
     ctx.fillStyle = "#0A0009";
@@ -265,67 +170,51 @@ const GameWheel = ({
     ctx.strokeStyle = "#333947";
     ctx.stroke();
 
-    // Restore the context to draw the pointer without rotation
     ctx.restore();
-    
   }, [wheelData, segments, wheelPosition]);
 
-  // Render wheel rotation animation
   useEffect(() => {
     if (!isSpinning || !canvasRef.current) return;
 
-    const selectedIndex = selectSegmentIndexByProbability(wheelData);
+    // Always use contractResult.segmentIndex if available
+    const selectedIndex = contractResult?.segmentIndex ?? selectSegmentIndexByProbability(wheelData);
+
     const segmentAngle = (Math.PI * 2) / segments;
     const totalSpins = 5;
-    
-    // Calculate target rotation to land on the selected segment
-    // The pointer is at the top (12 o'clock), so we need to account for that
-    const targetSegmentCenter = selectedIndex * segmentAngle + segmentAngle / 2;
+    const targetCenter = selectedIndex * segmentAngle + segmentAngle / 2;
     const startRotation = wheelPosition % (Math.PI * 2);
-    
-    // We want the selected segment to be at the top (under the pointer)
-    // So we rotate until that segment's center is at 0 radians (top)
-    const finalRotation = (Math.PI * 2 * totalSpins) + (Math.PI * 2 - targetSegmentCenter);
+    const finalRotation = (Math.PI * 2 * totalSpins) + (Math.PI * 2 - targetCenter);
 
     let startTime = null;
     let rafId;
-
     const duration = 3000;
 
     const animate = (timestamp) => {
       if (!startTime) startTime = timestamp;
       const elapsed = timestamp - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      const easeOut = 1 - Math.pow(1 - progress, 3); // cubic easing out
-
+      const easeOut = 1 - Math.pow(1 - progress, 3);
       const newPosition = startRotation + finalRotation * easeOut;
       setWheelPosition(newPosition);
 
       if (progress < 1) {
         rafId = requestAnimationFrame(animate);
       } else {
-        // When animation completes, set the multiplier to the selected segment
         const landedMultiplier = wheelData[selectedIndex].multiplier;
         handleSelectMultiplier(landedMultiplier);
       }
     };
 
     rafId = requestAnimationFrame(animate);
+    return () => { if (rafId) cancelAnimationFrame(rafId); };
+  }, [handleSelectMultiplier, isSpinning, segments, setWheelPosition, wheelData, wheelPosition, contractResult]);
 
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-    };
-  }, [handleSelectMultiplier, isSpinning, segments, setWheelPosition, wheelData, wheelPosition]);
-
-  // Helper function to get the current segment under the pointer
   const getCurrentSegmentUnderPointer = () => {
-    const normalizedPosition = wheelPosition % (Math.PI * 2);
-    const segmentAngle = (Math.PI * 2) / segments;
-    
-    const offsetPosition = (normalizedPosition + Math.PI/2 + Math.PI) % (Math.PI * 2);
-    const segmentIndex = Math.floor(offsetPosition / segmentAngle) % segments;
-    
-    return wheelData[segmentIndex];
+    const normalized = wheelPosition % (Math.PI * 2);
+    const angle = (Math.PI * 2) / segments;
+    const offset = (normalized + Math.PI/2 + Math.PI) % (Math.PI * 2);
+    const index = Math.floor(offset / angle) % segments;
+    return wheelData[index];
   };
 
   const currentSegment = getCurrentSegmentUnderPointer();
@@ -333,9 +222,8 @@ const GameWheel = ({
   return (
     <div className="flex flex-col justify-between items-center h-full w-full">
       <div className="relative flex h-[435px] w-[600px] sm:h-[525px] sm:w-[500px] lg:h-[625px] lg:w-[600px] items-center justify-center p-4">
-
         <Image
-          src="/arrow.svg"
+          src='/arrow.svg'
           width={50}
           height={50}
           alt="Pointer Arrow"
@@ -348,7 +236,6 @@ const GameWheel = ({
             isSpinning && "animate-pulse"
           )}
         />
-        
         {!isSpinning && hasSpun && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-4xl font-bold text-white animate-bounce">
@@ -358,7 +245,6 @@ const GameWheel = ({
         )}
       </div>
 
-      {/* Current Segment Display */}
       <div className="w-full max-w-md mx-auto mb-4 p-4 bg-[#1a1a1a] rounded-lg border border-[#333947]">
         <div className="text-center">
           <div className="text-sm text-gray-400 mb-2">Current Position</div>
@@ -374,18 +260,11 @@ const GameWheel = ({
               ({(currentSegment.probability * 100).toFixed(1)}% chance)
             </div>
           </div>
-          {/* Debug info */}
-          <div className="text-xs text-gray-500 mt-2">
-            Position: {(wheelPosition % (Math.PI * 2)).toFixed(3)} | 
-            Segment: {Math.floor(((wheelPosition % (Math.PI * 2)) + Math.PI/2 + Math.PI) / ((Math.PI * 2) / segments)) % segments} | 
-            Total: {segments}
-          </div>
         </div>
       </div>
-      
+
       <div className="flex w-full gap-3 p-2">
         {panelMultipliers.map((multiplier) => {
-          // Only highlight if hasSpun is true
           const isSelected = hasSpun && currentSegment && currentSegment.multiplier === multiplier;
           const bgColor = panelColorMap[multiplier] || "#333947";
           return (
@@ -397,15 +276,17 @@ const GameWheel = ({
               <span className="text-white pb-2">
                 {multiplier.toFixed(2)}x
               </span>
-              <div
-                className="w-full h-3 rounded-b-md"
-                style={{ backgroundColor: bgColor }}
-              ></div>
+              <div className="w-full h-3 rounded-b-md" style={{ backgroundColor: bgColor }}></div>
             </div>
           );
         })}
       </div>
 
+      <div className="result-multiplier">
+        {contractResult ? (
+          <span>Result: {contractResult.multiplier}x</span>
+        ) : null}
+      </div>
     </div>
   );
 };

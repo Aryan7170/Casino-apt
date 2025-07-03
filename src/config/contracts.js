@@ -66,10 +66,28 @@ export const ROULETTE_CONTRACTS = {
   // Add more chain configurations here as needed
 };
 
+// Wheel Contracts
+export const WHEEL_CONTRACTS = {
+  [CHAIN_IDS.LOCALHOST]: {
+      address: "0xaeb059256bb6b9f763a07ebb3f614e9fbcef942d", // Updated local roulette address
+      treasuryAddress: "0xFfbfce3f171911044b6D91d700548AEd9A662420"
+  },
+  [CHAIN_IDS.MANTLE_SEPOLIA]: {
+      address: "0xaeb059256bb6b9f763a07ebb3f614e9fbcef942d",
+      treasuryAddress: "0xFfbfce3f171911044b6D91d700548AEd9A662420"
+  },
+  [CHAIN_IDS.PHAROS_DEVNET]: {
+      address: "0xaeb059256bb6b9f763a07ebb3f614e9fbcef942d",
+      treasuryAddress: "0xFfbfce3f171911044b6D91d700548AEd9A662420"
+  },
+  // Add more chain configurations here as needed
+};
+
 // ABIs will be stored here after your Remix deployment
 export const ABIS = {
   TOKEN: null, // Will be filled with your Remix deployment ABI
-  ROULETTE: null // Will be filled with your Remix deployment ABI
+  ROULETTE: null, // Will be filled with your Remix deployment ABI
+  WHEEL: null // Will be filled with your Remix deployment ABI
 };
 
 // Chain Names for UI
@@ -970,6 +988,167 @@ PHAROS_DEVNET: {
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
+      }
+    ]
+  },
+  wheel: {
+    address: '0xb8dd501b513c2babd845aaa68ef76a5fade36fca',
+    abi: [
+      {
+        "inputs": [
+          {
+            "internalType": "contract IERC20",
+            "name": "_token",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          }
+        ],
+        "name": "OwnableInvalidOwner",
+        "type": "error"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          }
+        ],
+        "name": "OwnableUnauthorizedAccount",
+        "type": "error"
+      },
+      {
+        "inputs": [],
+        "name": "ReentrancyGuardReentrantCall",
+        "type": "error"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "player",
+            "type": "address"
+          },
+          {
+            "indexed": true,
+            "internalType": "uint256",
+            "name": "round",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "enum WheelGame.RiskLevel",
+            "name": "risk",
+            "type": "uint8"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint8",
+            "name": "segments",
+            "type": "uint8"
+          }
+        ],
+        "name": "BetPlaced",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "previousOwner",
+            "type": "address"
+          },
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "newOwner",
+            "type": "address"
+          }
+        ],
+        "name": "OwnershipTransferred",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "player",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "RequestAllowance",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "player",
+            "type": "address"
+          },
+          {
+            "indexed": true,
+            "internalType": "uint256",
+            "name": "round",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "multiplier",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "segmentIndex",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "bool",
+            "name": "isWin",
+            "type": "bool"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          }
+        ],
+        "name": "WheelSpun",
+        "type": "event"
       }
     ]
   }

@@ -8,12 +8,32 @@ import { calculateResult } from "../../../lib/gameLogic";
 import Image from "next/image";
 import coin from "../../../../public/coin.png";
 import { motion } from "framer-motion";
-import { FaHistory, FaTrophy, FaInfoCircle, FaChartLine, FaCoins, FaChevronDown, FaPercentage, FaBalanceScale } from "react-icons/fa";
-import { GiCardRandom, GiWheelbarrow, GiSpinningBlades, GiTrophyCup } from "react-icons/gi";
+import {
+  FaHistory,
+  FaTrophy,
+  FaInfoCircle,
+  FaChartLine,
+  FaCoins,
+  FaChevronDown,
+  FaPercentage,
+  FaBalanceScale,
+} from "react-icons/fa";
+import {
+  GiCardRandom,
+  GiWheelbarrow,
+  GiSpinningBlades,
+  GiTrophyCup,
+} from "react-icons/gi";
 import { HiOutlineTrendingUp, HiOutlineChartBar } from "react-icons/hi";
 import useWalletStatus from '@/hooks/useWalletStatus';
 import ConnectWalletButton from '@/components/ConnectWalletButton';
 import TokenBalance from '@/components/TokenBalance';
+import { useWriteContract, useReadContract } from 'wagmi';
+import { readContract } from 'wagmi/actions';
+import { wheelContractAddress, wheelABI } from './config/contractDetails';
+import { tokenContractAddress, tokenABI } from '../roulette/contractDetails';
+import { useChainId } from 'wagmi';
+import { config } from '@/app/providers';
 
 // Import new components
 import WheelVideo from "./components/WheelVideo";
@@ -40,11 +60,105 @@ export default function Home() {
   const [selectedRisk, setSelectedRisk] = useState('medium');
   const [result, setResult] = useState(null);
   const [showStats, setShowStats] = useState(false);
-  
+  const [contractResult, setContractResult] = useState(null);
+  const [cooldown, setCooldown] = useState(0);
+  const [blockWaitMessage, setBlockWaitMessage] = useState("");
+  const [blockCheckLoading, setBlockCheckLoading] = useState(false);
+
   // Wallet connection
   const { isConnected, address } = useWalletStatus();
+  const { writeContractAsync } = useWriteContract();
+  const { data: roundData, refetch: refetchRound } = useReadContract({
+    address: wheelContractAddress,
+    abi: wheelABI,
+    functionName: 'currentRound',
+    watch: true,
+  });
 
-  // Scroll to section function
+  const [currentRound, setCurrentRound] = useState(null);
+  const chainId = useChainId();
+
+  // Add state for lastBetBlock and MIN_WAIT_BLOCK
+  const [lastBetBlock, setLastBetBlock] = useState(null);
+  const [minWaitBlock, setMinWaitBlock] = useState(null);
+  const [currentBlock, setCurrentBlock] = useState(null);
+
+  useEffect(() => {
+    if (roundData !== undefined && roundData !== null) {
+      setCurrentRound(BigInt(roundData));
+    }
+  }, [roundData]);
+
+  // Cooldown timer effect
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setInterval(() => {
+        setCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [cooldown]);
+
+  // Fetch lastBetBlock, MIN_WAIT_BLOCK, and current block number
+  useEffect(() => {
+    const fetchBlockData = async () => {
+      if (!chainId) return;
+      setBlockCheckLoading(true);
+      try {
+        // Get lastBetBlock
+        const lastBlock = await readContract(config, {
+          address: wheelContractAddress,
+          abi: wheelABI,
+          functionName: 'lastBetBlock',
+          chainId: Number(chainId),
+        });
+        setLastBetBlock(Number(lastBlock));
+        // Get MIN_WAIT_BLOCK
+        const minWait = await readContract(config, {
+          address: wheelContractAddress,
+          abi: wheelABI,
+          functionName: 'MIN_WAIT_BLOCK',
+          chainId: Number(chainId),
+        });
+        setMinWaitBlock(Number(minWait));
+        // Get current block number
+        const blockNumber = await window.ethereum.request({ method: 'eth_blockNumber' });
+        setCurrentBlock(parseInt(blockNumber, 16));
+      } catch (err) {
+        console.error('Error fetching block data:', err);
+      }
+      setBlockCheckLoading(false);
+    };
+    fetchBlockData();
+    // Optionally poll every 2 seconds
+    const interval = setInterval(fetchBlockData, 2000);
+    return () => clearInterval(interval);
+  }, [chainId]);
+
+  // Add block wait logic to canBet
+  const canBetBlock =
+    lastBetBlock !== null && minWaitBlock !== null && currentBlock !== null
+      ? currentBlock > lastBetBlock + minWaitBlock
+      : true;
+
+  useEffect(() => {
+    if (!canBetBlock) {
+      setBlockWaitMessage('Please wait for the next block to be mined before placing another bet.');
+    } else {
+      setBlockWaitMessage('');
+    }
+  }, [canBetBlock]);
+
+  // Update canBet to include block check
+  const canBet =
+    isConnected &&
+    chainId !== undefined &&
+    chainId !== null &&
+    betAmount > 0 &&
+    !isSpinning &&
+    cooldown === 0 &&
+    canBetBlock;
+
   const scrollToElement = (elementId) => {
     const element = document.getElementById(elementId);
     if (element) {
@@ -54,124 +168,243 @@ export default function Home() {
     }
   };
 
-  const manulBet = () => {
-    if (betAmount <= 0 || betAmount > balance || isSpinning) return;
-    
-    setIsSpinning(true);
-    setHasSpun(false);
-    setBalance(prev => prev - betAmount);
-    
-    const result = calculateResult(risk, noOfSegments);
-    
-    setTimeout(() => {
-      setCurrentMultiplier(result.multiplier);
-      setWheelPosition(result.position);
-      
-      setTimeout(() => {
-        const winAmount = betAmount * result.multiplier;
-        setBalance(prev => prev + winAmount);
-        
-        const newHistoryItem = {
-          id: Date.now(),
-          game: "Wheel",
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          betAmount: betAmount,
-          multiplier: `${result.multiplier.toFixed(2)}x`,
-          payout: winAmount
-        };
-        
-        setGameHistory(prev => [newHistoryItem, ...prev]);
-        setIsSpinning(false);
-        setHasSpun(true);
-      }, 1000);
-    }, 3000);
+  const approveTokens = async (amount) => {
+    try {
+      console.log('Checking token allowance...');
+      const allowance = await window.ethereum.request({
+        method: 'eth_call',
+        params: [{
+          to: tokenContractAddress,
+          data: '0xdd62ed3e' + address.slice(2).padStart(64, '0') + wheelContractAddress.slice(2).padStart(64, '0')
+        }, 'latest']
+      });
+      console.log('Current allowance:', BigInt(allowance).toString());
+      if (BigInt(allowance) < BigInt(amount)) {
+        console.log('Insufficient allowance, sending approve transaction...');
+        await writeContractAsync({
+          address: tokenContractAddress,
+          abi: tokenABI,
+          functionName: 'approve',
+          args: [wheelContractAddress, amount],
+        });
+        console.log('Token approval transaction sent!');
+      } else {
+        console.log('Sufficient allowance, no need to approve.');
+      }
+    } catch (err) {
+      console.error('Token approval failed:', err);
+      throw err;
+    }
   };
 
+  const setWheelToContractResult = (segmentIndex, multiplier) => {
+    const segmentAngle = (Math.PI * 2) / noOfSegments;
+    const totalSpins = 5;
+    const segmentCenter = segmentIndex * segmentAngle + segmentAngle / 2;
+    const targetPosition = (Math.PI * 2 * totalSpins) + (Math.PI * 2 - segmentCenter);
+    setWheelPosition(targetPosition);
+    setCurrentMultiplier(multiplier);
+    setHasSpun(true);
+    console.log('Wheel set to contract result:', { segmentIndex, multiplier, targetPosition, segmentCenter });
+  };
+
+  // Helper: Retry fetching contract result until chainId is available
+  const fetchContractResultWithRetry = async (roundId, retries = 5) => {
+    if (chainId === undefined || chainId === null) {
+      if (retries > 0) {
+        await new Promise(res => setTimeout(res, 500));
+        return fetchContractResultWithRetry(roundId, retries - 1);
+      }
+      console.error("Chain ID is undefined after retries, cannot fetch contract result");
+      return null;
+    }
+    return fetchContractResult(roundId);
+  };
+
+  const fetchContractResult = async (roundId) => {
+    console.log('chainId before readContract', chainId, typeof chainId);
+    if (chainId === undefined || chainId === null || isNaN(Number(chainId))) {
+      console.error('chainId is not ready, aborting contract call');
+      return null;
+    }
+    try {
+      console.log("Fetching result for roundId:", roundId);
+      const result = await readContract(config, {
+        address: wheelContractAddress,
+        abi: wheelABI,
+        functionName: 'getResult',
+        args: [roundId],
+        chainId: Number(chainId),
+      });
+      if (!result || !Array.isArray(result) || result.length !== 3) {
+        console.error("Invalid contract result:", result);
+        return null;
+      }
+      const [multiplier, segmentIndex, isWin] = result;
+      return {
+        multiplier: Number(multiplier) / 100,
+        segmentIndex: Number(segmentIndex),
+        isWin
+      };
+    } catch (err) {
+      console.error("Error fetching contract result:", err);
+      return null;
+    }
+  };
+
+  const manulBet = async () => {
+    if (!canBet) return;
+    // Debug: log all relevant state and parameters
+    console.log('DEBUG: manulBet called with state:', {
+      isConnected,
+      chainId,
+      betAmount,
+      isSpinning,
+      cooldown,
+      canBet,
+      risk,
+      noOfSegments,
+      address,
+      currentRound,
+      roundData,
+      balance,
+    });
+    setIsSpinning(true);
+    try {
+      const amount = BigInt(Math.floor(betAmount * 1e18));
+      const roundId = currentRound !== null ? currentRound : 0n;
+      // Log the exact values being sent to the contract
+      console.log('DEBUG: Contract call params:', {
+        risk: risk === 'low' ? 0 : risk === 'medium' ? 1 : 2,
+        noOfSegments,
+        amount: amount.toString(),
+        address,
+        balance,
+        minBet: 1 * 1e18,
+        betAmount,
+        amountInWei: amount.toString(),
+        balanceInWei: BigInt(Math.floor(balance * 1e18)).toString(),
+      });
+      // Warn if betAmount or balance is too low
+      if (amount < BigInt(1e18)) {
+        console.warn('WARNING: Bet amount in wei is less than minBet (1e18). This will cause a revert.');
+      }
+      if (BigInt(Math.floor(balance * 1e18)) < BigInt(1e18)) {
+        console.warn('WARNING: Wallet balance in wei is less than minBet (1e18). This will cause a revert.');
+      }
+      await approveTokens(amount);
+      let tx;
+      try {
+        tx = await writeContractAsync({
+          address: wheelContractAddress,
+          abi: wheelABI,
+          functionName: 'placeBet',
+          args: [risk === 'low' ? 0 : risk === 'medium' ? 1 : 2, noOfSegments, amount],
+        });
+      } catch (err) {
+        setIsSpinning(false);
+        alert('Transaction failed: ' + (err?.message || JSON.stringify(err)));
+        return;
+      }
+      console.log("Bet transaction sent:", tx);
+      setCooldown(3); // Start 3-second cooldown
+      // Wait 10 seconds before trying to fetch result
+      setTimeout(async () => {
+        const result = await fetchContractResultWithRetry(roundId);
+        if (result) {
+          setContractResult(result);
+          setWheelToContractResult(result.segmentIndex, result.multiplier);
+          if (result.isWin && result.multiplier > 0) {
+            alert(`You won! Multiplier: ${result.multiplier}x`);
+          } else {
+            alert("You lost this round.");
+          }
+        } else {
+          alert("Failed to fetch contract result. Please try again later.");
+        }
+        refetchRound();
+      }, 10000);
+    } catch (err) {
+      setIsSpinning(false);
+      alert("Bet failed: " + (err?.message || JSON.stringify(err)));
+    }
+    setIsSpinning(false);
+  };
 
   const autoBet = async ({
     numberOfBets,
-    winIncrease = 0,
-    lossIncrease = 0,
-    stopProfit = 0,
-    stopLoss = 0,
     betAmount: initialBetAmount,
     risk,
     noOfSegments,
   }) => {
-    if (isSpinning) return; // Prevent overlapping spins
-
+    if (isSpinning) return;
     let currentBet = initialBetAmount;
-    let totalProfit = 0;
-
     for (let i = 0; i < numberOfBets; i++) {
       setIsSpinning(true);
       setHasSpun(false);
-      setBalance(prev => prev - currentBet);
-
-      // Calculate result (you have this function)
-      const result = calculateResult(risk, noOfSegments);
-
-      // Simulate spin delay
-      await new Promise((r) => setTimeout(r, 3000)); // spin animation time
-
-      setCurrentMultiplier(result.multiplier);
-      setWheelPosition(result.position);
-
-      setIsSpinning(false);
-      setHasSpun(true);
-
-      // Wait 2 seconds to show the result
-      await new Promise((r) => setTimeout(r, 2000));
-
-      // Calculate win amount
-      const winAmount = currentBet * result.multiplier;
-
-      // Update balance with win
-      setBalance(prev => prev + winAmount);
-
-      // Update total profit
-      const profit = winAmount - currentBet;
-      totalProfit += profit;
-
-      // Store history entry
-      const newHistoryItem = {
-        id: Date.now() + i, // unique id per bet
-        game: "Wheel",
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        betAmount: currentBet,
-        multiplier: `${result.multiplier.toFixed(2)}x`,
-        payout: winAmount,
-      };
-
-      setGameHistory(prev => [newHistoryItem, ...prev]);
-
-      // Adjust bet for next round based on win/loss increase
-      if (result.multiplier > 1) {
-        currentBet = currentBet + (currentBet * winIncrease);
-      } else {
-        currentBet = currentBet + (currentBet * lossIncrease);
+      // Wait for cooldown
+      if (cooldown > 0) {
+        await new Promise((resolve) => {
+          const interval = setInterval(() => {
+            if (cooldown === 0) {
+              clearInterval(interval);
+              resolve();
+            }
+          }, 500);
+        });
       }
-
-      // Clamp bet to balance
-      if (currentBet > balance) currentBet = balance;
-      if (currentBet <= 0) currentBet = initialBetAmount;
-
-      // Stop conditions
-      if (stopProfit > 0 && totalProfit >= stopProfit) break;
-      if (stopLoss > 0 && totalProfit <= -stopLoss) break;
+      try {
+        const amount = BigInt(Math.floor(currentBet * 1e18));
+        const roundId = currentRound !== null ? currentRound : 0n;
+        await approveTokens(amount);
+        let tx;
+        try {
+          tx = await writeContractAsync({
+            address: wheelContractAddress,
+            abi: wheelABI,
+            functionName: 'placeBet',
+            args: [risk === 'low' ? 0 : risk === 'medium' ? 1 : 2, noOfSegments, amount],
+          });
+        } catch (err) {
+      setIsSpinning(false);
+          alert('Auto bet failed at bet #' + (i + 1) + ': ' + (err?.message || JSON.stringify(err)));
+          break;
+        }
+        setCooldown(3); // Start 3-second cooldown
+        // Wait 10 seconds before trying to fetch result
+        await new Promise((resolve) => setTimeout(resolve, 10000));
+        const result = await fetchContractResultWithRetry(roundId);
+        if (result) {
+          setContractResult(result);
+          setWheelToContractResult(result.segmentIndex, result.multiplier);
+          if (result.isWin && result.multiplier > 0) {
+            alert(`Auto bet #${i + 1}: You won! Multiplier: ${result.multiplier}x`);
+          } else {
+            alert(`Auto bet #${i + 1}: You lost this round.`);
+          }
+      } else {
+          alert(`Auto bet #${i + 1}: Failed to fetch contract result. Stopping auto-bet.`);
+          break;
+        }
+        refetchRound();
+        // Wait for cooldown to finish before next bet
+        while (cooldown > 0) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+      } catch (err) {
+        setIsSpinning(false);
+        alert('Auto bet failed: ' + (err?.message || JSON.stringify(err)));
+        break;
+      }
     }
-
     setIsSpinning(false);
-    setBetAmount(currentBet); // update bet amount in panel
   };
 
   const handleSelectMultiplier = (value) => {
     setTargetMultiplier(value);
   };
 
-  // Header Section
   const renderHeader = () => {
-    // Sample statistics
     const gameStatistics = {
       totalBets: '1,856,342',
       totalVolume: '8.3M APTC',
@@ -179,7 +412,7 @@ export default function Home() {
     };
     
     return (
-      <div className="relative text-white px-4 md:px-8 lg:px-20 mb-8 pt-20 md:pt-24 mt-4">
+      <div className="relative text-white px-4 md:px-8 lg:px-20 mb-8 pt-20 md:pt-28 mt-0">
         {/* Background Elements */}
         <div className="absolute top-5 -right-32 w-64 h-64 bg-red-500/10 rounded-full blur-3xl"></div>
         <div className="absolute top-28 left-1/3 w-32 h-32 bg-green-500/10 rounded-full blur-2xl"></div>
@@ -312,19 +545,16 @@ export default function Home() {
               </div>
             </div>
           </div>
-
           <div className="w-full h-0.5 bg-gradient-to-r from-red-600 via-blue-500/30 to-transparent mt-6"></div>
         </div>
       </div>
     );
   };
 
-
   return (
     <div className="min-h-screen bg-[#070005] text-white pb-20">
       {/* Header */}
       {renderHeader()}
-
       {/* Main Game Section */}
       <div className="px-4 md:px-8 lg:px-20">
         <div className="flex flex-col lg:flex-row gap-6">
@@ -339,6 +569,7 @@ export default function Home() {
               wheelPosition={wheelPosition}
               setWheelPosition={setWheelPosition}
               hasSpun={hasSpun}
+              contractResult={contractResult}
             />
           </div>
           <div className="w-full lg:w-1/3">
@@ -355,31 +586,22 @@ export default function Home() {
               manulBet={manulBet}
               isSpinning={isSpinning}
               autoBet={autoBet}
+              canBet={canBet}
             />
           </div>
         </div>
       </div>
-      
-      {/* Video Section */}
       <WheelVideo />
-      
-      {/* Game Description */}
       <WheelDescription />
-      
-      {/* Strategy Guide */}
       <WheelStrategyGuide />
-      
-      {/* Win Probabilities */}
       <WheelProbability />
-      
-      {/* Payouts */}
       <WheelPayouts />
-      
-      {/* Game History */}
       <WheelHistory />
+      {blockWaitMessage && (
+        <div className="bg-yellow-200 text-yellow-900 p-2 rounded mb-2 text-center">
+          {blockWaitMessage}
+        </div>
+      )}
     </div>
   );
 }
-
-
-

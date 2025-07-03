@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract WheelGame is ReentrancyGuard, Ownable {
     IERC20 public immutable token; // APTC Token (immutable after deployment)
     uint256 public minBet;
-    address public constant TREASURY = 0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199;
+    address public constant TREASURY = 0xFfbfce3f171911044b6D91d700548AEd9A662420;
     uint256 public constant TREASURY_FEE_RATE = 5; // 0.5% = 5 / 1000
     uint256 public constant MIN_WAIT_BLOCK = 1;
 
@@ -17,9 +17,9 @@ contract WheelGame is ReentrancyGuard, Ownable {
     uint256 public currentRound;
 
     enum RiskLevel {
-        Low,    // 0
-        Medium, // 1
-        High    // 2
+        Low,
+        Medium,
+        High
     }
 
     struct Bet {
@@ -37,28 +37,26 @@ contract WheelGame is ReentrancyGuard, Ownable {
         bool isWin;
     }
 
-    // Store multipliers multiplied by 100 to avoid decimals
     // Low Risk: 70% chance 0x, 20% chance 1.2x, 10% chance 1.5x
     struct LowRiskConfig {
-        uint256[3] multipliers; // [0, 120, 150]
-        uint256[3] probabilities; // [70, 20, 10] (out of 100)
+        uint256[3] multipliers;
+        uint256[3] probabilities;
     }
 
-    // Medium Risk: 35% chance 0x, 20% chance 1.5x, 15% chance 1.7x, 15% chance 2.0x, 10% chance 3.0x, 5% chance 4.0x
+    // Medium Risk: 35% chance 0x, ..., 5% chance 4.0x
     struct MediumRiskConfig {
-        uint256[6] multipliers; // [0, 150, 170, 200, 300, 400]
-        uint256[6] probabilities; // [35, 20, 15, 15, 10, 5] (out of 100)
+        uint256[6] multipliers;
+        uint256[6] probabilities;
     }
 
-    // High Risk: Dynamic based on segments
     struct HighRiskConfig {
-        uint256 lossMultiplier; // 0
-        uint256 winMultiplier; // Dynamic based on segments
-        uint256 winProbability; // Dynamic based on segments (out of 1000)
+        uint256 lossMultiplier;
+        uint256 winMultiplier;
+        uint256 winProbability;
     }
 
-    LowRiskConfig public lowRiskConfig;
-    MediumRiskConfig public mediumRiskConfig;
+    LowRiskConfig private lowRiskConfig;
+    MediumRiskConfig private mediumRiskConfig;
 
     mapping(address => uint256) public lastBetTime;
     mapping(uint256 => Bet) public bets;
@@ -83,19 +81,19 @@ contract WheelGame is ReentrancyGuard, Ownable {
 
     event RequestAllowance(address indexed player, uint256 amount);
 
+    event DebugLog(string message, address player, uint256 amount, uint8 segments, uint256 allowance, uint256 balance, uint256 minBet, uint256 timeSinceLastBet, uint256 blockNumber, uint256 lastBetBlock);
+
     constructor(IERC20 _token) Ownable(msg.sender) {
         require(address(_token) != address(0), "Invalid token");
         token = _token;
         minBet = 1 * 10**18; // 1 APTC
         currentRound = 1;
 
-        // Initialize Low Risk Config
-        lowRiskConfig.multipliers = [0, 120, 150]; // 0x, 1.2x, 1.5x
-        lowRiskConfig.probabilities = [70, 20, 10]; // 70%, 20%, 10%
+        lowRiskConfig.multipliers = [0, 120, 150];
+        lowRiskConfig.probabilities = [70, 20, 10];
 
-        // Initialize Medium Risk Config
-        mediumRiskConfig.multipliers = [0, 150, 170, 200, 300, 400]; // 0x, 1.5x, 1.7x, 2.0x, 3.0x, 4.0x
-        mediumRiskConfig.probabilities = [35, 20, 15, 15, 10, 5]; // 35%, 20%, 15%, 15%, 10%, 5%
+        mediumRiskConfig.multipliers = [0, 150, 170, 200, 300, 400];
+        mediumRiskConfig.probabilities = [35, 20, 15, 15, 10, 5];
     }
 
     function checkUserAllowance(address user) public view returns (uint256) {
@@ -115,19 +113,21 @@ contract WheelGame is ReentrancyGuard, Ownable {
         uint8 segments,
         uint256 amount
     ) external nonReentrant hasEnoughBalance(amount) {
-        require(segments >= 10 && segments <= 50 && segments % 10 == 0, "Invalid segments count");
-        
+        uint256 balance = token.balanceOf(msg.sender);
+        uint256 minBet_ = minBet;
         uint256 currentAllowance = token.allowance(msg.sender, address(this));
-        require(currentAllowance >= amount, "Insufficient allowance");
-        
         uint256 timeSinceLastBet = block.timestamp - lastBetTime[msg.sender];
+        emit DebugLog("Before segments check", msg.sender, amount, segments, currentAllowance, balance, minBet_, timeSinceLastBet, block.number, lastBetBlock);
+        require(segments >= 10 && segments <= 50 && segments % 10 == 0, "Invalid segments count");
+        emit DebugLog("Before allowance check", msg.sender, amount, segments, currentAllowance, balance, minBet_, timeSinceLastBet, block.number, lastBetBlock);
+        require(currentAllowance >= amount, "Insufficient allowance");
+        emit DebugLog("Before cooldown check", msg.sender, amount, segments, currentAllowance, balance, minBet_, timeSinceLastBet, block.number, lastBetBlock);
         require(timeSinceLastBet >= 3 seconds, "Must wait 3 seconds between bets");
-        
+        emit DebugLog("Before block wait check", msg.sender, amount, segments, currentAllowance, balance, minBet_, timeSinceLastBet, block.number, lastBetBlock);
         require(block.number > lastBetBlock + MIN_WAIT_BLOCK, "Must wait at least 1 block between bets");
-        
+        emit DebugLog("Before token transfer", msg.sender, amount, segments, currentAllowance, balance, minBet_, timeSinceLastBet, block.number, lastBetBlock);
         require(token.transferFrom(msg.sender, address(this), amount), "Token transfer failed");
 
-        // Store bet
         bets[currentRound] = Bet({
             player: msg.sender,
             amount: amount,
@@ -141,9 +141,7 @@ contract WheelGame is ReentrancyGuard, Ownable {
 
         emit BetPlaced(msg.sender, currentRound, amount, risk, segments);
 
-        // Process the spin immediately
         spinWheel(currentRound);
-        
         currentRound++;
     }
 
@@ -153,7 +151,6 @@ contract WheelGame is ReentrancyGuard, Ownable {
         Bet memory bet = bets[roundId];
         require(bet.player != address(0), "Invalid bet");
 
-        // Generate random number
         uint256 randomNumber = uint256(
             keccak256(
                 abi.encodePacked(
@@ -170,11 +167,9 @@ contract WheelGame is ReentrancyGuard, Ownable {
         nonce++;
         lastBetBlock = block.number;
 
-        // Calculate result based on risk level
         WheelResult memory result = calculateWheelResult(bet.risk, bet.segments, randomNumber);
         results[roundId] = result;
 
-        // Process payout
         uint256 payout = 0;
         if (result.isWin && result.multiplier > 0) {
             uint256 winAmount = (bet.amount * result.multiplier) / 100;
@@ -184,18 +179,10 @@ contract WheelGame is ReentrancyGuard, Ownable {
             require(token.transfer(bet.player, payout), "Player transfer failed");
             require(token.transfer(TREASURY, fee), "Treasury fee transfer failed");
         } else {
-            // Loss - tokens already in contract, send to treasury
             require(token.transfer(TREASURY, bet.amount), "Loss transfer to treasury failed");
         }
 
-        emit WheelSpun(
-            bet.player,
-            roundId,
-            result.multiplier,
-            result.segmentIndex,
-            result.isWin,
-            payout
-        );
+        emit WheelSpun(bet.player, roundId, result.multiplier, result.segmentIndex, result.isWin, payout);
     }
 
     function calculateWheelResult(
@@ -203,7 +190,7 @@ contract WheelGame is ReentrancyGuard, Ownable {
         uint8 segments,
         uint256 randomNumber
     ) internal view returns (WheelResult memory) {
-        uint256 random100 = randomNumber % 100; // 0-99
+        uint256 random100 = randomNumber % 100;
         uint256 segmentIndex = randomNumber % segments;
 
         if (risk == RiskLevel.Low) {
@@ -220,25 +207,14 @@ contract WheelGame is ReentrancyGuard, Ownable {
         uint256 segmentIndex
     ) internal view returns (WheelResult memory) {
         uint256 cumulative = 0;
-        
         for (uint256 i = 0; i < lowRiskConfig.multipliers.length; i++) {
             cumulative += lowRiskConfig.probabilities[i];
             if (random100 < cumulative) {
                 bool isWin = lowRiskConfig.multipliers[i] > 0;
-                return WheelResult({
-                    multiplier: lowRiskConfig.multipliers[i],
-                    segmentIndex: segmentIndex,
-                    isWin: isWin
-                });
+                return WheelResult(lowRiskConfig.multipliers[i], segmentIndex, isWin);
             }
         }
-        
-        // Fallback (should never reach here)
-        return WheelResult({
-            multiplier: 0,
-            segmentIndex: segmentIndex,
-            isWin: false
-        });
+        return WheelResult(0, segmentIndex, false);
     }
 
     function calculateMediumRiskResult(
@@ -246,25 +222,14 @@ contract WheelGame is ReentrancyGuard, Ownable {
         uint256 segmentIndex
     ) internal view returns (WheelResult memory) {
         uint256 cumulative = 0;
-        
         for (uint256 i = 0; i < mediumRiskConfig.multipliers.length; i++) {
             cumulative += mediumRiskConfig.probabilities[i];
             if (random100 < cumulative) {
                 bool isWin = mediumRiskConfig.multipliers[i] > 0;
-                return WheelResult({
-                    multiplier: mediumRiskConfig.multipliers[i],
-                    segmentIndex: segmentIndex,
-                    isWin: isWin
-                });
+                return WheelResult(mediumRiskConfig.multipliers[i], segmentIndex, isWin);
             }
         }
-        
-        // Fallback (should never reach here)
-        return WheelResult({
-            multiplier: 0,
-            segmentIndex: segmentIndex,
-            isWin: false
-        });
+        return WheelResult(0, segmentIndex, false);
     }
 
     function calculateHighRiskResult(
@@ -273,60 +238,30 @@ contract WheelGame is ReentrancyGuard, Ownable {
         uint256 segmentIndex
     ) internal pure returns (WheelResult memory) {
         HighRiskConfig memory config = getHighRiskConfig(segments);
-        uint256 random1000 = randomNumber % 1000; // 0-999
-        
+        uint256 random1000 = randomNumber % 1000;
+
         if (random1000 < config.winProbability) {
-            // Win
-            return WheelResult({
-                multiplier: config.winMultiplier,
-                segmentIndex: segmentIndex,
-                isWin: true
-            });
+            return WheelResult(config.winMultiplier, segmentIndex, true);
         } else {
-            // Loss
-            return WheelResult({
-                multiplier: 0,
-                segmentIndex: segmentIndex,
-                isWin: false
-            });
+            return WheelResult(0, segmentIndex, false);
         }
     }
 
     function getHighRiskConfig(uint8 segments) internal pure returns (HighRiskConfig memory) {
         if (segments <= 10) {
-            return HighRiskConfig({
-                lossMultiplier: 0,
-                winMultiplier: 990, // 9.90x
-                winProbability: 100 // 10%
-            });
+            return HighRiskConfig(0, 990, 100);
         } else if (segments <= 20) {
-            return HighRiskConfig({
-                lossMultiplier: 0,
-                winMultiplier: 1980, // 19.80x
-                winProbability: 80 // 8%
-            });
+            return HighRiskConfig(0, 1980, 80);
         } else if (segments <= 30) {
-            return HighRiskConfig({
-                lossMultiplier: 0,
-                winMultiplier: 2970, // 29.70x
-                winProbability: 60 // 6%
-            });
+            return HighRiskConfig(0, 2970, 60);
         } else if (segments <= 40) {
-            return HighRiskConfig({
-                lossMultiplier: 0,
-                winMultiplier: 3960, // 39.60x
-                winProbability: 40 // 4%
-            });
+            return HighRiskConfig(0, 3960, 40);
         } else {
-            return HighRiskConfig({
-                lossMultiplier: 0,
-                winMultiplier: 4950, // 49.50x
-                winProbability: 20 // 2%
-            });
+            return HighRiskConfig(0, 4950, 20);
         }
     }
 
-    // View functions for frontend
+    // Getters
     function getBetInfo(uint256 roundId) external view returns (
         address player,
         uint256 amount,
@@ -362,12 +297,15 @@ contract WheelGame is ReentrancyGuard, Ownable {
         return (mediumRiskConfig.multipliers, mediumRiskConfig.probabilities);
     }
 
-    function getHighRiskMultiplier(uint8 segments) external pure returns (uint256 multiplier, uint256 probability) {
+    function getHighRiskMultiplier(uint8 segments) external pure returns (
+        uint256 multiplier,
+        uint256 probability
+    ) {
         HighRiskConfig memory config = getHighRiskConfig(segments);
         return (config.winMultiplier, config.winProbability);
     }
 
-    // Admin functions
+    // Admin
     function setMinBet(uint256 _minBet) external onlyOwner {
         require(_minBet > 0, "Min bet must be > 0");
         minBet = _minBet;
@@ -377,7 +315,7 @@ contract WheelGame is ReentrancyGuard, Ownable {
         uint256[3] memory multipliers,
         uint256[3] memory probabilities
     ) external onlyOwner {
-        require(probabilities[0] + probabilities[1] + probabilities[2] == 100, "Probabilities must sum to 100");
+        require(probabilities[0] + probabilities[1] + probabilities[2] == 100, "Invalid probabilities");
         lowRiskConfig.multipliers = multipliers;
         lowRiskConfig.probabilities = probabilities;
     }
@@ -386,11 +324,11 @@ contract WheelGame is ReentrancyGuard, Ownable {
         uint256[6] memory multipliers,
         uint256[6] memory probabilities
     ) external onlyOwner {
-        uint256 sum = 0;
+        uint256 total = 0;
         for (uint256 i = 0; i < probabilities.length; i++) {
-            sum += probabilities[i];
+            total += probabilities[i];
         }
-        require(sum == 100, "Probabilities must sum to 100");
+        require(total == 100, "Invalid probabilities");
         mediumRiskConfig.multipliers = multipliers;
         mediumRiskConfig.probabilities = probabilities;
     }
@@ -403,7 +341,6 @@ contract WheelGame is ReentrancyGuard, Ownable {
         emit RequestAllowance(msg.sender, amount);
     }
 
-    // Emergency functions
     function emergencyWithdraw() external onlyOwner {
         uint256 balance = token.balanceOf(address(this));
         require(token.transfer(msg.sender, balance), "Emergency withdraw failed");
