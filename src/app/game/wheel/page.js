@@ -42,6 +42,7 @@ import WheelStrategyGuide from "./components/WheelStrategyGuide";
 import WheelProbability from "./components/WheelProbability";
 import WheelPayouts from "./components/WheelPayouts";
 import WheelHistory from "./components/WheelHistory";
+import ResultsPopup from "./components/ResultsPopup";
 
 export default function Home() {
   const [balance, setBalance] = useState(1000);
@@ -65,30 +66,125 @@ export default function Home() {
   const [blockWaitMessage, setBlockWaitMessage] = useState("");
   const [blockCheckLoading, setBlockCheckLoading] = useState(false);
   const [resultPopup, setResultPopup] = useState(null);
+  const [showResultsPopup, setShowResultsPopup] = useState(false);
+  const [gameResult, setGameResult] = useState(null);
 
   // Wallet connection
   const { isConnected, address } = useWalletStatus();
   const { writeContractAsync } = useWriteContract();
-  const { data: roundData, refetch: refetchRound } = useReadContract({
-    address: wheelContractAddress,
-    abi: wheelABI,
-    functionName: 'currentRound',
-    watch: true,
-  });
-
-  const [currentRound, setCurrentRound] = useState(null);
   const chainId = useChainId();
+
+  // Contract state
+  const [contract, setContract] = useState(null);
+  const [contractReady, setContractReady] = useState(false);
+  const [contractError, setContractError] = useState(null);
 
   // Add state for lastBetBlock and MIN_WAIT_BLOCK
   const [lastBetBlock, setLastBetBlock] = useState(null);
   const [minWaitBlock, setMinWaitBlock] = useState(null);
   const [currentBlock, setCurrentBlock] = useState(null);
+  const [currentRound, setCurrentRound] = useState(null);
 
+  // Initialize Contract using wagmi
   useEffect(() => {
-    if (roundData !== undefined && roundData !== null) {
-      setCurrentRound(BigInt(roundData));
-    }
-  }, [roundData]);
+    const initContract = async () => {
+      try {
+        setContractError(null);
+        
+        if (window.ethereum && chainId) {
+          // Create a simple contract interface using wagmi's readContract
+          const contractInterface = {
+            methods: {
+              currentRound: () => ({
+                call: async () => {
+                  return await readContract(config, {
+                    address: wheelContractAddress,
+                    abi: wheelABI,
+                    functionName: 'currentRound',
+                    chainId: Number(chainId),
+                  });
+                }
+              }),
+              lastBetBlock: () => ({
+                call: async () => {
+                  return await readContract(config, {
+                    address: wheelContractAddress,
+                    abi: wheelABI,
+                    functionName: 'lastBetBlock',
+                    chainId: Number(chainId),
+                  });
+                }
+              }),
+              MIN_WAIT_BLOCK: () => ({
+                call: async () => {
+                  return await readContract(config, {
+                    address: wheelContractAddress,
+                    abi: wheelABI,
+                    functionName: 'MIN_WAIT_BLOCK',
+                    chainId: Number(chainId),
+                  });
+                }
+              }),
+              getResult: (roundId) => ({
+                call: async () => {
+                  return await readContract(config, {
+                    address: wheelContractAddress,
+                    abi: wheelABI,
+                    functionName: 'getResult',
+                    args: [roundId],
+                    chainId: Number(chainId),
+                  });
+                }
+              }),
+              checkUserAllowance: (user) => ({
+                call: async () => {
+                  return await readContract(config, {
+                    address: wheelContractAddress,
+                    abi: wheelABI,
+                    functionName: 'checkUserAllowance',
+                    args: [user],
+                    chainId: Number(chainId),
+                  });
+                }
+              })
+            }
+          };
+          
+          setContract(contractInterface);
+          setContractReady(true);
+          
+          console.log('Contract initialized successfully with wagmi');
+        } else if (!window.ethereum) {
+          setContractError('MetaMask not detected');
+          console.error('MetaMask not detected');
+        } else if (!chainId) {
+          setContractError('Chain ID not available');
+          console.error('Chain ID not available');
+        }
+      } catch (error) {
+        setContractError(`Contract initialization failed: ${error.message}`);
+        console.error('Contract initialization error:', error);
+      }
+    };
+
+    initContract();
+  }, [chainId]);
+
+  // Fetch current round when contract is ready
+  useEffect(() => {
+    const fetchCurrentRound = async () => {
+      if (!contract || !contractReady) return;
+      
+      try {
+        const round = await contract.methods.currentRound().call();
+        setCurrentRound(BigInt(round));
+      } catch (error) {
+        console.error('Error fetching current round:', error);
+      }
+    };
+
+    fetchCurrentRound();
+  }, [contract, contractReady]);
 
   // Cooldown timer effect
   useEffect(() => {
@@ -103,25 +199,18 @@ export default function Home() {
   // Fetch lastBetBlock, MIN_WAIT_BLOCK, and current block number
   useEffect(() => {
     const fetchBlockData = async () => {
-      if (!chainId) return;
+      if (!contract || !contractReady) return;
+      
       setBlockCheckLoading(true);
       try {
         // Get lastBetBlock
-        const lastBlock = await readContract(config, {
-          address: wheelContractAddress,
-          abi: wheelABI,
-          functionName: 'lastBetBlock',
-          chainId: Number(chainId),
-        });
+        const lastBlock = await contract.methods.lastBetBlock().call();
         setLastBetBlock(Number(lastBlock));
+        
         // Get MIN_WAIT_BLOCK
-        const minWait = await readContract(config, {
-          address: wheelContractAddress,
-          abi: wheelABI,
-          functionName: 'MIN_WAIT_BLOCK',
-          chainId: Number(chainId),
-        });
+        const minWait = await contract.methods.MIN_WAIT_BLOCK().call();
         setMinWaitBlock(Number(minWait));
+        
         // Get current block number
         const blockNumber = await window.ethereum.request({ method: 'eth_blockNumber' });
         setCurrentBlock(parseInt(blockNumber, 16));
@@ -130,11 +219,12 @@ export default function Home() {
       }
       setBlockCheckLoading(false);
     };
+    
     fetchBlockData();
     // Optionally poll every 2 seconds
     const interval = setInterval(fetchBlockData, 2000);
     return () => clearInterval(interval);
-  }, [chainId]);
+  }, [contract, contractReady]);
 
   // Add block wait logic to canBet
   const canBetBlock =
@@ -150,11 +240,11 @@ export default function Home() {
     }
   }, [canBetBlock]);
 
-  // Update canBet to include block check
+  // Update canBet to include contract readiness check
   const canBet =
     isConnected &&
-    chainId !== undefined &&
-    chainId !== null &&
+    contractReady &&
+    !contractError &&
     betAmount > 0 &&
     !isSpinning &&
     cooldown === 0 &&
@@ -172,14 +262,9 @@ export default function Home() {
   const approveTokens = async (amount) => {
     try {
       console.log('Checking token allowance...');
-      const allowance = await window.ethereum.request({
-        method: 'eth_call',
-        params: [{
-          to: tokenContractAddress,
-          data: '0xdd62ed3e' + address.slice(2).padStart(64, '0') + wheelContractAddress.slice(2).padStart(64, '0')
-        }, 'latest']
-      });
+      const allowance = await contract.methods.checkUserAllowance(address).call();
       console.log('Current allowance:', BigInt(allowance).toString());
+      
       if (BigInt(allowance) < BigInt(amount)) {
         console.log('Insufficient allowance, sending approve transaction...');
         await writeContractAsync({
@@ -209,34 +294,27 @@ export default function Home() {
     console.log('Wheel set to contract result:', { segmentIndex, multiplier, targetPosition, segmentCenter });
   };
 
-  // Helper: Retry fetching contract result until chainId is available
+  // Helper: Retry fetching contract result until contract is ready
   const fetchContractResultWithRetry = async (roundId, retries = 5) => {
-    if (chainId === undefined || chainId === null) {
+    if (!contract || !contractReady) {
       if (retries > 0) {
         await new Promise(res => setTimeout(res, 500));
         return fetchContractResultWithRetry(roundId, retries - 1);
       }
-      console.error("Chain ID is undefined after retries, cannot fetch contract result");
+      console.error("Contract is not ready after retries, cannot fetch contract result");
       return null;
     }
     return fetchContractResult(roundId);
   };
 
   const fetchContractResult = async (roundId) => {
-    console.log('chainId before readContract', chainId, typeof chainId);
-    if (chainId === undefined || chainId === null || isNaN(Number(chainId))) {
-      console.error('chainId is not ready, aborting contract call');
+    if (!contract || !contractReady) {
+      console.error('Contract is not ready, aborting contract call');
       return null;
     }
     try {
       console.log("Fetching result for roundId:", roundId);
-      const result = await readContract(config, {
-        address: wheelContractAddress,
-        abi: wheelABI,
-        functionName: 'getResult',
-        args: [roundId],
-        chainId: Number(chainId),
-      });
+      const result = await contract.methods.getResult(roundId).call();
       if (!result || !Array.isArray(result) || result.length !== 3) {
         console.error("Invalid contract result:", result);
         return null;
@@ -274,27 +352,50 @@ export default function Home() {
         return;
       }
       setCooldown(3);
+      
+      // Start wheel spin immediately for visual feedback
+      setIsSpinning(true);
+      
+      // Fetch contract result and update wheel
       setTimeout(async () => {
         const result = await fetchContractResultWithRetry(roundId);
         if (result) {
           setContractResult(result);
-          setIsSpinning(true); // Start wheel spin
-          setTimeout(() => {
-            setIsSpinning(false); // End wheel spin after animation duration
-            setResultPopup({
-              win: result.isWin && result.multiplier > 0,
-              error: false,
-              message: result.isWin && result.multiplier > 0
-                ? `You won! Multiplier: ${result.multiplier}x`
-                : 'You lost this round.',
-              contractResult: result
-            });
-          }, 3200); // match wheel animation duration
+          
+          // Set wheel to contract result
           setWheelToContractResult(result.segmentIndex, result.multiplier);
+          
+          // End wheel spin after animation duration
+          setTimeout(() => {
+            setIsSpinning(false);
+            // Set up the game result for the popup
+            const gameResultData = {
+              multiplier: BigInt(Math.floor(result.multiplier * 100)), // Convert back to contract format
+              segmentIndex: result.segmentIndex,
+              isWin: result.isWin,
+              payout: result.isWin ? BigInt(Math.floor(result.multiplier * betAmount * 1e18)) : 0n,
+              betAmount: BigInt(Math.floor(betAmount * 1e18)),
+              roundId: roundId.toString(),
+              risk: risk,
+              segments: noOfSegments,
+              color: result.isWin ? "#00E403" : "#333947" // Green for win, dark for loss
+            };
+            setGameResult(gameResultData);
+            setShowResultsPopup(true);
+          }, 3200); // match wheel animation duration
         } else {
+          setIsSpinning(false);
           setResultPopup({ win: false, error: true, message: 'Failed to fetch contract result. Please try again later.' });
         }
-        refetchRound();
+        // Refresh current round
+        if (contract && contractReady) {
+          try {
+            const round = await contract.methods.currentRound().call();
+            setCurrentRound(BigInt(round));
+          } catch (error) {
+            console.error('Error refreshing current round:', error);
+          }
+        }
       }, 10000);
     } catch (err) {
       setIsSpinning(false);
@@ -340,27 +441,51 @@ export default function Home() {
           break;
         }
         setCooldown(3);
+        
+        // Start wheel spin immediately for visual feedback
+        setIsSpinning(true);
+        
+        // Fetch contract result and update wheel
         await new Promise((resolve) => setTimeout(resolve, 10000));
         const result = await fetchContractResultWithRetry(roundId);
         if (result) {
           setContractResult(result);
-          setIsSpinning(true);
+          
+          // Set wheel to contract result
+          setWheelToContractResult(result.segmentIndex, result.multiplier);
+          
+          // End wheel spin after animation duration
           await new Promise((resolve) => setTimeout(resolve, 3200));
           setIsSpinning(false);
-          setResultPopup({
-            win: result.isWin && result.multiplier > 0,
-            error: false,
-            message: result.isWin && result.multiplier > 0
-              ? `Auto bet #${i + 1}: You won! Multiplier: ${result.multiplier}x`
-              : `Auto bet #${i + 1}: You lost this round.`,
-            contractResult: result
-          });
-          setWheelToContractResult(result.segmentIndex, result.multiplier);
+          
+          // Set up the game result for the popup
+          const gameResultData = {
+            multiplier: BigInt(Math.floor(result.multiplier * 100)), // Convert back to contract format
+            segmentIndex: result.segmentIndex,
+            isWin: result.isWin,
+            payout: result.isWin ? BigInt(Math.floor(result.multiplier * currentBet * 1e18)) : 0n,
+            betAmount: BigInt(Math.floor(currentBet * 1e18)),
+            roundId: roundId.toString(),
+            risk: risk,
+            segments: noOfSegments,
+            color: result.isWin ? "#00E403" : "#333947" // Green for win, dark for loss
+          };
+          setGameResult(gameResultData);
+          setShowResultsPopup(true);
         } else {
+          setIsSpinning(false);
           setResultPopup({ win: false, error: true, message: `Auto bet #${i + 1}: Failed to fetch contract result. Stopping auto-bet.` });
           break;
         }
-        refetchRound();
+        // Refresh current round
+        if (contract && contractReady) {
+          try {
+            const round = await contract.methods.currentRound().call();
+            setCurrentRound(BigInt(round));
+          } catch (error) {
+            console.error('Error refreshing current round:', error);
+          }
+        }
       } catch (err) {
         setIsSpinning(false);
         setResultPopup({ win: false, error: true, message: 'Auto bet failed: ' + (err?.message || JSON.stringify(err)) });
@@ -371,6 +496,13 @@ export default function Home() {
 
   const handleSelectMultiplier = (value) => {
     setTargetMultiplier(value);
+  };
+
+  const handleCloseResultsPopup = () => {
+    setShowResultsPopup(false);
+    setGameResult(null);
+    setHasSpun(false);
+    setContractResult(null);
   };
 
   const renderHeader = () => {
@@ -524,6 +656,40 @@ export default function Home() {
     <div className="min-h-screen bg-[#070005] text-white pb-20">
       {/* Header */}
       {renderHeader()}
+      
+      {/* Contract Status Display */}
+      {contractError && (
+        <div className="px-4 md:px-8 lg:px-20 mb-4">
+          <div className="bg-red-900/20 border border-red-800/20 rounded-lg p-4 text-center">
+            <div className="text-red-400 font-bold mb-2">Contract Connection Error</div>
+            <div className="text-red-300 text-sm">{contractError}</div>
+            <div className="text-gray-400 text-xs mt-2">
+              Please make sure MetaMask is installed and connected to the correct network.
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {!contractError && !contractReady && (
+        <div className="px-4 md:px-8 lg:px-20 mb-4">
+          <div className="bg-yellow-900/20 border border-yellow-800/20 rounded-lg p-4 text-center">
+            <div className="text-yellow-400 font-bold mb-2">Initializing Contract...</div>
+            <div className="text-yellow-300 text-sm">Please wait while we connect to the smart contract.</div>
+          </div>
+        </div>
+      )}
+      
+      {contractReady && !contractError && (
+        <div className="px-4 md:px-8 lg:px-20 mb-4">
+          <div className="bg-green-900/20 border border-green-800/20 rounded-lg p-4 text-center">
+            <div className="text-green-400 font-bold mb-2">Contract Connected</div>
+            <div className="text-green-300 text-sm">
+              Smart contract ready • Round: {currentRound?.toString() || 'Loading...'}
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Main Game Section */}
       <div className="px-4 md:px-8 lg:px-20">
         <div className="flex flex-col lg:flex-row gap-6">
@@ -566,28 +732,13 @@ export default function Home() {
       <WheelProbability />
       <WheelPayouts />
       <WheelHistory />
-      {blockWaitMessage && (
-        <div className="bg-yellow-200 text-yellow-900 p-2 rounded mb-2 text-center">
-          {blockWaitMessage}
-        </div>
-      )}
-      {resultPopup && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60">
-          <div className="bg-[#1a1a1a] border border-[#333947] rounded-lg p-8 text-center shadow-xl">
-            <div className={`text-3xl font-bold mb-2 ${resultPopup.win ? 'text-green-400' : resultPopup.error ? 'text-red-400' : 'text-yellow-400'}`}>{resultPopup.message}</div>
-            {resultPopup.contractResult && (
-              <div className="mt-2 text-white/80">
-                Segment: <span className="font-mono">{resultPopup.contractResult.segmentIndex}</span><br/>
-                Multiplier: <span className="font-mono">{resultPopup.contractResult.multiplier}x</span><br/>
-                Win: <span className="font-mono">{resultPopup.contractResult.isWin ? 'Yes' : 'No'}</span>
-              </div>
-            )}
-            <button className="mt-6 px-6 py-2 rounded bg-gradient-to-r from-red-500 to-yellow-500 text-white font-bold" onClick={() => setResultPopup(null)}>
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+      
+      {/* Results Popup */}
+      <ResultsPopup
+        isOpen={showResultsPopup}
+        onClose={handleCloseResultsPopup}
+        result={gameResult}
+      />
     </div>
   );
 }
