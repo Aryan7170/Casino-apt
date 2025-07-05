@@ -1,7 +1,7 @@
 // Wheel contract details for frontend integration
 
 // TODO: Replace with your deployed Wheel contract address
-export const wheelContractAddress = '0xab8527d3d9ee60319e7cd013cb1964bcc6b37286';
+export const wheelContractAddress = '0xcf4469d29aaae6f136b9cd171a01700895093c67';
 export const tokenContractAddress = '0x60672ccafd719eb569858003ed3b0ac0f6e63954';
 export const treasuryAddress = '0xFfbfce3f171911044b6D91d700548AEd9A662420';
 
@@ -86,73 +86,6 @@ export const wheelABI = [
 		"anonymous": false,
 		"inputs": [
 			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "message",
-				"type": "string"
-			},
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "player",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint8",
-				"name": "segments",
-				"type": "uint8"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "allowance",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "balance",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "minBet",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "timeSinceLastBet",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "blockNumber",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "lastBetBlock",
-				"type": "uint256"
-			}
-		],
-		"name": "DebugLog",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
 				"indexed": true,
 				"internalType": "address",
 				"name": "previousOwner",
@@ -229,6 +162,32 @@ export const wheelABI = [
 		],
 		"name": "WheelSpun",
 		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "LOW_RISK_SEGMENT_COUNT",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "MEDIUM_RISK_SEGMENT_COUNT",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
 	},
 	{
 		"inputs": [],
@@ -346,6 +305,13 @@ export const wheelABI = [
 		"type": "function"
 	},
 	{
+		"inputs": [],
+		"name": "emergencyWithdraw",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
 		"inputs": [
 			{
 				"internalType": "uint256",
@@ -397,17 +363,29 @@ export const wheelABI = [
 				"type": "uint8"
 			}
 		],
-		"name": "getHighRiskMultiplier",
+		"name": "getHighRiskSegments",
 		"outputs": [
 			{
-				"internalType": "uint256",
-				"name": "multiplier",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "probability",
-				"type": "uint256"
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "multiplier",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "color",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "probability",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct WheelGame.WheelSegment[]",
+				"name": "",
+				"type": "tuple[]"
 			}
 		],
 		"stateMutability": "pure",
@@ -415,17 +393,29 @@ export const wheelABI = [
 	},
 	{
 		"inputs": [],
-		"name": "getLowRiskConfig",
+		"name": "getLowRiskSegments",
 		"outputs": [
 			{
-				"internalType": "uint256[3]",
-				"name": "multipliers",
-				"type": "uint256[3]"
-			},
-			{
-				"internalType": "uint256[3]",
-				"name": "probabilities",
-				"type": "uint256[3]"
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "multiplier",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "color",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "probability",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct WheelGame.WheelSegment[]",
+				"name": "",
+				"type": "tuple[]"
 			}
 		],
 		"stateMutability": "view",
@@ -433,17 +423,29 @@ export const wheelABI = [
 	},
 	{
 		"inputs": [],
-		"name": "getMediumRiskConfig",
+		"name": "getMediumRiskSegments",
 		"outputs": [
 			{
-				"internalType": "uint256[6]",
-				"name": "multipliers",
-				"type": "uint256[6]"
-			},
-			{
-				"internalType": "uint256[6]",
-				"name": "probabilities",
-				"type": "uint256[6]"
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "multiplier",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "color",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "probability",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct WheelGame.WheelSegment[]",
+				"name": "",
+				"type": "tuple[]"
 			}
 		],
 		"stateMutability": "view",
@@ -479,6 +481,47 @@ export const wheelABI = [
 		"type": "function"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "enum WheelGame.RiskLevel",
+				"name": "risk",
+				"type": "uint8"
+			},
+			{
+				"internalType": "uint8",
+				"name": "segments",
+				"type": "uint8"
+			}
+		],
+		"name": "getWheelData",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "multiplier",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "color",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "probability",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct WheelGame.WheelSegment[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"name": "lastBetBlock",
 		"outputs": [
@@ -504,6 +547,64 @@ export const wheelABI = [
 			{
 				"internalType": "uint256",
 				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "lowRiskSegments",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "multiplier",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "color",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "probability",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "mediumRiskSegments",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "multiplier",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "color",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "probability",
 				"type": "uint256"
 			}
 		],
@@ -663,17 +764,27 @@ export const wheelABI = [
 	{
 		"inputs": [
 			{
-				"internalType": "uint256[3]",
-				"name": "multipliers",
-				"type": "uint256[3]"
+				"internalType": "uint256",
+				"name": "index",
+				"type": "uint256"
 			},
 			{
-				"internalType": "uint256[3]",
-				"name": "probabilities",
-				"type": "uint256[3]"
+				"internalType": "uint256",
+				"name": "multiplier",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "color",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "probability",
+				"type": "uint256"
 			}
 		],
-		"name": "updateLowRiskConfig",
+		"name": "updateLowRiskSegment",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -681,17 +792,27 @@ export const wheelABI = [
 	{
 		"inputs": [
 			{
-				"internalType": "uint256[6]",
-				"name": "multipliers",
-				"type": "uint256[6]"
+				"internalType": "uint256",
+				"name": "index",
+				"type": "uint256"
 			},
 			{
-				"internalType": "uint256[6]",
-				"name": "probabilities",
-				"type": "uint256[6]"
+				"internalType": "uint256",
+				"name": "multiplier",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "color",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "probability",
+				"type": "uint256"
 			}
 		],
-		"name": "updateMediumRiskConfig",
+		"name": "updateMediumRiskSegment",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
