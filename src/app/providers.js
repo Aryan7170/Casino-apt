@@ -58,7 +58,7 @@ const fallbackProjectId = "64df6621925fa7d0680ba510ac3788df";
 const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || fallbackProjectId;
 
 // Create wagmi config
-const config = getDefaultConfig({
+export const config = getDefaultConfig({
   appName: 'APT Casino',
   projectId: projectId,
   chains: [mantleSepolia, pharosDevnet],

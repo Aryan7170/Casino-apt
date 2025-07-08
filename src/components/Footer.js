@@ -6,6 +6,7 @@ import Link from "next/link";
 import GradientBorderButton from "./GradientBorderButton";
 import { FaGlobe, FaChevronDown, FaChevronUp, FaMobileAlt, FaLock, FaShieldAlt, FaCoins } from "react-icons/fa";
 
+
 export default function Footer() {
   const [email, setEmail] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -102,7 +103,7 @@ export default function Footer() {
           </div>
           
           {/* Language Selector */}
-          <div className="mt-6 relative">
+          <div className="mt-6 relative z-50">
             <button 
               className="flex items-center gap-2 text-white/70 hover:text-white p-2 rounded-md bg-[#250020] hover:bg-[#350030] w-full transition-colors"
               onClick={() => setShowLanguage(!showLanguage)}
@@ -241,9 +242,30 @@ export default function Footer() {
         </div>
       </div>
 
+      <div className="max-w-[1200px] mx-auto px-6">
+        <div className="relative my-10 p-[3px] rounded-[1.75rem] bg-gradient-to-r from-[#EB3351] to-[#2615E0] animate-borderMove bg-[length:200%_200%]">
+          <div className="relative w-full h-full rounded-[1.75rem] bg-white dark:bg-slate-900 text-black dark:text-white overflow-hidden">
+            
+            <Image
+              src="/images/news/HeadlinesBg.svg"
+              alt="APT Logo"
+              width={200}
+              height={200}
+              className="w-full h-full object-contain"
+            />
+
+            <span className="absolute inset-0 flex items-center text-white justify-center text-5xl font-semibold z-10">
+              Launching Game AI Agent Soon
+            </span>
+
+          </div>
+        </div>
+      </div>
+
+
       {/* Bottom Divider and Legal */}
       <div className="max-w-[1200px] mx-auto px-6">
-        <div className="mt-12 mb-6 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+        <div className="mt-0 mb-6 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
         
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-sm text-white/50">

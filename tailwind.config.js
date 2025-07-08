@@ -42,9 +42,14 @@ module.exports = {
         float: {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-20px)' },
-        }
+        },
+        borderMove: {
+          '0%': { backgroundPosition: '0% 50%' },
+          '100%': { backgroundPosition: '100% 50%' },
+        },
       },
       animation: {
+        borderMove: 'borderMove 4s linear infinite',
         blink: 'blink 4s infinite',
         cardHover: 'cardHover 2s ease-in-out infinite',
         chipSpin: 'chipSpin 3s linear infinite',

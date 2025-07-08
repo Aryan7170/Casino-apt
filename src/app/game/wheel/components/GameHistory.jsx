@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import coin from "../../../public/coin.png";
 
 const GameHistory = ({ gameHistory }) => {
   const [activeTab, setActiveTab] = useState("my-bet");
@@ -80,7 +79,7 @@ const GameHistory = ({ gameHistory }) => {
                       <span className="flex items-center">
                         {item.betAmount.toFixed(10)}
                         <Image
-                          src={coin}
+                          src="/coin.png"
                           width={20}
                           height={20}
                           alt="coin"
@@ -93,7 +92,7 @@ const GameHistory = ({ gameHistory }) => {
                       <span className="flex items-center">
                         {item.payout.toFixed(10)}
                         <Image
-                          src={coin}
+                          src="/coin.png"
                           width={20}
                           height={20}
                           alt="coin"

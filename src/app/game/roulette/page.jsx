@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useReducer, useMemo, useEffect, useRef, useCallback } from "react";
 import { Box, Typography, IconButton, CircularProgress } from "@mui/material";
-import Tooltip, { tooltipClasses } from "@mui/material/Tooltip";
+import Tooltip, { tooltipClasses } from "@mui/material/Tooltip"; 
 import { ThemeProvider, styled, createTheme } from "@mui/material/styles";
 import InfoIcon from "@mui/icons-material/Info";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -1829,7 +1829,7 @@ export default function GameRoulette() {
           }}
         >
           {/* Recent Results Bar */}
-          <Box 
+          {/* <Box 
             sx={{ 
               display: 'flex', 
               alignItems: 'center', 
@@ -1889,10 +1889,10 @@ export default function GameRoulette() {
                 </Box>
               ))
             )}
-          </Box>
+          </Box> */}
 
           {/* Play Button */}
-          <Box
+          {/* <Box
             sx={{
               display: 'flex',
               justifyContent: 'center',
@@ -1927,7 +1927,7 @@ export default function GameRoulette() {
                 'PLAY'
               )}
             </Button>
-          </Box>
+          </Box> */}
 
           {/* Responsive Grid Layout */}
           <Grid 
@@ -2433,8 +2433,8 @@ export default function GameRoulette() {
           
           <GameDetail gameData={gameData} bettingTableData={bettingTableData} />
         </Box>
-<TreasuryUI />
-<TreasuryTest />
+{/* <TreasuryUI /> */}
+{/* <TreasuryTest /> */}
 
         <Snackbar
           open={showNotification}

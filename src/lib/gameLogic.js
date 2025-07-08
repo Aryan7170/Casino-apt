@@ -1,16 +1,20 @@
-import { wheelDataByRisk } from "../app/game/wheel/components/GameWheel"; // Make sure this is exported
+import { wheelDataByRisk } from "../app/game/wheel/components/GameWheel.jsx"; // Updated path after restructuring
 
 export const calculateResult = (risk, noOfSegments) => {
   
+  // Simulate contract logic: first determine segment index, then multiplier
+  const segmentIndex = Math.floor(Math.random() * noOfSegments);
+  
+  // Get the wheel data for the risk level
   const wheelData = risk === "high" ? wheelDataByRisk.high(noOfSegments) : wheelDataByRisk[risk];
 
-  // Pick index based on probability
-  const rand = Math.random();
+  // Pick multiplier based on probability (similar to contract logic)
+  const rand = Math.random() * 100; // 0-100 like contract
   let cumulative = 0;
   let selectedIndex = 0;
 
   for (let i = 0; i < wheelData.length; i++) {
-    cumulative += wheelData[i].probability;
+    cumulative += wheelData[i].probability * 100; // Convert to percentage like contract
     if (rand <= cumulative) {
       selectedIndex = i;
       break;
@@ -19,23 +23,16 @@ export const calculateResult = (risk, noOfSegments) => {
 
   const multiplier = wheelData[selectedIndex].multiplier;
 
-  // Find all matching segment indices (in case of duplicate multipliers)
-  const matchingSegments = [];
-  for (let i = 0; i < noOfSegments; i++) {
-    if (wheelData[i % wheelData.length].multiplier === multiplier) {
-      matchingSegments.push(i);
-    }
-  }
-
-  const chosenSegment = matchingSegments[Math.floor(Math.random() * matchingSegments.length)];
-
+  // Calculate wheel position based on segment index (like contract)
   const totalSpins = 5;
   const segmentAngle = (Math.PI * 2) / noOfSegments;
-  const position = (chosenSegment * segmentAngle) + (Math.PI * 2 * totalSpins);
+  const segmentCenter = segmentIndex * segmentAngle + segmentAngle / 2;
+  const position = (Math.PI * 2 * totalSpins) + (Math.PI * 2 - segmentCenter);
 
   return {
     multiplier,
-    position
+    position,
+    segmentIndex
   };
 };
 /**

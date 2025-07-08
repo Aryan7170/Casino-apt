@@ -52,6 +52,34 @@ export const getRouletteContract = async (withSigner = false) => {
   return contract;
 };
 
+export const getMinesContract = async (withSigner = false) => {
+  const provider = getProvider();
+  
+  // Get the current chain ID
+  let chainId;
+  if (typeof window !== 'undefined' && window.ethereum) {
+    chainId = await window.ethereum.request({ method: 'eth_chainId' });
+  }
+
+  // Select the appropriate contract address based on the network
+  const contractConfig = chainId === '0x138b' 
+    ? CONTRACTS.MANTLE_SEPOLIA.mines 
+    : CONTRACTS.PHAROS_SEPOLIA.mines;
+
+  const contract = new ethers.Contract(
+    contractConfig.address,
+    contractConfig.abi,
+    provider
+  );
+
+  if (withSigner) {
+    const signer = await provider.getSigner();
+    return contract.connect(signer);
+  }
+
+  return contract;
+};
+
 export const switchToPharosSepolia = async () => {
   if (typeof window === 'undefined' || !window.ethereum) return;
 
