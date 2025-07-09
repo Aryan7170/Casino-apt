@@ -2,7 +2,7 @@
 
 // TODO: Replace with your deployed Wheel contract address
 export const wheelContractAddress = '0xcf4469d29aaae6f136b9cd171a01700895093c67';
-export const tokenContractAddress = '0x1DE498144F2A7A4c7D85d09C0B12999FD1a435c2';
+export const tokenContractAddress = '0x60672ccafd719eb569858003ed3b0ac0f6e63954';
 export const treasuryAddress = '0xFfbfce3f171911044b6D91d700548AEd9A662420';
 
 // Import the ABI from the compiled contract or paste it here
