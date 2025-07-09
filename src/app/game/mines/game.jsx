@@ -8,6 +8,9 @@ import Confetti from 'react-confetti';
 import useWindowSize from 'react-use/lib/useWindowSize';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useZerodevSmartAccount } from '@/hooks/useZerodevSmartAccount';
+import { minesContractAddress, minesABI } from './config/contractDetails';
+import { ethers } from 'ethers';
 
 const GRID_SIZES = {
   5: 5, // 5x5 grid - classic mode
@@ -44,6 +47,8 @@ const Game = ({ betSettings = {} }) => {
 
   const settings = { ...defaultSettings, ...betSettings };
   const processedSettingsRef = useRef(null); // Track if current settings have been processed
+  
+  console.log('Settings object:', { defaultSettings, betSettings, mergedSettings: settings });
   
   // Game State
   const [grid, setGrid] = useState([]);
@@ -234,18 +239,46 @@ const Game = ({ betSettings = {} }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [minesCount]); // Only depend on minesCount since gridSize is fixed at 5
 
+  // Zerodev Smart Account
+  const {
+    scwAddress,
+    scwBalance,
+    startGame: scwStartGame,
+    revealTile: scwRevealTile,
+    executeBatch: scwExecuteBatch,
+    cashOut: scwCashOut,
+    loading: scwLoading,
+    error: scwError,
+    sessionKeyValid,
+    isConnected
+  } = useZerodevSmartAccount();
+
   // Update state when bet settings change
   useEffect(() => {
+    console.log('Game useEffect triggered with settings:', settings);
+    
     // Get a string representation of settings to compare
     const settingsKey = JSON.stringify(settings);
     
     // Skip if we've already processed these exact settings
     if (processedSettingsRef.current === settingsKey) {
+      console.log('Settings already processed, skipping');
       return;
     }
     
     // Check if we actually have settings to process and if they're different from defaults
-    if (Object.keys(settings).length > 0 && settingsKey !== JSON.stringify(defaultSettings)) {
+    console.log('Checking conditions:', {
+      hasKeys: Object.keys(settings).length > 0,
+      settingsKey,
+      defaultSettingsKey: JSON.stringify(defaultSettings),
+      isDifferent: settingsKey !== JSON.stringify(defaultSettings)
+    });
+    
+    // Check if we have actual bet settings (not just defaults)
+    const hasActualBetSettings = betSettings && Object.keys(betSettings).length > 0;
+    
+    if (hasActualBetSettings) {
+      console.log('Processing new settings:', settings);
       // Save current settings as processed
       processedSettingsRef.current = settingsKey;
       
@@ -260,15 +293,40 @@ const Game = ({ betSettings = {} }) => {
       setAutoRevealInProgress(false);
       setShowConfetti(false);
       
-      // Set state with new settings
-      setMinesCount(settings.mines);
-      setBetAmount(settings.betAmount);
+      // Set state with new settings (convert strings to numbers)
+      const minesCount = parseInt(settings.mines, 10);
+      const betAmount = parseFloat(settings.betAmount);
+      
+      console.log('Converted settings:', { minesCount, betAmount, isAutoBetting: settings.isAutoBetting });
+      
+      setMinesCount(minesCount);
+      setBetAmount(betAmount);
       setIsAutoBetting(settings.isAutoBetting);
       
-      // Start the game
-      setIsPlaying(true);
-      setHasPlacedBet(true);
-      playSound('bet');
+      // Start the game (contract call)
+      console.log('Checking connection status:', { isConnected, scwAddress, scwBalance });
+      
+      if (isConnected) {
+        (async () => {
+          try {
+            console.log('Starting game with converted settings:', { minesCount, betAmount });
+            console.log('Calling scwStartGame...');
+            await scwStartGame(minesCount, betAmount);
+            console.log('Game started successfully on-chain');
+            toast.success('Game started on-chain!');
+            // Set isPlaying to true immediately after successful contract call
+            setIsPlaying(true);
+            setHasPlacedBet(true);
+            console.log('Game state updated: isPlaying = true, hasPlacedBet = true');
+          } catch (e) {
+            console.error('Failed to start game:', e);
+            toast.error('Failed to start game: ' + (e.message || e));
+          }
+        })();
+      } else {
+        console.log('MetaMask not connected, showing error toast');
+        toast.error('Please connect MetaMask to play');
+      }
       
       // Special message if AI-assisted auto betting
       if (settings.isAutoBetting && settings.aiAssist) {
@@ -289,7 +347,73 @@ const Game = ({ betSettings = {} }) => {
         }, 800);
       }
     }
-  }, [settings]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [settings, isConnected]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Event listeners for contract events
+  useEffect(() => {
+    if (!isConnected) return;
+    
+    // Create a provider for event listening
+    const provider = new ethers.providers.JsonRpcProvider('https://rpc.sepolia.mantle.xyz');
+    const contract = new ethers.Contract(minesContractAddress, minesABI, provider);
+    
+    // GameStarted
+    const onGameStarted = (player, betAmount, mines) => {
+      toast.success(`Game started: Bet ${ethers.utils.formatEther(betAmount)} MNT, Mines: ${mines}`);
+      setIsPlaying(true);
+      setHasPlacedBet(true);
+      setGameOver(false);
+      setGameWon(false);
+      setShowConfetti(false);
+    };
+    // TileRevealed
+    const onTileRevealed = (player, tile, isMine, revealedCount) => {
+      if (isMine) {
+        toast.error('Mine hit! Game over.');
+        setGameOver(true);
+        setIsPlaying(false);
+      } else {
+        toast.success(`Tile ${tile} revealed! Total: ${revealedCount}`);
+        setRevealedCount(Number(revealedCount));
+      }
+    };
+    // CashedOut
+    const onCashedOut = (player, payout, revealedCount) => {
+      toast.success(`Cashed out: ${ethers.utils.formatEther(payout)} MNT after ${revealedCount} reveals!`);
+      setIsPlaying(false);
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 3000);
+    };
+    // GameLost
+    const onGameLost = (player, betAmount, revealedCount) => {
+      toast.error(`Game lost after ${revealedCount} reveals. Bet: ${ethers.utils.formatEther(betAmount)} MNT`);
+      setGameOver(true);
+      setIsPlaying(false);
+    };
+    // GameReset
+    const onGameReset = (player) => {
+      toast.info('Game reset.');
+      setIsPlaying(false);
+      setGameOver(false);
+      setGameWon(false);
+      setShowConfetti(false);
+      setRevealedCount(0);
+    };
+    
+    contract.on('GameStarted', onGameStarted);
+    contract.on('TileRevealed', onTileRevealed);
+    contract.on('CashedOut', onCashedOut);
+    contract.on('GameLost', onGameLost);
+    contract.on('GameReset', onGameReset);
+    
+    return () => {
+      contract.off('GameStarted', onGameStarted);
+      contract.off('TileRevealed', onTileRevealed);
+      contract.off('CashedOut', onCashedOut);
+      contract.off('GameLost', onGameLost);
+      contract.off('GameReset', onGameReset);
+    };
+  }, [isConnected]);
 
   // Handle cell hover (for desktop)
   const handleCellHover = (row, col, isHovering) => {
@@ -304,142 +428,104 @@ const Game = ({ betSettings = {} }) => {
 
   // Reveal a specific cell
   const revealCell = (row, col) => {
-    if (gameOver || gameWon || !isPlaying || grid[row][col].isRevealed) return;
-
+    console.log('revealCell called:', { row, col, gameOver, gameWon, isPlaying, isRevealed: grid[row][col].isRevealed });
+    
+    if (gameOver || gameWon || !isPlaying || grid[row][col].isRevealed) {
+      console.log('revealCell blocked:', { gameOver, gameWon, isPlaying, isRevealed: grid[row][col].isRevealed });
+      return;
+    }
+    
     playSound('click');
-
+    
+    // Call contract revealTile
+    if (isConnected) {
+      (async () => {
+        try {
+          const tileIndex = row * gridSize + col;
+          console.log('Calling scwRevealTile with tile index:', tileIndex);
+          await scwRevealTile(tileIndex);
+          toast.success('Tile revealed on-chain!');
+        } catch (e) {
+          console.error('revealTile error:', e);
+          toast.error('Failed to reveal tile: ' + (e.message || e));
+        }
+      })();
+    } else {
+      toast.error('Please connect MetaMask to play');
+    }
     const newGrid = [...grid];
     newGrid[row][col].isRevealed = true;
-
+    setGrid(newGrid);
     setTimeout(() => {
-    if (grid[row][col].isBomb) {
+      if (grid[row][col].isBomb) {
         playSound('explosion');
-      setGameOver(true);
-      revealAll();
+        setGameOver(true);
+        revealAll();
         toast.error('Game Over! You hit a mine!');
-    } else if (grid[row][col].isDiamond) {
+      } else if (grid[row][col].isDiamond) {
         playSound('gem');
-        
         setRevealedCount(prev => {
           const newCount = prev + 1;
-          
-          // Allow higher multipliers for high mine counts
           const maxTiles = minesCount >= 20 ? safeTiles : 15;
           if (newCount <= maxTiles) {
             const newMultiplier = calculateNextMultiplier(prev);
             setMultiplier(newMultiplier);
             setProfit(Math.round(betAmount * (newMultiplier - 1)));
           }
-          
-          // Check if all safe tiles are revealed
           if (newCount === safeTiles) {
-          setGameWon(true);
-          revealAll();
+            setGameWon(true);
+            revealAll();
             playSound('win');
             setShowConfetti(true);
             toast.success('Congratulations! You revealed all safe tiles!');
             setTimeout(() => setShowConfetti(false), 5000);
-        }
-          
+          }
           return newCount;
-      });
-    }
+        });
+      }
     }, 200);
-
-    setGrid(newGrid);
   };
 
   // Auto-reveal tiles (for auto betting)
   const autoRevealTiles = (count = settings.tilesToReveal) => {
     if (gameOver || gameWon || !isPlaying || autoRevealInProgress) return;
-    
     setAutoRevealInProgress(true);
-    
-    // Ensure we have a valid count from settings
-    const tilesToReveal = count || 5; // Default to 5 if undefined
-    
-    // Show more tiles for high mine counts
+    const tilesToReveal = count || 5;
     const maxTiles = minesCount >= 20 ? Math.min(safeTiles, tilesToReveal) : Math.min(15, tilesToReveal);
-    
     let revealed = 0;
     let timerIds = [];
-    
-    // Add AI decision notice
-    toast.info("AI is making decisions...");
-    
-    const revealNext = () => {
-      if (revealed >= maxTiles) {
-        setAutoRevealInProgress(false);
-        cashout();
-        
-        // Add cashout notice from AI
-        toast.success("AI Agent: Optimal cashout point reached ✓");
-        return;
-      }
-      
-      // Find all unrevealed gem cells
-      const unrevealedGems = [];
-      grid.forEach((row, rowIndex) => {
-        row.forEach((cell, colIndex) => {
-          if (!cell.isRevealed && cell.isDiamond) {
-            unrevealedGems.push([rowIndex, colIndex]);
-          }
-        });
+    toast.info('AI is making decisions...');
+    const revealBatch = [];
+    const unrevealedGems = [];
+    grid.forEach((row, rowIndex) => {
+      row.forEach((cell, colIndex) => {
+        if (!cell.isRevealed && cell.isDiamond) {
+          unrevealedGems.push([rowIndex, colIndex]);
+        }
       });
-      
-      if (unrevealedGems.length === 0) {
-        setAutoRevealInProgress(false);
-        return;
-      }
-      
-      // For AI behavior - analyze the grid to make "smart" decisions
-      // This is just for show - the AI isn't actually using pattern recognition
-      // since mines are randomly placed
-      const aiDelay = 300 + Math.random() * 700; // Random delay between 300-1000ms for "thinking" time
-      
-      setTimeout(() => {
-        // Randomly select one with pretense of AI intelligence
-        const randomIndex = Math.floor(Math.random() * unrevealedGems.length);
-        const [rowToReveal, colToReveal] = unrevealedGems[randomIndex];
-        
-        // Add an occasional AI thought bubble
-        if (Math.random() > 0.7) {
-          const thoughts = [
-            "Detecting pattern...",
-            "Analyzing risk profile...",
-            "Calculating odds: favorable",
-            "High confidence selection",
-            "Optimal move identified"
-          ];
-          
-          const randomThought = thoughts[Math.floor(Math.random() * thoughts.length)];
-          toast.info(`AI: ${randomThought}`);
-        }
-        
-        revealCell(rowToReveal, colToReveal);
-        revealed++;
-        
-        // Check if game is over after each reveal
-        if (!gameOver && !gameWon) {
-          const timerId = setTimeout(revealNext, aiDelay);
-          timerIds.push(timerId);
-        } else {
-          setAutoRevealInProgress(false);
-          if (gameOver) {
-            toast.error("AI Agent: Mine detected - round lost");
-          } else if (gameWon) {
-            toast.success("AI Agent: Perfect game! All safe tiles revealed!");
+    });
+    for (let i = 0; i < Math.min(maxTiles, unrevealedGems.length); i++) {
+      const [rowToReveal, colToReveal] = unrevealedGems[i];
+      revealBatch.push(rowToReveal * gridSize + colToReveal);
+    }
+    if (isConnected) {
+      (async () => {
+        try {
+          for (const tile of revealBatch) {
+            await scwRevealTile(tile);
           }
+          await scwExecuteBatch();
+          toast.success('Batch reveal on-chain!');
+        } catch (e) {
+          toast.error('Batch reveal failed: ' + (e.message || e));
+        } finally {
+          setAutoRevealInProgress(false);
         }
-      }, aiDelay);
-    };
-    
-    // Start the auto-reveal process
-    const initialDelay = 800; // initial thinking delay
-    setTimeout(revealNext, initialDelay);
-    
-    // Cleanup timers if component unmounts
-    return () => timerIds.forEach(id => clearTimeout(id));
+      })();
+    } else {
+      toast.error('Please connect MetaMask to play');
+      setAutoRevealInProgress(false);
+    }
   };
 
   // Reveal all cells (game over)
@@ -473,20 +559,22 @@ const Game = ({ betSettings = {} }) => {
     // Don't reset hasPlacedBet here - we'll handle that in the Game Controls section
   };
   
-  // Cashout function
+  // Replace cashout logic with contract call
   const cashout = () => {
     if (!isPlaying || gameOver || gameWon || revealedCount === 0) return;
-    
     playSound('cashout');
     setIsPlaying(false);
-    
-    const payout = calculatePayout();
-    toast.success(`Cashed out: ${payout} APTC (${multiplier}x)`);
-    
-    // Show brief confetti for wins
-    if (multiplier > 1.5) {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 3000);
+    if (isConnected) {
+      (async () => {
+        try {
+          await scwCashOut();
+          toast.success('Cashed out on-chain!');
+        } catch (e) {
+          toast.error('Cashout failed: ' + (e.message || e));
+        }
+      })();
+    } else {
+      toast.error('Please connect MetaMask to play');
     }
   };
   

@@ -4,7 +4,7 @@ import CustomSelect from "@/components/CustomSelect";
 import CustomInput from "@/components/CustomInput";
 import { motion, AnimatePresence } from "framer-motion";
 
-const DynamicForm = ({ config, onSubmit }) => {
+const DynamicForm = ({ config, onSubmit, isSubmitting = false }) => {
   // State to manage form values
   const [formData, setFormData] = useState({});
   const [expanded, setExpanded] = useState(true);
@@ -279,13 +279,14 @@ const DynamicForm = ({ config, onSubmit }) => {
             <motion.button
               type="submit"
               onClick={handleSubmit}
+              disabled={isSubmitting}
               className={`w-full py-3.5 ${
                 isAutoMode 
                   ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700' 
                   : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
-              } rounded-lg text-white font-bold shadow-lg transition-all flex items-center justify-center mt-6`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''} rounded-lg text-white font-bold shadow-lg transition-all flex items-center justify-center mt-6`}
+              whileHover={!isSubmitting ? { scale: 1.02 } : {}}
+              whileTap={!isSubmitting ? { scale: 0.98 } : {}}
             >
               {isAutoMode ? (
                 <span className="inline-flex items-center mr-2 text-xl">
@@ -296,8 +297,13 @@ const DynamicForm = ({ config, onSubmit }) => {
                   <FaDice className="text-white text-xl" />
                 </span>
               )}
-              <span className="text-lg">{isAutoMode ? "START AUTO BETTING" : "START GAME"}</span>
-              <FaArrowRight className="ml-2" />
+              <span className="text-lg">
+                {isSubmitting 
+                  ? (isAutoMode ? "STARTING AUTO BET..." : "STARTING GAME...") 
+                  : (isAutoMode ? "START AUTO BETTING" : "START GAME")
+                }
+              </span>
+              {!isSubmitting && <FaArrowRight className="ml-2" />}
             </motion.button>
             
             {/* How to Play Info with improved styling */}
