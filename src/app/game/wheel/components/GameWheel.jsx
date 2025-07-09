@@ -21,6 +21,7 @@ function selectSegmentIndexByProbability(wheelData) {
   return wheelData.length - 1; // fallback
 }
 
+
 // FIXED: Exact match with smart contract's wheel data (integers)
 export const wheelDataByRisk = {
   low: [
@@ -66,7 +67,8 @@ function getHighRiskProbability(noOfSegments) {
 
 // Helper function to convert integer multiplier to decimal for display
 function formatMultiplier(intMultiplier) {
-  return (intMultiplier / 100).toFixed(2);
+  const num = typeof intMultiplier === 'bigint' ? Number(intMultiplier) : intMultiplier;
+  return (num / 100).toFixed(2);
 }
 
 const GameWheel = ({
@@ -78,97 +80,57 @@ const GameWheel = ({
   risk = "medium",
   hasSpun = false,
   contractResult = null, // Add contract result prop
+  wheelData = [], // Fetched from contract
 }) => {
+
+  const generateWheelSegments = (risk, segments) => {
+    const degreesPerSegment = 360 / segments;
+    
+    return Array.from({ length: segments }).map((_, i) => ({
+      index: i,
+      startDegree: i * degreesPerSegment,
+      endDegree: (i + 1) * degreesPerSegment,
+      // Add other segment properties based on risk level
+      multiplier: risk === 'high' 
+        ? (i === 0 ? getHighRiskMultiplier(segments) : 0)
+        : (i % 2 === 0 
+            ? (risk === 'medium' 
+                ? mediumRiskMultipliers[i % mediumRiskMultipliers.length]
+                : lowRiskMultipliers[i % lowRiskMultipliers.length])
+            : 0),
+      color: risk === 'high'
+        ? (i === 0 ? "#D72E60" : "#333947")
+        : (i % 2 === 0
+            ? colors[i % colors.length]
+            : "#333947")
+    }));
+  };
+  
+  // Helper function for high risk multiplie
+  
+  // Define these at the top of your file if not already there
+  const lowRiskMultipliers = [120, 150]; // 1.2x, 1.5x
+  const mediumRiskMultipliers = [150, 170, 200, 300, 400];
+  const colors = ["#00E403", "#D9D9D9", "#FDE905", "#7F46FD", "#FCA32F", "#D72E60"];
+    
   const canvasRef = useRef(null);
   
-  // FIXED: Generate wheel data using EXACT smart contract logic
-  const wheelData = useMemo(() => {
-    const segments = noOfSegments;
-    let wheelData = [];
-
-    if (risk === "high") {
-      // High risk: dynamic based on segments - EXACT contract logic
-      const winMultiplier = getHighRiskMultiplier(segments);
-      const winProbability = getHighRiskProbability(segments);
-      const lossProbability = 1000 - winProbability;
-      
-      for (let i = 0; i < segments; i++) {
-        if (i === 0) {
-          wheelData[i] = { 
-            multiplier: winMultiplier, 
-            color: "#D72E60", 
-            probability: winProbability 
-          };
-        } else {
-          wheelData[i] = { 
-            multiplier: 0, 
-            color: "#333947", 
-            probability: lossProbability 
-          };
-        }
-      }
-    } else if (risk === "medium") {
-      // Medium risk: FIXED to match new contract logic with proper probabilities
-      const mediumRiskSegments = wheelDataByRisk.medium;
-      
-      for (let i = 0; i < segments; i++) {
-        if (i % 2 === 0) {
-          // Even segments: 0x multiplier (35% of total probability)
-          wheelData[i] = { 
-            multiplier: 0, 
-            color: "#333947", 
-            probability: 350 * 2 / segments 
-          };
-        } else {
-          // Odd segments: non-zero multipliers (65% of total probability)
-          let baseSegmentIndex = i % 6; // Map to 6 base segments
-          if (baseSegmentIndex === 0) baseSegmentIndex = 1; // Skip 0x segment
-          wheelData[i] = { 
-            ...mediumRiskSegments[baseSegmentIndex],
-            probability: 650 * 2 / segments 
-          };
-        }
-      }
-    } else {
-      // Low risk: FIXED to match new contract logic with proper probabilities
-      const lowRiskSegments = wheelDataByRisk.low;
-      
-      for (let i = 0; i < segments; i++) {
-        if (i % 2 === 0) {
-          // Even segments: non-zero multipliers (30% of total probability)
-          let baseSegmentIndex = i % 3; // Map to 3 base segments
-          if (baseSegmentIndex === 1) baseSegmentIndex = 0; // Skip 1.2x segment
-          wheelData[i] = { 
-            ...lowRiskSegments[baseSegmentIndex],
-            probability: 300 * 2 / segments 
-          };
-        } else {
-          // Odd segments: 0x multiplier (70% of total probability)
-          wheelData[i] = { 
-            multiplier: 0, 
-            color: "#333947", 
-            probability: 700 * 2 / segments 
-          };
-        }
-      }
-    }
-
-    return wheelData;
-  }, [risk, noOfSegments]);
-
   const segments = wheelData.length;
 
   // For the bottom panel, show unique multipliers from the wheel
   const panelMultipliers = useMemo(() => {
-    const uniqueMultipliers = [...new Set(wheelData.map(d => d.multiplier))];
+    const uniqueMultipliers = [
+      ...new Set(wheelData.map(d => typeof d.multiplier === 'bigint' ? Number(d.multiplier) : d.multiplier))
+    ];
     return uniqueMultipliers.sort((a, b) => a - b);
   }, [wheelData]);
   
   const panelColorMap = useMemo(() => {
     const colorMap = {};
     wheelData.forEach(segment => {
-      if (!colorMap[segment.multiplier]) {
-        colorMap[segment.multiplier] = segment.color;
+      const mult = typeof segment.multiplier === 'bigint' ? Number(segment.multiplier) : segment.multiplier;
+      if (!colorMap[mult]) {
+        colorMap[mult] = segment.color;
       }
     });
     return colorMap;
@@ -177,6 +139,7 @@ const GameWheel = ({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    if (!segments) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -232,7 +195,7 @@ const GameWheel = ({
         ctx.textBaseline = "middle";
         ctx.fillStyle = wheelData[i].multiplier === 0 ? "#666" : "#FFF";
         ctx.font = segments <= 10 ? "14px Arial" : "10px Arial";
-        // FIXED: Format multiplier for display
+        // Format multiplier for display
         ctx.fillText(
           `${formatMultiplier(wheelData[i].multiplier)}x`, 
           radius * 0.75, 
@@ -258,59 +221,36 @@ const GameWheel = ({
 
   // Render wheel rotation animation
   useEffect(() => {
-    if (!isSpinning || !canvasRef.current) return;
-
+    if (!isSpinning || !canvasRef.current || !segments) return;
     // Use contract result if available, otherwise fall back to frontend generation
     let selectedIndex;
     if (contractResult && contractResult.segmentIndex !== undefined) {
-      // Use contract result - map segment index to wheel segments
-      selectedIndex = contractResult.segmentIndex % segments;
-      console.log('Using contract result for wheel spin:', contractResult, 'selectedIndex:', selectedIndex);
-      console.log('Wheel segment at selectedIndex:', wheelData[selectedIndex]);
-      console.log('All wheel segments:', wheelData.map((seg, idx) => `${idx}: ${formatMultiplier(seg.multiplier)}x`));
+      selectedIndex = Number(contractResult.segmentIndex); // Convert BigInt to Number
     } else {
-      // Fallback to frontend generation (for testing/demo)
-      selectedIndex = selectSegmentIndexByProbability(wheelData);
-      console.log('Using frontend-generated result for wheel spin, selectedIndex:', selectedIndex);
+      // This case should ideally not happen if contract result is always provided after a spin
+      // As a fallback, ensure a segment is selected, though it won't be contract-verified
+      selectedIndex = 0; 
     }
-
     const segmentAngle = (Math.PI * 2) / segments;
     const totalSpins = 5;
-    
-    // Calculate target rotation to land on the selected segment
     const targetSegmentCenter = selectedIndex * segmentAngle + segmentAngle / 2;
     const startRotation = wheelPosition % (Math.PI * 2);
-    
-    // We want the selected segment to be at the top (under the pointer)
     const finalRotation = (Math.PI * 2 * totalSpins) + (Math.PI * 2 - targetSegmentCenter);
-
     let startTime = null;
     let rafId;
-
     const duration = 3000;
-
     const animate = (timestamp) => {
       if (!startTime) startTime = timestamp;
       const elapsed = timestamp - startTime;
       const progress = Math.min(elapsed / duration, 1);
       const easeOut = 1 - Math.pow(1 - progress, 3); // cubic easing out
-
       const newPosition = startRotation + finalRotation * easeOut;
       setWheelPosition(newPosition);
-
       if (progress < 1) {
         rafId = requestAnimationFrame(animate);
-      } else {
-        // Use contract result multiplier if available, otherwise use wheel data
-        const landedMultiplier = contractResult && contractResult.multiplier !== undefined 
-          ? Math.floor(contractResult.multiplier * 100) // Convert back to contract format
-          : wheelData[selectedIndex].multiplier;
-        handleSelectMultiplier(landedMultiplier);
       }
     };
-
     rafId = requestAnimationFrame(animate);
-
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
     };
@@ -318,21 +258,29 @@ const GameWheel = ({
 
   // Helper function to get the current segment under the pointer
   const getCurrentSegmentUnderPointer = () => {
+    if (!segments) return { multiplier: 0, color: '#333947', probability: 0 };
     const normalizedPosition = wheelPosition % (Math.PI * 2);
     const segmentAngle = (Math.PI * 2) / segments;
-    
     const offsetPosition = (normalizedPosition + Math.PI/2 + Math.PI) % (Math.PI * 2);
     const segmentIndex = Math.floor(offsetPosition / segmentAngle) % segments;
-    
-    return wheelData[segmentIndex];
+    const seg = wheelData[segmentIndex];
+    return {
+      ...seg,
+      multiplier: typeof seg.multiplier === 'bigint' ? Number(seg.multiplier) : seg.multiplier,
+      probability: typeof seg.probability === 'bigint' ? Number(seg.probability) : seg.probability,
+    };
   };
 
   const currentSegment = getCurrentSegmentUnderPointer();
+  // Show the result value in the center after spinning, using contractResult if available
+  const resultMultiplier = hasSpun && contractResult && contractResult.multiplier !== undefined
+    ? (typeof contractResult.multiplier === 'bigint' ? Number(contractResult.multiplier) : contractResult.multiplier)
+    : hasSpun ? currentSegment.multiplier : null;
+   
 
   return (
     <div className="flex flex-col justify-between items-center h-full w-full">
       <div className="relative flex h-[435px] w-[600px] sm:h-[525px] sm:w-[500px] lg:h-[625px] lg:w-[600px] items-center justify-center p-4">
-
         <Image
           src="/arrow.svg"
           width={50}
@@ -347,16 +295,14 @@ const GameWheel = ({
             isSpinning && "animate-pulse"
           )}
         />
-        
         {!isSpinning && hasSpun && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-4xl font-bold text-white animate-bounce">
-              {formatMultiplier(currentSegment.multiplier)}x
+              {resultMultiplier !== null ? formatMultiplier(resultMultiplier) + 'x' : ''}
             </div>
           </div>
         )}
       </div>
-
       {/* Current Segment Display */}
       <div className="w-full max-w-md mx-auto mb-4 p-4 bg-[#1a1a1a] rounded-lg border border-[#333947]">
         <div className="text-center">
@@ -367,7 +313,7 @@ const GameWheel = ({
               style={{ backgroundColor: currentSegment.color }}
             ></div>
             <div className="text-2xl font-bold text-white">
-              {formatMultiplier(currentSegment.multiplier)}x
+              {formatMultiplier(resultMultiplier)}x
             </div>
             <div className="text-sm text-gray-400">
               ({(currentSegment.probability / 10).toFixed(1)}% chance)
@@ -381,7 +327,6 @@ const GameWheel = ({
           </div>
         </div>
       </div>
-      
       <div className="flex w-full gap-3 p-2">
         {panelMultipliers.map((multiplier) => {
           // Only highlight if hasSpun is true
@@ -404,7 +349,6 @@ const GameWheel = ({
           );
         })}
       </div>
-
     </div>
   );
 };

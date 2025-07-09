@@ -1,5 +1,5 @@
 export const minesContractAddress = '0xa534adf7A3B107f8bDF10CD042a309701Db71e6D';
-export const tokenContractAddress = '0x60672ccafd719eb569858003ed3b0ac0f6e63954';
+export const tokenContractAddress = '0x1DE498144F2A7A4c7D85d09C0B12999FD1a435c2';
 export const treasuryAddress = '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199';
 
 export const minesABI = [

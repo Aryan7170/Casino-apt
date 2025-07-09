@@ -43,6 +43,26 @@ const pharosDevnet = {
   testnet: true,
 };
 
+// Define Binance Smart Chain Testnet
+const binanceTestnet = {
+  id: 97,
+  name: 'Binance Smart Chain Testnet',
+  network: 'bsc-testnet',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Binance Coin',
+    symbol: 'BNB',
+  },
+  rpcUrls: {
+    default: { http: ['https://data-seed-prebsc-1-s1.binance.org:8545'] },
+    public: { http: ['https://data-seed-prebsc-1-s1.binance.org:8545'] },
+  },
+  blockExplorers: {
+    default: { name: 'BscScan Testnet', url: 'https://testnet.bscscan.com' },
+  },
+  testnet: true,
+};
+
 // Configure transport with improved settings
 const configureTransport = (url) => http(url, {
   batch: { batchSize: 1 },  // Disable batching for more reliable connections
@@ -83,6 +103,11 @@ export const publicMantleSepoliaClient = createPublicClient({
 // Use Mantle Sepolia as the primary client
 export const publicPharosSepoliaClient = publicMantleSepoliaClient;
 
+export const publicBinanceTestnetClient = createPublicClient({
+  chain: binanceTestnet,
+  transport: configureTransport(binanceTestnet.rpcUrls.default.http[0]),
+});
+
 let walletClient = null;
 
 export const getWalletClient = async () => {
@@ -97,8 +122,17 @@ export const getWalletClient = async () => {
     // Create wallet client if not already created
     if (!walletClient) {
       const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      // Prefer Mantle Sepolia (0x138b), fallback to Pharos Devnet
-      const chain = chainId === '0x138b' ? mantleSepolia : pharosDevnet;
+      // Prefer Mantle Sepolia (0x138b), fallback to Pharos Devnet, then Binance Testnet
+      let chain;
+      if (chainId === '0x138b') {
+        chain = mantleSepolia;
+      } else if (chainId === '0xc352') {
+        chain = pharosDevnet;
+      } else if (chainId === '0x61') { // 0x61 is chainId for Binance Smart Chain Testnet
+        chain = binanceTestnet;
+      } else {
+        chain = mantleSepolia; // Default fallback
+      }
       
       walletClient = createWalletClient({
         chain,
@@ -114,14 +148,25 @@ export const getWalletClient = async () => {
   }
 };
 
-export const createCustomWalletClient = (account) => {
+export const createCustomWalletClient = (account, providedChainId) => {
   if (typeof window === 'undefined' || !window.ethereum) {
     throw new Error('No ethereum provider found');
   }
   
+  let chain;
+  if (providedChainId === '0x138b') {
+    chain = mantleSepolia;
+  } else if (providedChainId === '0xc352') {
+    chain = pharosDevnet;
+  } else if (providedChainId === '0x61') {
+    chain = binanceTestnet;
+  } else {
+    chain = pharosDevnet; // Default to pharosDevnet
+  }
+
   return createWalletClient({
     account,
-    chain: pharosDevnet,
+    chain,
     transport: custom(window.ethereum)
   });
 };
@@ -133,11 +178,13 @@ export const checkNetwork = async () => {
   
   try {
     const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-    if (chainId !== '0x138b' && chainId !== '0xc352') { // Mantle or Pharos Devnet chainId
+    // Support Mantle Sepolia (0x138b), Local Hardhat (0x7a69) and Binance Testnet (0x61)
+    if (chainId !== '0x138b' && chainId !== '0x7a69' && chainId !== '0x61') {
       try {
+        // Try switching to Mantle Sepolia first
         await window.ethereum.request({
           method: 'wallet_switchEthereumChain',
-          params: [{ chainId: '0x138b' }], // Default to Mantle Sepolia
+          params: [{ chainId: '0x138b' }],
         });
       } catch (switchError) {
         if (switchError.code === 4902) {

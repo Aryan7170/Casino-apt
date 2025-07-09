@@ -1,6 +1,6 @@
-export const rouletteContractAddress = '0xfa339164994ea5d08fd898af81ffa8a5c4982974';
-export const tokenContractAddress = '0x60672ccafd719eb569858003ed3b0ac0f6e63954';
-export const treasuryAddress = '0xFfbfce3f171911044b6D91d700548AEd9A662420';
+export const rouletteContractAddress = '0x18B5E45eFEd35c55a67316b45968242C82d2523E';
+export const tokenContractAddress = '0x1DE498144F2A7A4c7D85d09C0B12999FD1a435c2';
+export const treasuryAddress = '0xFF9582E3898599D2cF0Abdc06321789dc345e529';
 
 export const rouletteABI = [
 	{

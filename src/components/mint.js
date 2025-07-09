@@ -5,7 +5,7 @@ export const mint = async (recipient, amount) => {
         const provider = new ethers.providers.JsonRpcProvider("https://rpc.sepolia.mantle.xyz");
         const privateKey = process.env.NEXT_PUBLIC_PRIVATE_KEY; // Make sure to set this in your .env file
         const wallet = new ethers.Wallet(privateKey, provider);
-        const contractAddress = "0x60672ccafd719eb569858003ed3b0ac0f6e63954"; // Your deployed token address
+        const contractAddress = "0x1DE498144F2A7A4c7D85d09C0B12999FD1a435c2"; // Your deployed token address
         const contractABI = [
             "function mint(address to, uint256 amount) public",
             "function balanceOf(address account) public view returns (uint256)",
@@ -25,7 +25,7 @@ export const mint = async (recipient, amount) => {
     }
 };
 
-const recipient = "0xFfbfce3f171911044b6D91d700548AEd9A662420";
+const recipient = "0xFF9582E3898599D2cF0Abdc06321789dc345e529";
 const amount = 1000;
 mint(recipient, amount);
 

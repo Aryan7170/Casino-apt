@@ -24,6 +24,17 @@ const SUPPORTED_NETWORKS = {
     },
     rpcUrls: ['https://devnet.dplabs-internal.com'],
     blockExplorerUrls: ['https://pharosscan.xyz']
+  },
+  BINANCE_TESTNET: {
+    chainId: '0x61', // 97 in decimal
+    chainName: 'Binance Smart Chain Testnet',
+    nativeCurrency: {
+      name: 'Binance Coin',
+      symbol: 'tBNB',
+      decimals: 18
+    },
+    rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545'],
+    blockExplorerUrls: ['https://testnet.bscscan.com']
   }
 };
 
@@ -63,6 +74,7 @@ const NetworkSwitcher = () => {
       // Convert chainIds to lowercase for comparison
       const mantleChainId = SUPPORTED_NETWORKS.MANTLE_SEPOLIA.chainId.toLowerCase();
       const pharosChainId = SUPPORTED_NETWORKS.PHAROS_DEVNET.chainId.toLowerCase();
+      const binanceChainId = SUPPORTED_NETWORKS.BINANCE_TESTNET.chainId.toLowerCase();
       const currentChainId = chainId.toLowerCase();
 
       if (currentChainId === mantleChainId) {
@@ -71,6 +83,9 @@ const NetworkSwitcher = () => {
       } else if (currentChainId === pharosChainId) {
         console.log('Setting network to Pharos Devnet');
         setCurrentNetwork('PHAROS_DEVNET');
+      } else if (currentChainId === binanceChainId) {
+        console.log('Setting network to Binance Testnet');
+        setCurrentNetwork('BINANCE_TESTNET');
       } else {
         console.log('Unsupported network detected:', chainId);
         setCurrentNetwork(null);

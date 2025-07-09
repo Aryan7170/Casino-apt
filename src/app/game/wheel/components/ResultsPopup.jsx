@@ -7,6 +7,8 @@ import { GiWheelbarrow } from "react-icons/gi";
 const ResultsPopup = ({ isOpen, onClose, result }) => {
   if (!isOpen || !result) return null;
 
+  console.log("RESULT DATA:", result);
+
   const {
     multiplier,
     segmentIndex,
@@ -16,14 +18,19 @@ const ResultsPopup = ({ isOpen, onClose, result }) => {
     roundId,
     risk,
     segments,
-    color
+    color,
+    randomNumber,
+    selectedSegmentIndex,
   } = result;
 
   const winAmount = isWin ? payout : 0n;
   const multiplierFormatted = (Number(multiplier) / 100).toFixed(2); // Convert from contract format
   const winAmountFormatted = (Number(winAmount) / 1e18).toFixed(4); // Convert from wei
   const betAmountFormatted = (Number(betAmount) / 1e18).toFixed(4); // Convert from wei
-
+  const segmentDegreeRange = 360 / segments;
+  const segmentStartDegree = segmentIndex * segmentDegreeRange;
+  const segmentCenterDegree = segmentStartDegree + (segmentDegreeRange / 2);
+  
   // Determine color based on multiplier and win status
   const getSegmentColor = () => {
     if (color) return color;
@@ -155,7 +162,51 @@ const ResultsPopup = ({ isOpen, onClose, result }) => {
                     <FaDice className="text-orange-400 mr-2" />
                     <span className="text-white/80 text-sm font-sans">Segment Index</span>
                   </div>
-                  <span className="text-white font-bold">#{segmentIndex}</span>
+                  <span className="text-white font-bold">
+                    {segmentIndex}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-black/20 rounded-lg">
+                <div className="flex items-center">
+                  <span className="text-white/80 text-sm font-sans">Random Number</span>
+                </div>
+                <span className="text-white font-bold">
+                  {randomNumber !== undefined ? randomNumber.toString() : "N/A"}
+                </span>
+              </div>
+
+              {/* Selected Segment Index */}
+              <div className="flex items-center justify-between p-3 bg-black/20 rounded-lg">
+                <div className="flex items-center">
+                  <span className="text-white/80 text-sm font-sans">Selected Segment Index</span>
+                </div>
+                <span className="text-white font-bold">
+                  {selectedSegmentIndex !== undefined ? selectedSegmentIndex : "N/A"}
+                </span>
+              </div>
+
+
+                <div className="flex items-center justify-between p-3 bg-black/20 rounded-lg">
+                  <div className="flex items-center">
+                    <span className="text-white/80 text-sm font-sans">Segment Range (Degrees)</span>
+                  </div>
+                  <span className="text-white font-bold">
+                    {segmentStartDegree.toFixed(1)}°-{(segmentStartDegree + segmentDegreeRange).toFixed(1)}°
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-black/20 rounded-lg">
+                  <div className="flex items-center">
+                    <span className="text-white/80 text-sm font-sans">Segment Color</span>
+                  </div>
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="inline-block w-6 h-6 rounded-full border"
+                      style={{ backgroundColor: color, borderColor: "#fff" }}
+                    ></span>
+                    <span className="text-white font-bold">{color}</span>
+                  </span>
                 </div>
               </div>
 

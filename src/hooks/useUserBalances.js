@@ -11,7 +11,8 @@ import { formatUnits } from 'viem';
 // APTC token addresses by chain
 const APTC_TOKEN_ADDRESSES = {
   5003: '0x60672ccafd719eb569858003ed3b0ac0f6e63954', // Mantle Sepolia
-  50002: '0x6982508145454Ce325dDbE47a25d4ec3d2311933', // Pharos Devnet
+  50002: '0x6982508145454Ce325dDbE47a25d4ec3d2311933',
+  97: '0x1DE498144F2A7A4c7D85d09C0B12999FD1a435c2', // Pharos Devnet
 };
 
 // Simple ERC20 ABI for balanceOf

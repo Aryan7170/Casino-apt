@@ -2,8 +2,8 @@ import { useWriteContract, useReadContract, useAccount, useWaitForTransactionRec
 import { useState } from "react";
 import { parseEther, formatEther } from 'viem';
 
-const TREASURY_ADDRESS = "0xFfbfce3f171911044b6D91d700548AEd9A662420";
-const TOKEN_CONTRACT_ADDRESS = "0x60672ccafd719eb569858003ed3b0ac0f6e63954";
+const TREASURY_ADDRESS = "0xFF9582E3898599D2cF0Abdc06321789dc345e529";
+const TOKEN_CONTRACT_ADDRESS = "0x1DE498144F2A7A4c7D85d09C0B12999FD1a435c2";
 
 const TOKEN_ABI = [
     "function transfer(address to, uint256 amount) public returns (bool)",
