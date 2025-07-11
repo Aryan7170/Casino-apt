@@ -4,13 +4,13 @@ async function mintTokens() {
     const provider = new ethers.providers.JsonRpcProvider("https://rpc.sepolia.mantle.xyz");
     const privateKey = "cf4235da669935a29fa95d5afc417b5023675dc6ccb99dc13b1f8fdb398933d7";
     const wallet = new ethers.Wallet(privateKey, provider);
-    const contractAddress = "0x1DE498144F2A7A4c7D85d09C0B12999FD1a435c2";
+    const tokenContractAddress = "0xe5735e5E41465b5AA6f7f2176982024a244A4692";
     const contractABI = [
         "function mint(address to, uint256 amount) public",
         "function balanceOf(address account) public view returns (uint256)",
     ];
 
-    const contract = new ethers.Contract(contractAddress, contractABI, wallet);
+    const contract = new ethers.Contract(tokenContractAddress, contractABI, wallet);
     const recipient = "0xFF9582E3898599D2cF0Abdc06321789dc345e529";
     const amount = 1000;
 

@@ -2,22 +2,104 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { formatUnits, parseUnits } from 'viem';
-import { useReadContract, useWriteContract } from 'wagmi';
-import { tokenABI, tokenContractAddress } from '@/app/game/roulette/contractDetails';
+import { useReadContract, useWriteContract, useChainId } from 'wagmi';
+import { CONTRACTS, CHAIN_IDS } from '@/config/contracts';
+
+// Standard ERC20 ABI for fallback
+const STANDARD_ERC20_ABI = [
+  {
+    "inputs": [{"internalType": "address", "name": "account", "type": "address"}],
+    "name": "balanceOf",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "address", "name": "spender", "type": "address"}],
+    "name": "allowance",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "address", "name": "spender", "type": "address"},
+      {"internalType": "uint256", "name": "amount", "type": "uint256"}
+    ],
+    "name": "approve",
+    "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "address", "name": "to", "type": "address"},
+      {"internalType": "uint256", "name": "amount", "type": "uint256"}
+    ],
+    "name": "transfer",
+    "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+];
 
 export const useToken = (address) => {
   const [balance, setBalance] = useState('0');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const chainId = useChainId();
 
-  // Read token balance
-  const { data: balanceData, isError, isLoading: isBalanceLoading } = useReadContract({
-    address: tokenContractAddress,
-    abi: tokenABI,
+  // Get contract configuration for current chain
+  const getContractConfig = () => {
+    if (chainId === CHAIN_IDS.ETHEREUM_SEPOLIA) {
+      return CONTRACTS.ETHEREUM_SEPOLIA?.token;
+    } else if (chainId === CHAIN_IDS.MANTLE_SEPOLIA) {
+      return CONTRACTS.MANTLE_SEPOLIA?.token;
+    } else if (chainId === CHAIN_IDS.PHAROS_DEVNET) {
+      return CONTRACTS.PHAROS_DEVNET?.token;
+    } else if (chainId === CHAIN_IDS.BINANCE_TESTNET) {
+      return CONTRACTS.BINANCE_TESTNET?.token;
+    }
+    return null;
+  };
+
+  const contractConfig = getContractConfig();
+  
+  // Debug logging
+  console.log('useToken hook debug:', {
+    chainId,
+    address,
+    contractConfig: contractConfig ? {
+      address: contractConfig.address,
+      hasABI: !!contractConfig.abi,
+      abiLength: contractConfig.abi?.length
+    } : null
+  });
+
+  // Read token balance with fallback to standard ERC20 ABI
+  const { data: balanceData, isError, isLoading: isBalanceLoading, error: readError } = useReadContract({
+    address: contractConfig?.address,
+    abi: contractConfig?.abi || STANDARD_ERC20_ABI,
     functionName: 'balanceOf',
     args: [address],
-    enabled: Boolean(address),
+    enabled: Boolean(address && contractConfig?.address),
     watch: true,
+    onSuccess: (data) => {
+      console.log('Token balance fetched successfully:', {
+        address: contractConfig?.address,
+        userAddress: address,
+        balance: data?.toString(),
+        chainId
+      });
+    },
+    onError: (error) => {
+      console.error('Token balance fetch failed:', {
+        address: contractConfig?.address,
+        userAddress: address,
+        error: error,
+        chainId
+      });
+    }
   });
 
   // Get write contract function
@@ -25,23 +107,39 @@ export const useToken = (address) => {
 
   // Update balance when data changes
   useEffect(() => {
+    console.log('Balance data changed:', {
+      balanceData: balanceData?.toString(),
+      isError,
+      isBalanceLoading,
+      formattedBalance: balanceData ? formatUnits(balanceData, 18) : '0'
+    });
+    
     if (balanceData) {
-      setBalance(formatUnits(balanceData, 18));
+      const formattedBalance = formatUnits(balanceData, 18);
+      console.log('Setting balance to:', formattedBalance);
+      setBalance(formattedBalance);
     }
     if (isError) {
+      // Print the actual error object, not just 'true'
+      console.error('Balance fetch error:', readError);
       setError('Failed to load token balance');
     }
     setIsLoading(isBalanceLoading);
-  }, [balanceData, isError, isBalanceLoading]);
+  }, [balanceData, isError, isBalanceLoading, readError]);
 
   const transfer = useCallback(async (to, amount) => {
+    if (!contractConfig?.address) {
+      setError('No contract configuration found for current network');
+      return null;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
       const hash = await writeContractAsync({
-        address: tokenContractAddress,
-        abi: tokenABI,
+        address: contractConfig.address,
+        abi: contractConfig.abi || STANDARD_ERC20_ABI,
         functionName: 'transfer',
         args: [to, parseUnits(amount.toString(), 18)],
       });
@@ -54,16 +152,16 @@ export const useToken = (address) => {
     } finally {
       setIsLoading(false);
     }
-  }, [writeContractAsync]);
+  }, [writeContractAsync, contractConfig]);
 
   const refresh = useCallback(async () => {
-    if (!address) return;
+    if (!address || !contractConfig?.address) return;
     
     try {
       setIsLoading(true);
       const { data: refreshedBalance } = await useReadContract({
-        address: tokenContractAddress,
-        abi: tokenABI,
+        address: contractConfig.address,
+        abi: contractConfig.abi || STANDARD_ERC20_ABI,
         functionName: 'balanceOf',
         args: [address],
       });
@@ -77,7 +175,7 @@ export const useToken = (address) => {
     } finally {
       setIsLoading(false);
     }
-  }, [address]);
+  }, [address, contractConfig]);
 
   return {
     balance,

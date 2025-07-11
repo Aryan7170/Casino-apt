@@ -1,21 +1,30 @@
-import { useWriteContract, useReadContract, useAccount, useWaitForTransactionReceipt } from 'wagmi';
+import { useWriteContract, useReadContract, useAccount, useWaitForTransactionReceipt, useChainId } from 'wagmi';
 import { useState } from "react";
 import { parseEther, formatEther } from 'viem';
+import { CONTRACTS, CHAIN_IDS } from '@/config/contracts';
 
 const TREASURY_ADDRESS = "0xFF9582E3898599D2cF0Abdc06321789dc345e529";
-const TOKEN_CONTRACT_ADDRESS = "0x1DE498144F2A7A4c7D85d09C0B12999FD1a435c2";
-
-const TOKEN_ABI = [
-    "function transfer(address to, uint256 amount) public returns (bool)",
-    "function transferFrom(address from, address to, uint256 amount) public returns (bool)",
-    "function balanceOf(address account) public view returns (uint256)",
-    "function approve(address spender, uint256 amount) public returns (bool)",
-];
 
 export const TreasuryManager = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const { address } = useAccount();
+    const chainId = useChainId();
+
+    // Dynamically select contract config based on chainId
+    let contractConfig;
+    if (chainId === CHAIN_IDS.ETHEREUM_SEPOLIA) {
+        contractConfig = CONTRACTS.ETHEREUM_SEPOLIA.token;
+    } else if (chainId === CHAIN_IDS.MANTLE_SEPOLIA) {
+        contractConfig = CONTRACTS.MANTLE_SEPOLIA.token;
+    } else if (chainId === CHAIN_IDS.PHAROS_DEVNET) {
+        contractConfig = CONTRACTS.PHAROS_DEVNET.token;
+    } else if (chainId === CHAIN_IDS.BINANCE_TESTNET) {
+        contractConfig = CONTRACTS.BINANCE_TESTNET.token;
+    }
+
+    const TOKEN_CONTRACT_ADDRESS = contractConfig?.address;
+    const TOKEN_ABI = contractConfig?.abi;
 
     const { writeContractAsync } = useWriteContract();
     const { waitForTransactionReceipt } = useWaitForTransactionReceipt();

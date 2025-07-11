@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
-import { useZerodevSmartAccount } from '@/hooks/useZerodevSmartAccount';
+import { useDelegationToolkit } from '@/hooks/useDelegationToolkit';
 
 // Components
 import Button from "@/components/Button";
@@ -48,13 +48,10 @@ export default function Mines() {
   const {
     isConnected,
     address,
-    scwAddress,
-    scwBalance,
-    sessionKeyValid,
     loading: walletLoading,
     error: walletError,
     connectWallet
-  } = useZerodevSmartAccount();
+  } = useDelegationToolkit();
 
   // Game State
   const [betSettings, setBetSettings] = useState({});
@@ -262,13 +259,7 @@ export default function Mines() {
           {/* Wallet Info */}
           <div className="mb-4 flex flex-wrap gap-4 items-center">
             <div className="bg-purple-900/30 rounded-lg px-4 py-2 text-xs font-mono">
-              <span className="text-purple-300">Account:</span> {scwAddress ? `${scwAddress.slice(0, 8)}...${scwAddress.slice(-6)}` : 'Not connected'}
-            </div>
-            <div className="bg-blue-900/30 rounded-lg px-4 py-2 text-xs font-mono">
-              <span className="text-blue-300">Balance:</span> {scwBalance ? `${scwBalance} MNT` : '—'}
-            </div>
-            <div className="bg-green-900/30 rounded-lg px-4 py-2 text-xs font-mono">
-              <span className="text-green-300">Status:</span> {sessionKeyValid ? 'Ready' : 'Setup needed'}
+              <span className="text-purple-300">Account:</span> {address ? `${address.slice(0, 8)}...${address.slice(-6)}` : 'Not connected'}
             </div>
           </div>
 

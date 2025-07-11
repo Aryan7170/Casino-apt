@@ -5,6 +5,7 @@ const CHAIN_IDS = {
   MANTLE_SEPOLIA: '0x138b', // 5003
   PHAROS_DEVNET: '0xc352', // 50002
   BINANCE_TESTNET: '0x61', // 97
+  ETHEREUM_SEPOLIA: '0xaa36a7', // 11155111
 };
 
 export const getProvider = () => {
@@ -21,6 +22,7 @@ const getCurrentChainKey = async () => {
     if (chainId === CHAIN_IDS.MANTLE_SEPOLIA) return 'MANTLE_SEPOLIA';
     if (chainId === CHAIN_IDS.PHAROS_DEVNET) return 'PHAROS_DEVNET';
     if (chainId === CHAIN_IDS.BINANCE_TESTNET) return 'BINANCE_TESTNET';
+    if (chainId === CHAIN_IDS.ETHEREUM_SEPOLIA) return 'ETHEREUM_SEPOLIA';
   }
   // Default fallback
   return 'MANTLE_SEPOLIA';
@@ -103,6 +105,23 @@ export const switchToBinanceTestnet = async () => {
       await window.ethereum.request({
         method: 'wallet_addEthereumChain',
         params: [NETWORKS.BINANCE_TESTNET],
+      });
+    }
+  }
+};
+
+export const switchToEthereumSepolia = async () => {
+  if (typeof window === 'undefined' || !window.ethereum) return;
+  try {
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: NETWORKS.ETHEREUM_SEPOLIA.chainId }],
+    });
+  } catch (error) {
+    if (error.code === 4902) {
+      await window.ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [NETWORKS.ETHEREUM_SEPOLIA],
       });
     }
   }

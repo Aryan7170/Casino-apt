@@ -4,6 +4,7 @@ export const CHAIN_IDS = {
   MANTLE_SEPOLIA: 5003,
   PHAROS_DEVNET: 50002,
   BINANCE_TESTNET: 97, // Binance Smart Chain Testnet
+  ETHEREUM_SEPOLIA: 11155111, // Ethereum Sepolia Testnet
   // Add more chains here as needed
 };
 
@@ -13,6 +14,7 @@ export const CHAIN_NAMES = {
   [CHAIN_IDS.MANTLE_SEPOLIA]: "Mantle Sepolia",
   [CHAIN_IDS.PHAROS_DEVNET]: "Pharos Devnet",
   [CHAIN_IDS.BINANCE_TESTNET]: "Binance Smart Chain Testnet",
+  [CHAIN_IDS.ETHEREUM_SEPOLIA]: "Ethereum Sepolia",
   // Add more chain names here as needed
 };
 
@@ -22,6 +24,7 @@ export const RPC_URLS = {
   [CHAIN_IDS.MANTLE_SEPOLIA]: "https://rpc.sepolia.mantle.xyz",
   [CHAIN_IDS.PHAROS_DEVNET]: "https://devnet.dplabs-internal.com",
   [CHAIN_IDS.BINANCE_TESTNET]: "https://data-seed-prebsc-1-s1.binance.org:8545",
+  [CHAIN_IDS.ETHEREUM_SEPOLIA]: "https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3",
   // Add more RPCs here as needed
 };
 
@@ -31,17 +34,9 @@ export const BLOCK_EXPLORERS = {
   [CHAIN_IDS.MANTLE_SEPOLIA]: "https://sepolia.mantlescan.xyz",
   [CHAIN_IDS.PHAROS_DEVNET]: "https://pharosscan.xyz",
   [CHAIN_IDS.BINANCE_TESTNET]: "https://testnet.bscscan.com",
+  [CHAIN_IDS.ETHEREUM_SEPOLIA]: "https://sepolia.etherscan.io",
   // Add more explorers here as needed
 };
-
-// Native Currencies
-// export const NATIVE_CURRENCIES = {
-//   [CHAIN_IDS.LOCALHOST]: { name: "Ethereum", symbol: "ETH", decimals: 18 },
-//   [CHAIN_IDS.MANTLE_SEPOLIA]: { name: "Mantle", symbol: "MNT", decimals: 18 },
-//   [CHAIN_IDS.PHAROS_DEVNET]: { name: "Pharos", symbol: "PHR", decimals: 18 },
-//   [CHAIN_IDS.BINANCE_TESTNET]: { name: "Binance Coin", symbol: "BNB", decimals: 18 },
-//   // Add more native currencies here as needed
-// };
 
 // Token Contracts (e.g., your game's ERC20 token)
 export const TOKEN_CONTRACTS = {
@@ -69,6 +64,12 @@ export const TOKEN_CONTRACTS = {
       symbol: "APTC",
       decimals: 18
   },
+  [CHAIN_IDS.ETHEREUM_SEPOLIA]: {
+      address: "0xB67aD31D42c13c4Bc3c96BeB89D288162f5a9D61",
+      name: "APT-Casino",
+      symbol: "APTC",
+      decimals: 18
+  },
   // Add more chain configurations here as needed
 };
 
@@ -89,7 +90,11 @@ export const ROULETTE_CONTRACTS = {
   [CHAIN_IDS.BINANCE_TESTNET]: {
     address: "0x18B5E45eFEd35c55a67316b45968242C82d2523E",
     treasuryAddress: "0xFF9582E3898599D2cF0Abdc06321789dc345e529"
-},
+  },
+  [CHAIN_IDS.ETHEREUM_SEPOLIA]: {
+    address: "0xc3e58B9Dc37Fa64cBe18DAC234465E2B5CCF80a1",
+    treasuryAddress: "0xFF9582E3898599D2cF0Abdc06321789dc345e529"
+  },
   // Add more chain configurations here as needed
 };
 
@@ -110,7 +115,11 @@ export const WHEEL_CONTRACTS = {
   [CHAIN_IDS.BINANCE_TESTNET]: {
     address: "0xcf4469d29aaae6f136b9cd171a01700895093c67",
     treasuryAddress: "0xFfbfce3f171911044b6D91d700548AEd9A662420"
-},
+  },
+  [CHAIN_IDS.ETHEREUM_SEPOLIA]: {
+    address: "0xcf4469d29aaae6f136b9cd171a01700895093c67", // You'll need to deploy your wheel contract here
+    treasuryAddress: "0xFfbfce3f171911044b6D91d700548AEd9A662420"
+  },
   // Add more chain configurations here as needed
 };
 
@@ -131,7 +140,11 @@ export const MINES_CONTRACTS = {
   [CHAIN_IDS.BINANCE_TESTNET]: {
     address: "0xa534adf7A3B107f8bDF10CD042a309701Db71e6D",
     treasuryAddress: "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199"
-},
+  },
+  [CHAIN_IDS.ETHEREUM_SEPOLIA]: {
+    address: "0xa534adf7A3B107f8bDF10CD042a309701Db71e6D", // You'll need to deploy your mines contract here
+    treasuryAddress: "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199"
+  },
   // Add more chain configurations here as needed
 };
 
@@ -174,7 +187,12 @@ export const NATIVE_CURRENCIES = {
     name: "tBNB",
     symbol: "tBNB",
     decimals: 18
-},
+  },
+  [CHAIN_IDS.ETHEREUM_SEPOLIA]: {
+    name: "ETH",
+    symbol: "ETH",
+    decimals: 18
+  },
   // Add more native currencies here as needed
 };
 
@@ -200,6 +218,7 @@ export const SUPPORTED_NETWORKS = [
     tokenContract: TOKEN_CONTRACTS[CHAIN_IDS.MANTLE_SEPOLIA],
     rouletteContract: ROULETTE_CONTRACTS[CHAIN_IDS.MANTLE_SEPOLIA],
     minesContract: MINES_CONTRACTS[CHAIN_IDS.MANTLE_SEPOLIA],
+    wheelContract: WHEEL_CONTRACTS[CHAIN_IDS.MANTLE_SEPOLIA],
   },
   {
     id: CHAIN_IDS.BINANCE_TESTNET,
@@ -209,15 +228,18 @@ export const SUPPORTED_NETWORKS = [
     nativeCurrency: NATIVE_CURRENCIES[CHAIN_IDS.BINANCE_TESTNET],
     tokenContract: TOKEN_CONTRACTS[CHAIN_IDS.BINANCE_TESTNET],
     wheelContract: WHEEL_CONTRACTS[CHAIN_IDS.BINANCE_TESTNET],
+    minesContract: MINES_CONTRACTS[CHAIN_IDS.BINANCE_TESTNET],
   },
   {
-    id: CHAIN_IDS.BINANCE_MAINNET,
-    name: CHAIN_NAMES[CHAIN_IDS.BINANCE_MAINNET],
-    rpcUrl: RPC_URLS[CHAIN_IDS.BINANCE_MAINNET],
-    explorer: BLOCK_EXPLORERS[CHAIN_IDS.BINANCE_MAINNET],
-    nativeCurrency: NATIVE_CURRENCIES[CHAIN_IDS.BINANCE_MAINNET],
-    tokenContract: TOKEN_CONTRACTS[CHAIN_IDS.BINANCE_MAINNET],
-    wheelContract: WHEEL_CONTRACTS[CHAIN_IDS.BINANCE_MAINNET],
+    id: CHAIN_IDS.ETHEREUM_SEPOLIA,
+    name: CHAIN_NAMES[CHAIN_IDS.ETHEREUM_SEPOLIA],
+    rpcUrl: RPC_URLS[CHAIN_IDS.ETHEREUM_SEPOLIA],
+    explorer: BLOCK_EXPLORERS[CHAIN_IDS.ETHEREUM_SEPOLIA],
+    nativeCurrency: NATIVE_CURRENCIES[CHAIN_IDS.ETHEREUM_SEPOLIA],
+    tokenContract: TOKEN_CONTRACTS[CHAIN_IDS.ETHEREUM_SEPOLIA],
+    rouletteContract: ROULETTE_CONTRACTS[CHAIN_IDS.ETHEREUM_SEPOLIA],
+    minesContract: MINES_CONTRACTS[CHAIN_IDS.ETHEREUM_SEPOLIA],
+    wheelContract: WHEEL_CONTRACTS[CHAIN_IDS.ETHEREUM_SEPOLIA],
   },
   {
     id: CHAIN_IDS.PHAROS_DEVNET,
@@ -228,6 +250,7 @@ export const SUPPORTED_NETWORKS = [
     tokenContract: TOKEN_CONTRACTS[CHAIN_IDS.PHAROS_DEVNET],
     rouletteContract: ROULETTE_CONTRACTS[CHAIN_IDS.PHAROS_DEVNET],
     minesContract: MINES_CONTRACTS[CHAIN_IDS.PHAROS_DEVNET],
+    wheelContract: WHEEL_CONTRACTS[CHAIN_IDS.PHAROS_DEVNET],
   },
   // More networks will be added here as you deploy to them
 ];
@@ -240,7 +263,9 @@ export const NETWORKS = {
       explorer: BLOCK_EXPLORERS[CHAIN_IDS.MANTLE_SEPOLIA],
       nativeCurrency: NATIVE_CURRENCIES[CHAIN_IDS.MANTLE_SEPOLIA],
       tokenContract: TOKEN_CONTRACTS[CHAIN_IDS.MANTLE_SEPOLIA],
-      rouletteContract: ROULETTE_CONTRACTS[CHAIN_IDS.MANTLE_SEPOLIA]
+      rouletteContract: ROULETTE_CONTRACTS[CHAIN_IDS.MANTLE_SEPOLIA],
+      minesContract: MINES_CONTRACTS[CHAIN_IDS.MANTLE_SEPOLIA],
+      wheelContract: WHEEL_CONTRACTS[CHAIN_IDS.MANTLE_SEPOLIA],
   },
   PHAROS_DEVNET: {
       id: CHAIN_IDS.PHAROS_DEVNET,
@@ -249,7 +274,9 @@ export const NETWORKS = {
       explorer: BLOCK_EXPLORERS[CHAIN_IDS.PHAROS_DEVNET],
       nativeCurrency: NATIVE_CURRENCIES[CHAIN_IDS.PHAROS_DEVNET],
       tokenContract: TOKEN_CONTRACTS[CHAIN_IDS.PHAROS_DEVNET],
-      rouletteContract: ROULETTE_CONTRACTS[CHAIN_IDS.PHAROS_DEVNET]
+      rouletteContract: ROULETTE_CONTRACTS[CHAIN_IDS.PHAROS_DEVNET],
+      minesContract: MINES_CONTRACTS[CHAIN_IDS.PHAROS_DEVNET],
+      wheelContract: WHEEL_CONTRACTS[CHAIN_IDS.PHAROS_DEVNET],      
   },
   BINANCE_TESTNET: {
       id: CHAIN_IDS.BINANCE_TESTNET,
@@ -258,7 +285,20 @@ export const NETWORKS = {
       explorer: BLOCK_EXPLORERS[CHAIN_IDS.BINANCE_TESTNET],
       nativeCurrency: NATIVE_CURRENCIES[CHAIN_IDS.BINANCE_TESTNET],
       tokenContract: TOKEN_CONTRACTS[CHAIN_IDS.BINANCE_TESTNET],
-      rouletteContract: ROULETTE_CONTRACTS[CHAIN_IDS.BINANCE_TESTNET]
+      rouletteContract: ROULETTE_CONTRACTS[CHAIN_IDS.BINANCE_TESTNET],
+      minesContract: MINES_CONTRACTS[CHAIN_IDS.BINANCE_TESTNET],
+      wheelContract: WHEEL_CONTRACTS[CHAIN_IDS.BINANCE_TESTNET],      
+  },
+  ETHEREUM_SEPOLIA: {
+      id: CHAIN_IDS.ETHEREUM_SEPOLIA,
+      name: CHAIN_NAMES[CHAIN_IDS.ETHEREUM_SEPOLIA],
+      rpcUrl: RPC_URLS[CHAIN_IDS.ETHEREUM_SEPOLIA],
+      explorer: BLOCK_EXPLORERS[CHAIN_IDS.ETHEREUM_SEPOLIA],
+      nativeCurrency: NATIVE_CURRENCIES[CHAIN_IDS.ETHEREUM_SEPOLIA],
+      tokenContract: TOKEN_CONTRACTS[CHAIN_IDS.ETHEREUM_SEPOLIA],
+      rouletteContract: ROULETTE_CONTRACTS[CHAIN_IDS.ETHEREUM_SEPOLIA],
+      minesContract: MINES_CONTRACTS[CHAIN_IDS.ETHEREUM_SEPOLIA],
+      wheelContract: WHEEL_CONTRACTS[CHAIN_IDS.ETHEREUM_SEPOLIA],      
   },
 };
 
@@ -2633,6 +2673,88 @@ BINANCE_TESTNET: {
   // roulette: { address: '...', abi: [...] },
   // wheel: { address: '...', abi: [...] },
   // mines: { address: '...', abi: [...] }
+},
+
+ETHEREUM_SEPOLIA: {
+  token: {
+    address: '0xB67aD31D42c13c4Bc3c96BeB89D288162f5a9D61',
+    abi: [
+      { "inputs": [], "stateMutability": "nonpayable", "type": "constructor" },
+      { "inputs": [ { "internalType": "address", "name": "spender", "type": "address" }, { "internalType": "uint256", "name": "allowance", "type": "uint256" }, { "internalType": "uint256", "name": "needed", "type": "uint256" } ], "name": "ERC20InsufficientAllowance", "type": "error" },
+      { "inputs": [ { "internalType": "address", "name": "sender", "type": "address" }, { "internalType": "uint256", "name": "balance", "type": "uint256" }, { "internalType": "uint256", "name": "needed", "type": "uint256" } ], "name": "ERC20InsufficientBalance", "type": "error" },
+      { "inputs": [ { "internalType": "address", "name": "approver", "type": "address" } ], "name": "ERC20InvalidApprover", "type": "error" },
+      { "inputs": [ { "internalType": "address", "name": "receiver", "type": "address" } ], "name": "ERC20InvalidReceiver", "type": "error" },
+      { "inputs": [ { "internalType": "address", "name": "sender", "type": "address" } ], "name": "ERC20InvalidSender", "type": "error" },
+      { "inputs": [ { "internalType": "address", "name": "spender", "type": "address" } ], "name": "ERC20InvalidSpender", "type": "error" },
+      { "inputs": [], "name": "EnforcedPause", "type": "error" },
+      { "inputs": [], "name": "ExpectedPause", "type": "error" },
+      { "inputs": [ { "internalType": "address", "name": "owner", "type": "address" } ], "name": "OwnableInvalidOwner", "type": "error" },
+      { "inputs": [ { "internalType": "address", "name": "account", "type": "address" } ], "name": "OwnableUnauthorizedAccount", "type": "error" },
+      { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "owner", "type": "address" }, { "indexed": true, "internalType": "address", "name": "spender", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "value", "type": "uint256" } ], "name": "Approval", "type": "event" },
+      { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "previousOwner", "type": "address" }, { "indexed": true, "internalType": "address", "name": "newOwner", "type": "address" } ], "name": "OwnershipTransferred", "type": "event" },
+      { "anonymous": false, "inputs": [ { "indexed": false, "internalType": "address", "name": "account", "type": "address" } ], "name": "Paused", "type": "event" },
+      { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "oldContract", "type": "address" }, { "indexed": true, "internalType": "address", "name": "newContract", "type": "address" } ], "name": "RouletteContractUpdated", "type": "event" },
+      { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "burner", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "TokensBurned", "type": "event" },
+      { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "to", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "TokensMinted", "type": "event" },
+      { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "from", "type": "address" }, { "indexed": true, "internalType": "address", "name": "to", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "value", "type": "uint256" } ], "name": "Transfer", "type": "event" },
+      { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "oldTreasury", "type": "address" }, { "indexed": true, "internalType": "address", "name": "newTreasury", "type": "address" } ], "name": "TreasuryUpdated", "type": "event" },
+      { "anonymous": false, "inputs": [ { "indexed": false, "internalType": "address", "name": "account", "type": "address" } ], "name": "Unpaused", "type": "event" },
+      { "inputs": [ { "internalType": "address", "name": "owner", "type": "address" }, { "internalType": "address", "name": "spender", "type": "address" } ], "name": "allowance", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [ { "internalType": "address", "name": "spender", "type": "address" }, { "internalType": "uint256", "name": "value", "type": "uint256" } ], "name": "approve", "outputs": [ { "internalType": "bool", "name": "", "type": "bool" } ], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [ { "internalType": "address", "name": "account", "type": "address" } ], "name": "balanceOf", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [ { "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "burn", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [], "name": "decimals", "outputs": [ { "internalType": "uint8", "name": "", "type": "uint8" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [ { "internalType": "address", "name": "to", "type": "address" }, { "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "mint", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [], "name": "name", "outputs": [ { "internalType": "string", "name": "", "type": "string" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "owner", "outputs": [ { "internalType": "address", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "pause", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [], "name": "paused", "outputs": [ { "internalType": "bool", "name": "", "type": "bool" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "renounceOwnership", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [], "name": "rouletteContract", "outputs": [ { "internalType": "address", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [ { "internalType": "address", "name": "_rouletteContract", "type": "address" } ], "name": "setRouletteContract", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [ { "internalType": "address", "name": "_treasury", "type": "address" } ], "name": "setTreasury", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [], "name": "symbol", "outputs": [ { "internalType": "string", "name": "", "type": "string" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "totalSupply", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [ { "internalType": "address", "name": "to", "type": "address" }, { "internalType": "uint256", "name": "value", "type": "uint256" } ], "name": "transfer", "outputs": [ { "internalType": "bool", "name": "", "type": "bool" } ], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [ { "internalType": "address", "name": "from", "type": "address" }, { "internalType": "address", "name": "to", "type": "address" }, { "internalType": "uint256", "name": "value", "type": "uint256" } ], "name": "transferFrom", "outputs": [ { "internalType": "bool", "name": "", "type": "bool" } ], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [ { "internalType": "address", "name": "newOwner", "type": "address" } ], "name": "transferOwnership", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [], "name": "treasury", "outputs": [ { "internalType": "address", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "unpause", "outputs": [], "stateMutability": "nonpayable", "type": "function" }
+    ]
+  },
+  roulette: {
+    address: '0xc3e58B9Dc37Fa64cBe18DAC234465E2B5CCF80a1',
+    "abi": [
+      { "inputs": [ { "internalType": "contract IERC20", "name": "_token", "type": "address" } ], "stateMutability": "nonpayable", "type": "constructor" },
+      { "inputs": [ { "internalType": "address", "name": "owner", "type": "address" } ], "name": "OwnableInvalidOwner", "type": "error" },
+      { "inputs": [ { "internalType": "address", "name": "account", "type": "address" } ], "name": "OwnableUnauthorizedAccount", "type": "error" },
+      { "inputs": [], "name": "ReentrancyGuardReentrantCall", "type": "error" },
+      { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "player", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" }, { "indexed": false, "internalType": "enum Roulette.BetType", "name": "betType", "type": "uint8" }, { "indexed": false, "internalType": "uint8", "name": "betValue", "type": "uint8" }, { "indexed": false, "internalType": "uint256", "name": "round", "type": "uint256" } ], "name": "BetPlaced", "type": "event" },
+      { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "player", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" }, { "indexed": false, "internalType": "bool", "name": "won", "type": "bool" }, { "indexed": false, "internalType": "uint256", "name": "winnings", "type": "uint256" }, { "indexed": false, "internalType": "uint256", "name": "round", "type": "uint256" } ], "name": "BetResult", "type": "event" },
+      { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "previousOwner", "type": "address" }, { "indexed": true, "internalType": "address", "name": "newOwner", "type": "address" } ], "name": "OwnershipTransferred", "type": "event" },
+      { "anonymous": false, "inputs": [ { "indexed": false, "internalType": "uint256", "name": "randomNumber", "type": "uint256" }, { "indexed": false, "internalType": "uint256", "name": "round", "type": "uint256" } ], "name": "RandomGenerated", "type": "event" },
+      { "inputs": [], "name": "MIN_WAIT_BLOCK", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "TREASURY", "outputs": [ { "internalType": "address", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "TREASURY_FEE_RATE", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "name": "bets", "outputs": [ { "internalType": "address", "name": "player", "type": "address" }, { "internalType": "uint256", "name": "amount", "type": "uint256" }, { "internalType": "enum Roulette.BetType", "name": "betType", "type": "uint8" }, { "internalType": "uint8", "name": "betValue", "type": "uint8" }, { "internalType": "uint256", "name": "round", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "currentRound", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "lastBetBlock", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [ { "internalType": "address", "name": "", "type": "address" } ], "name": "lastBetTime", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "maxBet", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "minBet", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "nonce", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "owner", "outputs": [ { "internalType": "address", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [ { "internalType": "enum Roulette.BetType[]", "name": "betTypes", "type": "uint8[]" }, { "internalType": "uint8[]", "name": "betValues", "type": "uint8[]" }, { "internalType": "uint256[]", "name": "amounts", "type": "uint256[]" }, { "internalType": "uint256[][]", "name": "betNumbers", "type": "uint256[][]" } ], "name": "placeMultipleBets", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [], "name": "randomResult", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "renounceOwnership", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [ { "internalType": "uint256", "name": "_maxBet", "type": "uint256" } ], "name": "setMaxBet", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [ { "internalType": "uint256", "name": "_minBet", "type": "uint256" } ], "name": "setMinBet", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [], "name": "token", "outputs": [ { "internalType": "contract IERC20", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [ { "internalType": "address", "name": "newOwner", "type": "address" } ], "name": "transferOwnership", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [ { "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "withdrawTokens", "outputs": [], "stateMutability": "nonpayable", "type": "function" }
+    ]
+  },
+
 },
 // ... existing code ...
 }; 

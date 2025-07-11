@@ -8,7 +8,7 @@ import Confetti from 'react-confetti';
 import useWindowSize from 'react-use/lib/useWindowSize';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useZerodevSmartAccount } from '@/hooks/useZerodevSmartAccount';
+import { useDelegationToolkit } from '@/hooks/useDelegationToolkit';
 import { minesContractAddress, minesABI } from './config/contractDetails';
 import { ethers } from 'ethers';
 
@@ -239,19 +239,17 @@ const Game = ({ betSettings = {} }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [minesCount]); // Only depend on minesCount since gridSize is fixed at 5
 
-  // Zerodev Smart Account
+  // Delegation Toolkit
   const {
-    scwAddress,
-    scwBalance,
-    startGame: scwStartGame,
-    revealTile: scwRevealTile,
-    executeBatch: scwExecuteBatch,
-    cashOut: scwCashOut,
-    loading: scwLoading,
-    error: scwError,
-    sessionKeyValid,
+    address,
+    startGame: dtStartGame,
+    revealTile: dtRevealTile,
+    executeBatch: dtExecuteBatch,
+    cashOut: dtCashOut,
+    loading: dtLoading,
+    error: dtError,
     isConnected
-  } = useZerodevSmartAccount();
+  } = useDelegationToolkit();
 
   // Update state when bet settings change
   useEffect(() => {
@@ -304,14 +302,14 @@ const Game = ({ betSettings = {} }) => {
       setIsAutoBetting(settings.isAutoBetting);
       
       // Start the game (contract call)
-      console.log('Checking connection status:', { isConnected, scwAddress, scwBalance });
+      console.log('Checking connection status:', { isConnected, address });
       
       if (isConnected) {
         (async () => {
           try {
             console.log('Starting game with converted settings:', { minesCount, betAmount });
-            console.log('Calling scwStartGame...');
-            await scwStartGame(minesCount, betAmount);
+            console.log('Calling dtStartGame...');
+            await dtStartGame(minesCount, betAmount, minesContractAddress, minesABI);
             console.log('Game started successfully on-chain');
             toast.success('Game started on-chain!');
             // Set isPlaying to true immediately after successful contract call
@@ -442,8 +440,8 @@ const Game = ({ betSettings = {} }) => {
       (async () => {
         try {
           const tileIndex = row * gridSize + col;
-          console.log('Calling scwRevealTile with tile index:', tileIndex);
-          await scwRevealTile(tileIndex);
+          console.log('Calling dtRevealTile with tile index:', tileIndex);
+          await dtRevealTile(tileIndex, minesContractAddress, minesABI);
           toast.success('Tile revealed on-chain!');
         } catch (e) {
           console.error('revealTile error:', e);
@@ -512,9 +510,9 @@ const Game = ({ betSettings = {} }) => {
       (async () => {
         try {
           for (const tile of revealBatch) {
-            await scwRevealTile(tile);
+            await dtRevealTile(tile, minesContractAddress, minesABI);
           }
-          await scwExecuteBatch();
+          await dtExecuteBatch(minesContractAddress, minesABI);
           toast.success('Batch reveal on-chain!');
         } catch (e) {
           toast.error('Batch reveal failed: ' + (e.message || e));
@@ -567,7 +565,7 @@ const Game = ({ betSettings = {} }) => {
     if (isConnected) {
       (async () => {
         try {
-          await scwCashOut();
+          await dtCashOut(minesContractAddress, minesABI);
           toast.success('Cashed out on-chain!');
         } catch (e) {
           toast.error('Cashout failed: ' + (e.message || e));

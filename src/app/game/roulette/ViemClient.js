@@ -63,6 +63,26 @@ const binanceTestnet = {
   testnet: true,
 };
 
+// Define Ethereum Sepolia chain
+const ethereumSepolia = {
+  id: 11155111,
+  name: 'Ethereum Sepolia',
+  network: 'ethereum-sepolia',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Ethereum',
+    symbol: 'ETH',
+  },
+  rpcUrls: {
+    default: { http: ['https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3'] },
+    public: { http: ['https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3'] },
+  },
+  blockExplorers: {
+    default: { name: 'Etherscan Sepolia', url: 'https://sepolia.etherscan.io' },
+  },
+  testnet: true,
+};
+
 // Configure transport with improved settings
 const configureTransport = (url) => http(url, {
   batch: { batchSize: 1 },  // Disable batching for more reliable connections
@@ -105,7 +125,12 @@ export const publicPharosSepoliaClient = publicMantleSepoliaClient;
 
 export const publicBinanceTestnetClient = createPublicClient({
   chain: binanceTestnet,
-  transport: configureTransport(binanceTestnet.rpcUrls.default.http[0]),
+  transport: configureTransport('https://data-seed-prebsc-1-s1.binance.org:8545'),
+});
+
+export const publicEthereumSepoliaClient = createPublicClient({
+  chain: ethereumSepolia,
+  transport: configureTransport('https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3'),
 });
 
 let walletClient = null;
@@ -122,7 +147,7 @@ export const getWalletClient = async () => {
     // Create wallet client if not already created
     if (!walletClient) {
       const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      // Prefer Mantle Sepolia (0x138b), fallback to Pharos Devnet, then Binance Testnet
+      // Prefer Mantle Sepolia (0x138b), fallback to Pharos Devnet, then Binance Testnet, then Ethereum Sepolia
       let chain;
       if (chainId === '0x138b') {
         chain = mantleSepolia;
@@ -130,6 +155,8 @@ export const getWalletClient = async () => {
         chain = pharosDevnet;
       } else if (chainId === '0x61') { // 0x61 is chainId for Binance Smart Chain Testnet
         chain = binanceTestnet;
+      } else if (chainId === '0xaa36a7') { // 0xaa36a7 is chainId for Ethereum Sepolia
+        chain = ethereumSepolia;
       } else {
         chain = mantleSepolia; // Default fallback
       }
@@ -160,6 +187,8 @@ export const createCustomWalletClient = (account, providedChainId) => {
     chain = pharosDevnet;
   } else if (providedChainId === '0x61') {
     chain = binanceTestnet;
+  } else if (providedChainId === '0xaa36a7') {
+    chain = ethereumSepolia;
   } else {
     chain = pharosDevnet; // Default to pharosDevnet
   }
@@ -178,8 +207,8 @@ export const checkNetwork = async () => {
   
   try {
     const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-    // Support Mantle Sepolia (0x138b), Local Hardhat (0x7a69) and Binance Testnet (0x61)
-    if (chainId !== '0x138b' && chainId !== '0x7a69' && chainId !== '0x61') {
+    // Support Mantle Sepolia (0x138b), Local Hardhat (0x7a69), Binance Testnet (0x61), and Ethereum Sepolia (0xaa36a7)
+    if (chainId !== '0x138b' && chainId !== '0x7a69' && chainId !== '0x61' && chainId !== '0xaa36a7') {
       try {
         // Try switching to Mantle Sepolia first
         await window.ethereum.request({
@@ -202,6 +231,22 @@ export const checkNetwork = async () => {
                 },
                 rpcUrls: ['https://rpc.sepolia.mantle.xyz'],
                 blockExplorerUrls: ['https://sepolia.mantlescan.xyz']
+              }],
+            });
+            
+            // Add Ethereum Sepolia network
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0xaa36a7',
+                chainName: 'Ethereum Sepolia',
+                nativeCurrency: {
+                  name: 'Ethereum',
+                  symbol: 'ETH',
+                  decimals: 18
+                },
+                rpcUrls: ['https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3'],
+                blockExplorerUrls: ['https://sepolia.etherscan.io']
               }],
             });
             

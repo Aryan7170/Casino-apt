@@ -25,7 +25,6 @@ import {
   GiTrophyCup,
 } from "react-icons/gi";
 import { HiOutlineTrendingUp, HiOutlineChartBar } from "react-icons/hi";
-import useWalletStatus from '@/hooks/useWalletStatus';
 import ConnectWalletButton from '@/components/ConnectWalletButton';
 import TokenBalance from '@/components/TokenBalance';
 import { useWriteContract, useReadContract } from 'wagmi';
@@ -43,6 +42,7 @@ import WheelProbability from "./components/WheelProbability";
 import WheelPayouts from "./components/WheelPayouts";
 import WheelHistory from "./components/WheelHistory";
 import ResultsPopup from "./components/ResultsPopup";
+import { useDelegationToolkit } from '@/hooks/useDelegationToolkit';
 
 export default function Home() {
   const [balance, setBalance] = useState(1000);
@@ -71,7 +71,17 @@ export default function Home() {
   const [wheelData, setWheelData] = useState([]);
 
   // Wallet connection
-  const { isConnected, address } = useWalletStatus();
+  const {
+    isConnected,
+    address,
+    loading: walletLoading,
+    error: walletError,
+    connectWallet,
+    startGame,
+    revealTile,
+    executeBatch,
+    cashOut,
+  } = useDelegationToolkit();
   const { writeContractAsync } = useWriteContract();
   const chainId = useChainId();
 
