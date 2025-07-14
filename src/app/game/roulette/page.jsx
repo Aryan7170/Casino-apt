@@ -13,12 +13,9 @@ import TextFieldCurrency from "@/components/TextFieldCurrency";
 import Button from "@/components/Button";
 import { rouletteTutorial, rouletteOdds } from "./tutorials";
 import {
-  rouletteABI,
-  rouletteContractAddress,
-  tokenABI,
-  tokenContractAddress,
+  useContractDetails,
 } from "./contractDetails";
-import * as ViemClient from "./ViemClient";
+import { usePublicClient } from "./ViemClient";
 import { getContract, parseEther, waitForTransactionReceipt } from "viem";
 import { muiStyles } from "./styles";
 import Image from "next/image";
@@ -35,13 +32,22 @@ import { TreasuryManager } from '../../../components/TreasuryManager';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useDelegationToolkit } from '@/hooks/useDelegationToolkit';
 import useWalletStatus from '@/hooks/useWalletStatus';
-import { CONTRACTS, CHAIN_IDS } from '@/config/contracts';
-import { useChainId } from 'wagmi';
+
+const {
+  dynamicPublicClient,
+} = usePublicClient();
+
+const {
+  rouletteContractAddress,
+  tokenContractAddress,
+  rouletteABI,
+  tokenABI,
+  contractConfig
+} = useContractDetails();
 
 
 // Debug imports
-console.log("ViemClient:", ViemClient);
-console.log("publicEthereumSepoliaClient:", ViemClient.publicEthereumSepoliaClient);
+console.log("dynamicPublicClient", dynamicPublicClient);
 
 const TooltipWide = styled(({ className, ...props }) => (
   <Tooltip {...props} classes={{ popper: className }} />
@@ -693,27 +699,13 @@ export default function GameRoulette() {
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
 
   const { data: hash, isPending, writeContract: wagmiWriteContract } = useWriteContract();
-  const chainId = useChainId();
 
-  // Get contract configuration for current chain
-  const getContractConfig = () => {
-    if (chainId === CHAIN_IDS.ETHEREUM_SEPOLIA) {
-      return CONTRACTS.ETHEREUM_SEPOLIA;
-    } else if (chainId === CHAIN_IDS.MANTLE_SEPOLIA) {
-      return CONTRACTS.MANTLE_SEPOLIA;
-    } else if (chainId === CHAIN_IDS.PHAROS_DEVNET) {
-      return CONTRACTS.PHAROS_DEVNET;
-    } else if (chainId === CHAIN_IDS.BINANCE_TESTNET) {
-      return CONTRACTS.BINANCE_TESTNET;
-    }
-    return null;
-  };
+  // Get contract details using the hook
 
-  const contractConfig = getContractConfig();
 
   const checkTransactionStatus = async (hash) => {
     try {
-      const receipt = await ViemClient.publicEthereumSepoliaClient.waitForTransactionReceipt({ hash });
+      const receipt = await dynamicPublicClient.waitForTransactionReceipt({ hash });
       return receipt.status; // 'success' or 'reverted'
     } catch (error) {
       console.error("Error checking transaction status:", error);
@@ -875,7 +867,7 @@ export default function GameRoulette() {
       console.log('Contract address:', rouletteContractAddress);
       console.log('Connected wallet:', dtAddress);
 
-      const winningsListener = ViemClient.publicEthereumSepoliaClient.watchContractEvent({
+      const winningsListener = dynamicPublicClient.watchContractEvent({
       address: rouletteContractAddress,
       abi: rouletteABI,
       eventName: "RandomGenerated",
@@ -901,7 +893,7 @@ export default function GameRoulette() {
       },
     });
 
-      const betResultListener = ViemClient.publicEthereumSepoliaClient.watchContractEvent({
+      const betResultListener = dynamicPublicClient.watchContractEvent({
       address: rouletteContractAddress,
       abi: rouletteABI,
       eventName: "BetResult",
@@ -950,7 +942,7 @@ export default function GameRoulette() {
         },
       });
 
-      const vrfRequestListener = ViemClient.publicEthereumSepoliaClient.watchContractEvent({
+      const vrfRequestListener = dynamicPublicClient.watchContractEvent({
         address: rouletteContractAddress,
         abi: rouletteABI,
         eventName: "RandomNumberRequested",
@@ -1309,36 +1301,33 @@ export default function GameRoulette() {
     try {
       setNotification({ open: true, message: 'Checking allowance...', severity: 'info' });
 
-      // Get the current chain ID to determine which client to use
-      let chainId;
-      if (typeof window !== 'undefined' && window.ethereum) {
-        chainId = await window.ethereum.request({ method: 'eth_chainId' });
-        console.log('Current chainId:', chainId);
-      }
+      // // Get the current chain ID to determine which client to use
+      // let chainId;
+      // if (typeof window !== 'undefined' && window.ethereum) {
+      //   chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      //   console.log('Current chainId:', chainId);
+      // }
 
-      // Select the appropriate client based on the current network
-      let client;
-      if (chainId === '0x138b') { // Mantle Sepolia
-        client = ViemClient.publicMantleSepoliaClient;
-      } else if (chainId === '0xc352') { // Pharos Devnet
-        client = ViemClient.publicPharosSepoliaClient;
-      } else if (chainId === '0x61') { // Binance Testnet
-        client = ViemClient.publicBinanceTestnetClient;
-      } else if (chainId === '0xaa36a7') { // Binance Testnet
-        client = ViemClient.publicEthereumSepoliaClient;  
-      } else {
-        // Default fallback
-        client = ViemClient.publicMantleSepoliaClient;
-      }
+      // // Select the appropriate client based on the current network
+      // let client;
+      // if (chainId === '0x138b') { // Mantle Sepolia
+      //   client = ViemClient.publicMantleSepoliaClient;
+      // } else if (chainId === '0xc352') { // Pharos Devnet
+      //   client = ViemClient.publicPharosSepoliaClient;
+      // } else if (chainId === '0x61') { // Binance Testnet
+      //   client = ViemClient.publicBinanceTestnetClient;
+      // } else if (chainId === '0xaa36a7') { // Binance Testnet
+      //   client = dynamicPublicClient;  
+      // } 
 
-      console.log('Using client for chainId:', chainId, 'Client:', client);
+      // console.log('Using client for chainId:', chainId, 'Client:', client);
 
       // Get contract addresses for current network
       const contractAddresses = tokenContractAddress;
       console.log('Using contract addresses:', contractAddresses);
 
       // 1. Check current allowance
-      const currentAllowance = await ViemClient.publicEthereumSepoliaClient.readContract({
+      const currentAllowance = await dynamicPublicClient.readContract({
         address: tokenContractAddress,
         abi: tokenABI,
         functionName: 'allowance',
@@ -1355,7 +1344,7 @@ export default function GameRoulette() {
           functionName: 'approve',
           args: [rouletteContractAddress, amount],
         });
-        await ViemClient.publicEthereumSepoliaClient.waitForTransactionReceipt({ hash });
+        await dynamicPublicClient.waitForTransactionReceipt({ hash });
         setNotification({ open: true, message: 'Approval successful!', severity: 'success' });
       } else {
         // 4. If allowance is sufficient, do nothing.
@@ -1539,7 +1528,7 @@ export default function GameRoulette() {
       console.log('Waiting for transaction confirmation...');
       try {
         // Use ViemClient directly to wait for transaction
-        const receipt = await ViemClient.publicEthereumSepoliaClient.waitForTransactionReceipt({ hash });
+        const receipt = await dynamicPublicClient.waitForTransactionReceipt({ hash });
         console.log('Transaction receipt:', receipt);
         
         if (receipt.status === 'success') {
@@ -1700,7 +1689,7 @@ export default function GameRoulette() {
     try {
       // Ensure hash is a string, not an object
       const hashStr = typeof hash === 'object' && hash.hash ? hash.hash : hash;
-      const receipt = await ViemClient.publicEthereumSepoliaClient.waitForTransactionReceipt({ hash: hashStr });
+      const receipt = await dynamicPublicClient.waitForTransactionReceipt({ hash: hashStr });
       return receipt;
     } catch (error) {
       console.error("Wait for transaction error:", error);
@@ -1852,7 +1841,7 @@ export default function GameRoulette() {
       const contract = getContract({
         address: rouletteContractAddress,
         abi: rouletteABI,
-        client: ViemClient.publicEthereumSepoliaClient,
+        client: dynamicPublicClient,
       });
       
       // Try to call a simple view function

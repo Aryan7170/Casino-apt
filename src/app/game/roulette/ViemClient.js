@@ -114,13 +114,7 @@ export const publicMantleSepoliaClient = createPublicClient({
   transport: configureTransport('https://rpc.sepolia.mantle.xyz'),
 });
 
-// Comment out Pharos Devnet - using Mantle Sepolia instead
-// export const publicPharosSepoliaClient = createPublicClient({
-//   chain: pharosDevnet,
-//   transport: configureTransport('https://devnet.dplabs-internal.com'),
-// });
 
-// Use Mantle Sepolia as the primary client
 export const publicPharosSepoliaClient = publicMantleSepoliaClient;
 
 export const publicBinanceTestnetClient = createPublicClient({
@@ -132,6 +126,29 @@ export const publicEthereumSepoliaClient = createPublicClient({
   chain: ethereumSepolia,
   transport: configureTransport('https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3'),
 });
+
+const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+// Get contract configuration for current chain
+export const getPublicClient = (chainId) => {
+	if (chainId === '0x138b') {
+		return publicMantleSepoliaClient;
+	} else if (chainId === '0xc352') {
+		return publicPharosSepoliaClient;
+	} else if (chainId === '0x61') {
+		return publicBinanceTestnetClient;
+	} else if (chainId === '0xaa36a7') {
+		return publicEthereumSepoliaClient;
+	}
+	return null;
+};
+
+export const usePublicClient = () => {
+	const publicClient = getPublicClient(chainId);
+	
+	return {
+		dynamicPublicClient: publicClient,
+	};
+};
 
 let walletClient = null;
 

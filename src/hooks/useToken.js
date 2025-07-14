@@ -43,6 +43,15 @@ const STANDARD_ERC20_ABI = [
   }
 ];
 
+// Helper function to validate address
+const isValidAddress = (address) => {
+  if (!address) return false;
+  if (typeof address !== 'string') return false;
+  if (!address.startsWith('0x')) return false;
+  if (address.length !== 42) return false; // 0x + 40 hex characters
+  return /^0x[a-fA-F0-9]{40}$/.test(address);
+};
+
 export const useToken = (address) => {
   const [balance, setBalance] = useState('0');
   const [isLoading, setIsLoading] = useState(false);
@@ -65,14 +74,20 @@ export const useToken = (address) => {
 
   const contractConfig = getContractConfig();
   
+  // Validate address and contract config
+  const isValidAddressParam = isValidAddress(address);
+  const isValidContractConfig = contractConfig && contractConfig.address && isValidAddress(contractConfig.address);
+  
   // Debug logging
   console.log('useToken hook debug:', {
     chainId,
     address,
+    isValidAddress: isValidAddressParam,
     contractConfig: contractConfig ? {
       address: contractConfig.address,
       hasABI: !!contractConfig.abi,
-      abiLength: contractConfig.abi?.length
+      abiLength: contractConfig.abi?.length,
+      isValidContractAddress: isValidAddress(contractConfig.address)
     } : null
   });
 
@@ -82,7 +97,7 @@ export const useToken = (address) => {
     abi: contractConfig?.abi || STANDARD_ERC20_ABI,
     functionName: 'balanceOf',
     args: [address],
-    enabled: Boolean(address && contractConfig?.address),
+    enabled: Boolean(isValidAddressParam && isValidContractConfig),
     watch: true,
     onSuccess: (data) => {
       console.log('Token balance fetched successfully:', {
@@ -118,18 +133,30 @@ export const useToken = (address) => {
       const formattedBalance = formatUnits(balanceData, 18);
       console.log('Setting balance to:', formattedBalance);
       setBalance(formattedBalance);
-    }
-    if (isError) {
+    } else if (!isValidAddressParam) {
+      // Reset balance if address is invalid
+      setBalance('0');
+      setError('Invalid wallet address');
+    } else if (!isValidContractConfig) {
+      // Reset balance if contract config is invalid
+      setBalance('0');
+      setError('No contract configuration found for current network');
+    } else if (isError) {
       // Print the actual error object, not just 'true'
       console.error('Balance fetch error:', readError);
       setError('Failed to load token balance');
     }
     setIsLoading(isBalanceLoading);
-  }, [balanceData, isError, isBalanceLoading, readError]);
+  }, [balanceData, isError, isBalanceLoading, readError, isValidAddressParam, isValidContractConfig]);
 
   const transfer = useCallback(async (to, amount) => {
-    if (!contractConfig?.address) {
+    if (!isValidContractConfig) {
       setError('No contract configuration found for current network');
+      return null;
+    }
+
+    if (!isValidAddress(to)) {
+      setError('Invalid recipient address');
       return null;
     }
 
@@ -152,10 +179,10 @@ export const useToken = (address) => {
     } finally {
       setIsLoading(false);
     }
-  }, [writeContractAsync, contractConfig]);
+  }, [writeContractAsync, contractConfig, isValidContractConfig]);
 
   const refresh = useCallback(async () => {
-    if (!address || !contractConfig?.address) return;
+    if (!isValidAddressParam || !isValidContractConfig) return;
     
     try {
       setIsLoading(true);
@@ -175,13 +202,15 @@ export const useToken = (address) => {
     } finally {
       setIsLoading(false);
     }
-  }, [address, contractConfig]);
+  }, [address, contractConfig, isValidAddressParam, isValidContractConfig]);
 
   return {
     balance,
     transfer,
     isLoading,
     error,
-    refresh
+    refresh,
+    isValidAddress: isValidAddressParam,
+    isValidContract: isValidContractConfig
   };
 }; 

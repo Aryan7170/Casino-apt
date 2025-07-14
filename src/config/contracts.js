@@ -3,10 +3,20 @@ export const CHAIN_IDS = {
   LOCALHOST: 31337,
   MANTLE_SEPOLIA: 5003,
   PHAROS_DEVNET: 50002,
-  BINANCE_TESTNET: 97, // Binance Smart Chain Testnet
-  ETHEREUM_SEPOLIA: 11155111, // Ethereum Sepolia Testnet
+  BINANCE_TESTNET: 97,
+  ETHEREUM_SEPOLIA: 11155111,
   // Add more chains here as needed
 };
+
+export const CHAIN_ID = {
+  MANTLE_SEPOLIA: '0x138b', // 5003
+  PHAROS_DEVNET: '0xc352', // 50002
+  BINANCE_TESTNET: '0x61', // 97
+  ETHEREUM_SEPOLIA: '0xaa36a7', // 11155111
+  // Add more chains here as needed
+};
+
+export const treasuryAddress = '0xFF9582E3898599D2cF0Abdc06321789dc345e529';
 
 // Chain Names
 export const CHAIN_NAMES = {
@@ -41,7 +51,7 @@ export const BLOCK_EXPLORERS = {
 // Token Contracts (e.g., your game's ERC20 token)
 export const TOKEN_CONTRACTS = {
   [CHAIN_IDS.LOCALHOST]: {
-      address: "0x60672ccafd719eb569858003ed3b0ac0f6e63954", // Updated local token address
+      address: "0xB67aD31D42c13c4Bc3c96BeB89D288162f5a9D61", // Updated local token address
       name: "APT-Casino",
       symbol: "APTC",
       decimals: 18
@@ -53,7 +63,7 @@ export const TOKEN_CONTRACTS = {
       decimals: 18
   },
   [CHAIN_IDS.PHAROS_DEVNET]: {
-      address: "0x60672ccafd719eb569858003ed3b0ac0f6e63954",
+      address: "0xB67aD31D42c13c4Bc3c96BeB89D288162f5a9D61",
       name: "APT-Casino",
       symbol: "APTC",
       decimals: 18
@@ -76,24 +86,19 @@ export const TOKEN_CONTRACTS = {
 // Roulette Contracts
 export const ROULETTE_CONTRACTS = {
   [CHAIN_IDS.LOCALHOST]: {
-      address: "0xfa339164994ea5d08fd898af81ffa8a5c4982974", // Updated local roulette address
-      treasuryAddress: "0xFfbfce3f171911044b6D91d700548AEd9A662420"
+      address: "0xc3e58B9Dc37Fa64cBe18DAC234465E2B5CCF80a1", // Updated local roulette address
   },
   [CHAIN_IDS.MANTLE_SEPOLIA]: {
       address: "0xfa339164994ea5d08fd898af81ffa8a5c4982974",
-      treasuryAddress: "0xFfbfce3f171911044b6D91d700548AEd9A662420"
   },
   [CHAIN_IDS.PHAROS_DEVNET]: {
-      address: "0xfa339164994ea5d08fd898af81ffa8a5c4982974",
-      treasuryAddress: "0xFfbfce3f171911044b6D91d700548AEd9A662420"
+      address: "0xc3e58B9Dc37Fa64cBe18DAC234465E2B5CCF80a1",
   },
   [CHAIN_IDS.BINANCE_TESTNET]: {
     address: "0x18B5E45eFEd35c55a67316b45968242C82d2523E",
-    treasuryAddress: "0xFF9582E3898599D2cF0Abdc06321789dc345e529"
   },
   [CHAIN_IDS.ETHEREUM_SEPOLIA]: {
     address: "0xc3e58B9Dc37Fa64cBe18DAC234465E2B5CCF80a1",
-    treasuryAddress: "0xFF9582E3898599D2cF0Abdc06321789dc345e529"
   },
   // Add more chain configurations here as needed
 };
@@ -102,23 +107,18 @@ export const ROULETTE_CONTRACTS = {
 export const WHEEL_CONTRACTS = {
   [CHAIN_IDS.LOCALHOST]: {
       address: "0xcf4469d29aaae6f136b9cd171a01700895093c67", // Updated wheel contract address
-      treasuryAddress: "0xFfbfce3f171911044b6D91d700548AEd9A662420"
   },
   [CHAIN_IDS.MANTLE_SEPOLIA]: {
       address: "0xcf4469d29aaae6f136b9cd171a01700895093c67",
-      treasuryAddress: "0xFfbfce3f171911044b6D91d700548AEd9A662420"
   },
   [CHAIN_IDS.PHAROS_DEVNET]: {
       address: "0xcf4469d29aaae6f136b9cd171a01700895093c67",
-      treasuryAddress: "0xFfbfce3f171911044b6D91d700548AEd9A662420"
   },
   [CHAIN_IDS.BINANCE_TESTNET]: {
     address: "0xcf4469d29aaae6f136b9cd171a01700895093c67",
-    treasuryAddress: "0xFfbfce3f171911044b6D91d700548AEd9A662420"
   },
   [CHAIN_IDS.ETHEREUM_SEPOLIA]: {
     address: "0xcf4469d29aaae6f136b9cd171a01700895093c67", // You'll need to deploy your wheel contract here
-    treasuryAddress: "0xFfbfce3f171911044b6D91d700548AEd9A662420"
   },
   // Add more chain configurations here as needed
 };
@@ -127,23 +127,18 @@ export const WHEEL_CONTRACTS = {
 export const MINES_CONTRACTS = {
   [CHAIN_IDS.LOCALHOST]: {
       address: "0xa534adf7A3B107f8bDF10CD042a309701Db71e6D",
-      treasuryAddress: "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199"
   },
   [CHAIN_IDS.MANTLE_SEPOLIA]: {
       address: "0xa534adf7A3B107f8bDF10CD042a309701Db71e6D",
-      treasuryAddress: "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199"
   },
   [CHAIN_IDS.PHAROS_DEVNET]: {
       address: "0xa534adf7A3B107f8bDF10CD042a309701Db71e6D",
-      treasuryAddress: "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199"
   },
   [CHAIN_IDS.BINANCE_TESTNET]: {
     address: "0xa534adf7A3B107f8bDF10CD042a309701Db71e6D",
-    treasuryAddress: "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199"
   },
   [CHAIN_IDS.ETHEREUM_SEPOLIA]: {
     address: "0xa534adf7A3B107f8bDF10CD042a309701Db71e6D", // You'll need to deploy your mines contract here
-    treasuryAddress: "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199"
   },
   // Add more chain configurations here as needed
 };
@@ -155,16 +150,6 @@ export const ABIS = {
   WHEEL: null, // Will be filled with your Remix deployment ABI
   MINES: null // Will be filled with your Remix deployment ABI
 };
-
-// Chain Names for UI
-// export const CHAIN_NAMES = {
-//   [CHAIN_IDS.LOCALHOST]: "Local Hardhat",
-//   [CHAIN_IDS.MANTLE_SEPOLIA]: "Mantle Sepolia",
-//   [CHAIN_IDS.PHAROS_DEVNET]: "Pharos Devnet",
-//   [CHAIN_IDS.BINANCE_TESTNET]: "Pharos Devnet",
-
-//   // Add more chain names here as needed
-// };
 
 // Chain Native Currencies
 export const NATIVE_CURRENCIES = {
@@ -309,7 +294,6 @@ MANTLE_SEPOLIA: {
   token: {
     address: '0x60672ccafd719eb569858003ed3b0ac0f6e63954',
     abi: [
-      // Token ABI - same as PHAROS_DEVNET
       {
         "inputs": [],
         "stateMutability": "nonpayable",
@@ -952,6 +936,7 @@ MANTLE_SEPOLIA: {
         "stateMutability": "nonpayable",
         "type": "function"
       },
+      { "inputs": [ { "internalType": "enum Roulette.BetType[]", "name": "betTypes", "type": "uint8[]" }, { "internalType": "uint8[]", "name": "betValues", "type": "uint8[]" }, { "internalType": "uint256[]", "name": "amounts", "type": "uint256[]" }, { "internalType": "uint256[][]", "name": "betNumbers", "type": "uint256[][]" } ], "name": "placeMultipleBets", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
       {
         "inputs": [
           {
@@ -2667,6 +2652,38 @@ BINANCE_TESTNET: {
         "stateMutability": "nonpayable",
         "type": "function"
       }
+    ]
+  },
+  roulette: {
+    address: '0x18B5E45eFEd35c55a67316b45968242C82d2523E',
+    "abi": [
+      { "inputs": [ { "internalType": "contract IERC20", "name": "_token", "type": "address" } ], "stateMutability": "nonpayable", "type": "constructor" },
+      { "inputs": [ { "internalType": "address", "name": "owner", "type": "address" } ], "name": "OwnableInvalidOwner", "type": "error" },
+      { "inputs": [ { "internalType": "address", "name": "account", "type": "address" } ], "name": "OwnableUnauthorizedAccount", "type": "error" },
+      { "inputs": [], "name": "ReentrancyGuardReentrantCall", "type": "error" },
+      { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "player", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" }, { "indexed": false, "internalType": "enum Roulette.BetType", "name": "betType", "type": "uint8" }, { "indexed": false, "internalType": "uint8", "name": "betValue", "type": "uint8" }, { "indexed": false, "internalType": "uint256", "name": "round", "type": "uint256" } ], "name": "BetPlaced", "type": "event" },
+      { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "player", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" }, { "indexed": false, "internalType": "bool", "name": "won", "type": "bool" }, { "indexed": false, "internalType": "uint256", "name": "winnings", "type": "uint256" }, { "indexed": false, "internalType": "uint256", "name": "round", "type": "uint256" } ], "name": "BetResult", "type": "event" },
+      { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "previousOwner", "type": "address" }, { "indexed": true, "internalType": "address", "name": "newOwner", "type": "address" } ], "name": "OwnershipTransferred", "type": "event" },
+      { "anonymous": false, "inputs": [ { "indexed": false, "internalType": "uint256", "name": "randomNumber", "type": "uint256" }, { "indexed": false, "internalType": "uint256", "name": "round", "type": "uint256" } ], "name": "RandomGenerated", "type": "event" },
+      { "inputs": [], "name": "MIN_WAIT_BLOCK", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "TREASURY", "outputs": [ { "internalType": "address", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "TREASURY_FEE_RATE", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "name": "bets", "outputs": [ { "internalType": "address", "name": "player", "type": "address" }, { "internalType": "uint256", "name": "amount", "type": "uint256" }, { "internalType": "enum Roulette.BetType", "name": "betType", "type": "uint8" }, { "internalType": "uint8", "name": "betValue", "type": "uint8" }, { "internalType": "uint256", "name": "round", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "currentRound", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "lastBetBlock", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [ { "internalType": "address", "name": "", "type": "address" } ], "name": "lastBetTime", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "maxBet", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "minBet", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "nonce", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "owner", "outputs": [ { "internalType": "address", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [ { "internalType": "enum Roulette.BetType[]", "name": "betTypes", "type": "uint8[]" }, { "internalType": "uint8[]", "name": "betValues", "type": "uint8[]" }, { "internalType": "uint256[]", "name": "amounts", "type": "uint256[]" }, { "internalType": "uint256[][]", "name": "betNumbers", "type": "uint256[][]" } ], "name": "placeMultipleBets", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [], "name": "randomResult", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "renounceOwnership", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [ { "internalType": "uint256", "name": "_maxBet", "type": "uint256" } ], "name": "setMaxBet", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [ { "internalType": "uint256", "name": "_minBet", "type": "uint256" } ], "name": "setMinBet", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [], "name": "token", "outputs": [ { "internalType": "contract IERC20", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [ { "internalType": "address", "name": "newOwner", "type": "address" } ], "name": "transferOwnership", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [ { "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "withdrawTokens", "outputs": [], "stateMutability": "nonpayable", "type": "function" }
     ]
   },
   // Uncomment and fill in the following as you deploy the contracts:

@@ -1,30 +1,24 @@
-import { useWriteContract, useReadContract, useAccount, useWaitForTransactionReceipt, useChainId } from 'wagmi';
+import { useWriteContract, useReadContract, useAccount, useWaitForTransactionReceipt } from 'wagmi';
 import { useState } from "react";
 import { parseEther, formatEther } from 'viem';
-import { CONTRACTS, CHAIN_IDS } from '@/config/contracts';
+import { treasuryAddress } from '@/config/contracts';
+import { useContractDetails } from '@/app/game/roulette/contractDetails';
 
-const TREASURY_ADDRESS = "0xFF9582E3898599D2cF0Abdc06321789dc345e529";
+const TREASURY_ADDRESS = treasuryAddress;
+
+const {
+    tokenABI,
+    tokenContractAddress,
+  } = useContractDetails();
 
 export const TreasuryManager = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const { address } = useAccount();
-    const chainId = useChainId();
 
-    // Dynamically select contract config based on chainId
-    let contractConfig;
-    if (chainId === CHAIN_IDS.ETHEREUM_SEPOLIA) {
-        contractConfig = CONTRACTS.ETHEREUM_SEPOLIA.token;
-    } else if (chainId === CHAIN_IDS.MANTLE_SEPOLIA) {
-        contractConfig = CONTRACTS.MANTLE_SEPOLIA.token;
-    } else if (chainId === CHAIN_IDS.PHAROS_DEVNET) {
-        contractConfig = CONTRACTS.PHAROS_DEVNET.token;
-    } else if (chainId === CHAIN_IDS.BINANCE_TESTNET) {
-        contractConfig = CONTRACTS.BINANCE_TESTNET.token;
-    }
 
-    const TOKEN_CONTRACT_ADDRESS = contractConfig?.address;
-    const TOKEN_ABI = contractConfig?.abi;
+    const TOKEN_CONTRACT_ADDRESS = tokenContractAddress;
+    const TOKEN_ABI = tokenABI;
 
     const { writeContractAsync } = useWriteContract();
     const { waitForTransactionReceipt } = useWaitForTransactionReceipt();
