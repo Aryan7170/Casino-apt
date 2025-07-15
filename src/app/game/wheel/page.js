@@ -29,8 +29,8 @@ import ConnectWalletButton from '@/components/ConnectWalletButton';
 import TokenBalance from '@/components/TokenBalance';
 import { useWriteContract, useReadContract } from 'wagmi';
 import { readContract } from 'wagmi/actions';
-import { wheelContractAddress, wheelABI } from './config/contractDetails';
-import { tokenContractAddress, tokenABI } from '../roulette/contractDetails';
+
+import { useContractDetails } from "./config/contractDetails";
 import { useChainId } from 'wagmi';
 import { config } from '@/app/providers';
 
@@ -43,6 +43,16 @@ import WheelPayouts from "./components/WheelPayouts";
 import WheelHistory from "./components/WheelHistory";
 import ResultsPopup from "./components/ResultsPopup";
 import { useDelegationToolkit } from '@/hooks/useDelegationToolkit';
+
+const {
+  wheelContractAddress,
+  tokenContractAddress,
+  wheelABI,
+  tokenABI,
+  contractConfig
+} = useContractDetails();
+
+console.log('wheel contract details', wheelContractAddress, tokenContractAddress, wheelABI, tokenABI)
 
 export default function Home() {
   const [balance, setBalance] = useState(1000);
