@@ -315,77 +315,6 @@ export default function Home() {
     }
   };
 
-  const setWheelToContractResult = (segmentIndex, multiplier) => {
-    const segmentAngle = (Math.PI * 2) / noOfSegments;
-    const totalSpins = 5;
-    const segmentCenter = Number(segmentIndex) * segmentAngle + segmentAngle / 2;
-    const targetPosition = (Math.PI * 2 * totalSpins) + (Math.PI * 2 - segmentCenter);
-    setWheelPosition(targetPosition);
-    setCurrentMultiplier(multiplier);
-    setHasSpun(true);
-    console.log('Wheel set to contract result:', { segmentIndex, multiplier, targetPosition, segmentCenter });
-  };
-
-  // Helper: Retry fetching contract result until contract is ready
-  const fetchContractResultWithRetry = async (roundId, retries = 5, riskParam = risk, segmentsParam = noOfSegments) => {
-    if (!contract || !contractReady) {
-      if (retries > 0) {
-        await new Promise(res => setTimeout(res, 500));
-        return fetchContractResultWithRetry(roundId, retries - 1, riskParam, segmentsParam);
-      }
-      console.error("Contract is not ready after retries, cannot fetch contract result");
-      return null;
-    }
-    return fetchContractResult(roundId, riskParam, segmentsParam);
-  };
-
-  const fetchContractResult = async (roundId, riskParam = risk, segmentsParam = noOfSegments) => {
-    if (!contract || !contractReady) {
-      console.error('Contract is not ready, aborting contract call');
-      return null;
-    }
-    try {
-      console.log("Fetching result for roundId:", roundId);
-      const result = await contract.methods.getResult(roundId).call();
-      
-      // Handle both old (3 values) and new (4 values) result formats
-      let multiplierRaw, segmentIndexRaw, degreeRaw, isWin;
-      
-      if (result.length === 4) {
-        // New format with degree
-        [multiplierRaw, segmentIndexRaw, degreeRaw, isWin] = result;
-      } else if (result.length === 3) {
-        // Old format without degree
-        [multiplierRaw, segmentIndexRaw, isWin] = result;
-      } else {
-        console.error("Invalid contract result format:", result);
-        return null;
-      }
-  
-      const riskLevel = riskParam === 'low' ? 0 : riskParam === 'medium' ? 1 : 2;
-      const wheelDataArr = await contract.methods.getWheelData(riskLevel, segmentsParam).call();
-      
-      return {
-        multiplier: Number(multiplierRaw) / 100,
-        segmentIndex: Number(segmentIndexRaw),
-        isWin,
-        color: wheelDataArr && wheelDataArr[segmentIndexRaw] ? 
-               wheelDataArr[segmentIndexRaw].color : "#333947",
-        segmentMultiplier: wheelDataArr && wheelDataArr[segmentIndexRaw] ? 
-                          Number(wheelDataArr[segmentIndexRaw].multiplier) / 100 : 
-                          Number(multiplierRaw) / 100
-      };
-    } catch (err) {
-      console.error("Error fetching contract result:", err);
-      return null;
-    }
-  };
-  
-  // Helper function to calculate degree when not provided by contract
-  // const calculateDefaultDegree = (segmentIndex, segments) => {
-  //   const segmentSize = 360 / segments;
-  //   return segmentIndex * segmentSize + (segmentSize / 2); // Center of segment
-  // };
 
   const manulBet = async () => {
     if (!canBet) return;
@@ -410,7 +339,8 @@ export default function Home() {
       setCooldown(3);
       setIsSpinning(true);
       setTimeout(async () => {
-        const result = await fetchContractResultWithRetry(roundId, 5, risk, noOfSegments);
+        const result = await calculateResult(risk, noOfSegments);
+        console.log("result", result);
         if (result) {
           setContractResult(result);
           setTimeout(() => {
@@ -488,7 +418,7 @@ export default function Home() {
         setCooldown(3);
         setIsSpinning(true);
         await new Promise((resolve) => setTimeout(resolve, 10000));
-        const result = await fetchContractResultWithRetry(roundId, 5, risk, noOfSegments);
+        const result = await calculateResult(risk, noOfSegments);
         if (result) {
           setContractResult(result);
           await new Promise((resolve) => setTimeout(resolve, 3200));
@@ -785,12 +715,11 @@ export default function Home() {
       <WheelPayouts />
       <WheelHistory />
       
-      {/* Results Popup */}
-      <ResultsPopup
+      {/* <ResultsPopup
         isOpen={showResultsPopup}
         onClose={handleCloseResultsPopup}
         result={gameResult}
-      />
+      /> */}
     </div>
   );
 }

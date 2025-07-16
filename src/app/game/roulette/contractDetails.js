@@ -24,7 +24,7 @@ export const getRpcURLConfig = (chainId) => {
 	} else if (chainId === CHAIN_ID.MANTLE_SEPOLIA) {
 		return RPC_URLS.MANTLE_SEPOLIA;
 	} else if (chainId === CHAIN_ID.PHAROS_DEVNET) {
-		return CONTRRPC_URLSACTS.PHAROS_DEVNET;
+		return RPC_URLS.PHAROS_DEVNET;
 	} else if (chainId === CHAIN_ID.BINANCE_TESTNET) {
 		return RPC_URLS.BINANCE_TESTNET;
 	}
