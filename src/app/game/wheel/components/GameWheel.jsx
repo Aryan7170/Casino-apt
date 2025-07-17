@@ -21,6 +21,7 @@ const GameWheel = ({
   risk = "medium",
   hasSpun = false,
 }) => {
+  
   const canvasRef = useRef(null);
   
   // Use the extracted function to generate wheel data
@@ -142,9 +143,7 @@ const GameWheel = ({
     };
   }, [handleSelectMultiplier, isSpinning, segments, setWheelPosition, wheelData, wheelPosition]);
 
-  // Use the extracted function to get current segment
-  const currentSegment = getCurrentSegmentUnderPointer(wheelPosition, wheelData);
-  
+  // Use the extracted function to get current segment  
   // Get all current segment values (you can use this for more detailed info)
   const currentSegmentValues = getCurrentSegmentValues(wheelPosition, wheelData);
 
@@ -183,7 +182,7 @@ const GameWheel = ({
           <div className="flex items-center justify-center gap-4">
             <div 
               className="w-8 h-8 rounded-full border-2 border-white"
-              style={{ backgroundColor: currentSegment.color }}
+              style={{ backgroundColor: currentSegmentValues.color }}
             ></div>
             <div className="text-2xl font-bold text-white">
               {currentSegmentValues.formattedMultiplier}x

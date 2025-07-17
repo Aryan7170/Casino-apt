@@ -9,10 +9,10 @@ export const CHAIN_IDS = {
 };
 
 export const CHAIN_ID = {
-  MANTLE_SEPOLIA: 5003, // 5003
-  PHAROS_DEVNET: 50002, // 50002
-  BINANCE_TESTNET: 97, // 97
-  ETHEREUM_SEPOLIA: 11155111, // 11155111
+	MANTLE_SEPOLIA: '0x138b', // 5003
+	PHAROS_DEVNET: '0xc352', // 50002
+	BINANCE_TESTNET: '0x61', // 97
+	ETHEREUM_SEPOLIA: '0xaa36a7', // 11155111
   // Add more chains here as needed
 };
 
