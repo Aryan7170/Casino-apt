@@ -109,7 +109,7 @@ export const WHEEL_CONTRACTS = {
       address: "0xcf4469d29aaae6f136b9cd171a01700895093c67", // Updated wheel contract address
   },
   [CHAIN_IDS.MANTLE_SEPOLIA]: {
-      address: "0x5d0F17a1f21B3F9Dac8C78a54EE7764993a5Cacd",
+      address: "0xD7a0f0fFcB7b9DcA193ABE29bfCf33477764e99D",
   },
   [CHAIN_IDS.PHAROS_DEVNET]: {
       address: "0x6d55c17495E176a16700D101596f543D00972481",
@@ -1248,7 +1248,7 @@ MANTLE_SEPOLIA: {
     ]
   },
   wheel: {
-    address: '0x5d0F17a1f21B3F9Dac8C78a54EE7764993a5Cacd',
+    address: '0xD7a0f0fFcB7b9DcA193ABE29bfCf33477764e99D',
     abi: [
 		{
 			"inputs": [
@@ -3091,775 +3091,775 @@ PHAROS_DEVNET: {
   wheel: {
     address: '0x6d55c17495E176a16700D101596f543D00972481',
     abi: [
-			{
-				"inputs": [
-					{
-						"internalType": "contract IERC20",
-						"name": "_token",
-						"type": "address"
-					},
-					{
-						"internalType": "address",
-						"name": "_gameOperator",
-						"type": "address"
-					}
-				],
-				"stateMutability": "nonpayable",
-				"type": "constructor"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "owner",
-						"type": "address"
-					}
-				],
-				"name": "OwnableInvalidOwner",
-				"type": "error"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "account",
-						"type": "address"
-					}
-				],
-				"name": "OwnableUnauthorizedAccount",
-				"type": "error"
-			},
-			{
-				"inputs": [],
-				"name": "ReentrancyGuardReentrantCall",
-				"type": "error"
-			},
-			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "player",
-						"type": "address"
-					},
-					{
-						"indexed": true,
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					},
-					{
-						"indexed": false,
-						"internalType": "enum WheelGame.RiskLevel",
-						"name": "risk",
-						"type": "uint8"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint8",
-						"name": "segments",
-						"type": "uint8"
-					}
-				],
-				"name": "BetPlaced",
-				"type": "event"
-			},
-			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "player",
-						"type": "address"
-					},
-					{
-						"indexed": true,
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					}
-				],
-				"name": "BetRefunded",
-				"type": "event"
-			},
-			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "newOperator",
-						"type": "address"
-					}
-				],
-				"name": "GameOperatorUpdated",
-				"type": "event"
-			},
-			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "previousOwner",
-						"type": "address"
-					},
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "newOwner",
-						"type": "address"
-					}
-				],
-				"name": "OwnershipTransferred",
-				"type": "event"
-			},
-			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "player",
-						"type": "address"
-					},
-					{
-						"indexed": true,
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "multiplier",
-						"type": "uint256"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "segmentIndex",
-						"type": "uint256"
-					},
-					{
-						"indexed": false,
-						"internalType": "bool",
-						"name": "isWin",
-						"type": "bool"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "payout",
-						"type": "uint256"
-					}
-				],
-				"name": "WheelSpun",
-				"type": "event"
-			},
-			{
-				"inputs": [],
-				"name": "MIN_WAIT_BLOCK",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "TREASURY",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "TREASURY_FEE_RATE",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"name": "bets",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "player",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					},
-					{
-						"internalType": "enum WheelGame.RiskLevel",
-						"name": "risk",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint8",
-						"name": "segments",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "blockNumber",
-						"type": "uint256"
-					},
-					{
-						"internalType": "bool",
-						"name": "isActive",
-						"type": "bool"
-					},
-					{
-						"internalType": "uint256",
-						"name": "timestamp",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "user",
-						"type": "address"
-					}
-				],
-				"name": "checkUserAllowance",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "currentRound",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "_amount",
-						"type": "uint256"
-					}
-				],
-				"name": "depositForPayouts",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					}
-				],
-				"name": "emergencyRefund",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "_token",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "_amount",
-						"type": "uint256"
-					}
-				],
-				"name": "emergencyWithdraw",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "gameOperator",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					}
-				],
-				"name": "getBet",
-				"outputs": [
-					{
-						"components": [
-							{
-								"internalType": "address",
-								"name": "player",
-								"type": "address"
-							},
-							{
-								"internalType": "uint256",
-								"name": "amount",
-								"type": "uint256"
-							},
-							{
-								"internalType": "enum WheelGame.RiskLevel",
-								"name": "risk",
-								"type": "uint8"
-							},
-							{
-								"internalType": "uint8",
-								"name": "segments",
-								"type": "uint8"
-							},
-							{
-								"internalType": "uint256",
-								"name": "round",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "blockNumber",
-								"type": "uint256"
-							},
-							{
-								"internalType": "bool",
-								"name": "isActive",
-								"type": "bool"
-							},
-							{
-								"internalType": "uint256",
-								"name": "timestamp",
-								"type": "uint256"
-							}
-						],
-						"internalType": "struct WheelGame.Bet",
-						"name": "",
-						"type": "tuple"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "getContractBalance",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "getGameOperator",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					}
-				],
-				"name": "getResult",
-				"outputs": [
-					{
-						"components": [
-							{
-								"internalType": "uint256",
-								"name": "multiplier",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "segmentIndex",
-								"type": "uint256"
-							},
-							{
-								"internalType": "bool",
-								"name": "isWin",
-								"type": "bool"
-							}
-						],
-						"internalType": "struct WheelGame.WheelResult",
-						"name": "",
-						"type": "tuple"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "enum WheelGame.RiskLevel",
-						"name": "risk",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint8",
-						"name": "segments",
-						"type": "uint8"
-					}
-				],
-				"name": "getValidMultipliers",
-				"outputs": [
-					{
-						"internalType": "uint256[]",
-						"name": "",
-						"type": "uint256[]"
-					}
-				],
-				"stateMutability": "pure",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint8",
-						"name": "risk",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint8",
-						"name": "segments",
-						"type": "uint8"
-					}
-				],
-				"name": "getWheelData",
-				"outputs": [
-					{
-						"internalType": "uint256[]",
-						"name": "multipliers",
-						"type": "uint256[]"
-					},
-					{
-						"internalType": "string[]",
-						"name": "colors",
-						"type": "string[]"
-					},
-					{
-						"internalType": "uint256[]",
-						"name": "probabilities",
-						"type": "uint256[]"
-					}
-				],
-				"stateMutability": "pure",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					}
-				],
-				"name": "isRoundProcessed",
-				"outputs": [
-					{
-						"internalType": "bool",
-						"name": "",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "lastBetBlock",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"name": "lastBetTime",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "minBet",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "owner",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "enum WheelGame.RiskLevel",
-						"name": "risk",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint8",
-						"name": "segments",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					}
-				],
-				"name": "placeBet",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "frontendMultiplier",
-						"type": "uint256"
-					}
-				],
-				"name": "processResult",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "renounceOwnership",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"name": "results",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "multiplier",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "segmentIndex",
-						"type": "uint256"
-					},
-					{
-						"internalType": "bool",
-						"name": "isWin",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"name": "roundProcessed",
-				"outputs": [
-					{
-						"internalType": "bool",
-						"name": "",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "token",
-				"outputs": [
-					{
-						"internalType": "contract IERC20",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "newOwner",
-						"type": "address"
-					}
-				],
-				"name": "transferOwnership",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "_newOperator",
-						"type": "address"
-					}
-				],
-				"name": "updateGameOperator",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "_minBet",
-						"type": "uint256"
-					}
-				],
-				"name": "updateMinBet",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			}
-		]
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "_amount",
+					"type": "uint256"
+				}
+			],
+			"name": "depositForPayouts",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				}
+			],
+			"name": "emergencyRefund",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "_token",
+					"type": "address"
+				},
+				{
+					"internalType": "uint256",
+					"name": "_amount",
+					"type": "uint256"
+				}
+			],
+			"name": "emergencyWithdraw",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "contract IERC20",
+					"name": "_token",
+					"type": "address"
+				},
+				{
+					"internalType": "address",
+					"name": "_gameOperator",
+					"type": "address"
+				}
+			],
+			"stateMutability": "nonpayable",
+			"type": "constructor"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "owner",
+					"type": "address"
+				}
+			],
+			"name": "OwnableInvalidOwner",
+			"type": "error"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "account",
+					"type": "address"
+				}
+			],
+			"name": "OwnableUnauthorizedAccount",
+			"type": "error"
+		},
+		{
+			"inputs": [],
+			"name": "ReentrancyGuardReentrantCall",
+			"type": "error"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "player",
+					"type": "address"
+				},
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "amount",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "enum WheelGame.RiskLevel",
+					"name": "risk",
+					"type": "uint8"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint8",
+					"name": "segments",
+					"type": "uint8"
+				}
+			],
+			"name": "BetPlaced",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "player",
+					"type": "address"
+				},
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "amount",
+					"type": "uint256"
+				}
+			],
+			"name": "BetRefunded",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "newOperator",
+					"type": "address"
+				}
+			],
+			"name": "GameOperatorUpdated",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "previousOwner",
+					"type": "address"
+				},
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "newOwner",
+					"type": "address"
+				}
+			],
+			"name": "OwnershipTransferred",
+			"type": "event"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "enum WheelGame.RiskLevel",
+					"name": "risk",
+					"type": "uint8"
+				},
+				{
+					"internalType": "uint8",
+					"name": "segments",
+					"type": "uint8"
+				},
+				{
+					"internalType": "uint256",
+					"name": "amount",
+					"type": "uint256"
+				}
+			],
+			"name": "placeBet",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "frontendMultiplier",
+					"type": "uint256"
+				}
+			],
+			"name": "processResult",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "renounceOwnership",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "newOwner",
+					"type": "address"
+				}
+			],
+			"name": "transferOwnership",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "_newOperator",
+					"type": "address"
+				}
+			],
+			"name": "updateGameOperator",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "_minBet",
+					"type": "uint256"
+				}
+			],
+			"name": "updateMinBet",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "player",
+					"type": "address"
+				},
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "multiplier",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "segmentIndex",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "bool",
+					"name": "isWin",
+					"type": "bool"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "payout",
+					"type": "uint256"
+				}
+			],
+			"name": "WheelSpun",
+			"type": "event"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "bets",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "player",
+					"type": "address"
+				},
+				{
+					"internalType": "uint256",
+					"name": "amount",
+					"type": "uint256"
+				},
+				{
+					"internalType": "enum WheelGame.RiskLevel",
+					"name": "risk",
+					"type": "uint8"
+				},
+				{
+					"internalType": "uint8",
+					"name": "segments",
+					"type": "uint8"
+				},
+				{
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "blockNumber",
+					"type": "uint256"
+				},
+				{
+					"internalType": "bool",
+					"name": "isActive",
+					"type": "bool"
+				},
+				{
+					"internalType": "uint256",
+					"name": "timestamp",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "user",
+					"type": "address"
+				}
+			],
+			"name": "checkUserAllowance",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "currentRound",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "gameOperator",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				}
+			],
+			"name": "getBet",
+			"outputs": [
+				{
+					"components": [
+						{
+							"internalType": "address",
+							"name": "player",
+							"type": "address"
+						},
+						{
+							"internalType": "uint256",
+							"name": "amount",
+							"type": "uint256"
+						},
+						{
+							"internalType": "enum WheelGame.RiskLevel",
+							"name": "risk",
+							"type": "uint8"
+						},
+						{
+							"internalType": "uint8",
+							"name": "segments",
+							"type": "uint8"
+						},
+						{
+							"internalType": "uint256",
+							"name": "round",
+							"type": "uint256"
+						},
+						{
+							"internalType": "uint256",
+							"name": "blockNumber",
+							"type": "uint256"
+						},
+						{
+							"internalType": "bool",
+							"name": "isActive",
+							"type": "bool"
+						},
+						{
+							"internalType": "uint256",
+							"name": "timestamp",
+							"type": "uint256"
+						}
+					],
+					"internalType": "struct WheelGame.Bet",
+					"name": "",
+					"type": "tuple"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "getContractBalance",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "getGameOperator",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				}
+			],
+			"name": "getResult",
+			"outputs": [
+				{
+					"components": [
+						{
+							"internalType": "uint256",
+							"name": "multiplier",
+							"type": "uint256"
+						},
+						{
+							"internalType": "uint256",
+							"name": "segmentIndex",
+							"type": "uint256"
+						},
+						{
+							"internalType": "bool",
+							"name": "isWin",
+							"type": "bool"
+						}
+					],
+					"internalType": "struct WheelGame.WheelResult",
+					"name": "",
+					"type": "tuple"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "enum WheelGame.RiskLevel",
+					"name": "risk",
+					"type": "uint8"
+				},
+				{
+					"internalType": "uint8",
+					"name": "segments",
+					"type": "uint8"
+				}
+			],
+			"name": "getValidMultipliers",
+			"outputs": [
+				{
+					"internalType": "uint256[]",
+					"name": "",
+					"type": "uint256[]"
+				}
+			],
+			"stateMutability": "pure",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint8",
+					"name": "risk",
+					"type": "uint8"
+				},
+				{
+					"internalType": "uint8",
+					"name": "segments",
+					"type": "uint8"
+				}
+			],
+			"name": "getWheelData",
+			"outputs": [
+				{
+					"internalType": "uint256[]",
+					"name": "multipliers",
+					"type": "uint256[]"
+				},
+				{
+					"internalType": "string[]",
+					"name": "colors",
+					"type": "string[]"
+				},
+				{
+					"internalType": "uint256[]",
+					"name": "probabilities",
+					"type": "uint256[]"
+				}
+			],
+			"stateMutability": "pure",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				}
+			],
+			"name": "isRoundProcessed",
+			"outputs": [
+				{
+					"internalType": "bool",
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "lastBetBlock",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"name": "lastBetTime",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "MIN_WAIT_BLOCK",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "minBet",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "owner",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "results",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "multiplier",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "segmentIndex",
+					"type": "uint256"
+				},
+				{
+					"internalType": "bool",
+					"name": "isWin",
+					"type": "bool"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "roundProcessed",
+			"outputs": [
+				{
+					"internalType": "bool",
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "token",
+			"outputs": [
+				{
+					"internalType": "contract IERC20",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "TREASURY",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "TREASURY_FEE_RATE",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		}
+	]
   },
   mines: {
     address: '0xa534adf7A3B107f8bDF10CD042a309701Db71e6D',
@@ -4267,756 +4267,775 @@ BINANCE_TESTNET: {
   wheel: { 
     address: '0xcf4469d29aaae6f136b9cd171a01700895093c67', 
     abi: [
-			{
-				"inputs": [
-					{
-						"internalType": "contract IERC20",
-						"name": "_token",
-						"type": "address"
-					},
-					{
-						"internalType": "address",
-						"name": "_gameOperator",
-						"type": "address"
-					}
-				],
-				"stateMutability": "nonpayable",
-				"type": "constructor"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "owner",
-						"type": "address"
-					}
-				],
-				"name": "OwnableInvalidOwner",
-				"type": "error"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "account",
-						"type": "address"
-					}
-				],
-				"name": "OwnableUnauthorizedAccount",
-				"type": "error"
-			},
-			{
-				"inputs": [],
-				"name": "ReentrancyGuardReentrantCall",
-				"type": "error"
-			},
-			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "player",
-						"type": "address"
-					},
-					{
-						"indexed": true,
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					},
-					{
-						"indexed": false,
-						"internalType": "enum WheelGame.RiskLevel",
-						"name": "risk",
-						"type": "uint8"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint8",
-						"name": "segments",
-						"type": "uint8"
-					}
-				],
-				"name": "BetPlaced",
-				"type": "event"
-			},
-			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "player",
-						"type": "address"
-					},
-					{
-						"indexed": true,
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					}
-				],
-				"name": "BetRefunded",
-				"type": "event"
-			},
-			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "newOperator",
-						"type": "address"
-					}
-				],
-				"name": "GameOperatorUpdated",
-				"type": "event"
-			},
-			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "previousOwner",
-						"type": "address"
-					},
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "newOwner",
-						"type": "address"
-					}
-				],
-				"name": "OwnershipTransferred",
-				"type": "event"
-			},
-			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "player",
-						"type": "address"
-					},
-					{
-						"indexed": true,
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "multiplier",
-						"type": "uint256"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "segmentIndex",
-						"type": "uint256"
-					},
-					{
-						"indexed": false,
-						"internalType": "bool",
-						"name": "isWin",
-						"type": "bool"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "payout",
-						"type": "uint256"
-					}
-				],
-				"name": "WheelSpun",
-				"type": "event"
-			},
-			{
-				"inputs": [],
-				"name": "MIN_WAIT_BLOCK",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "TREASURY",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "TREASURY_FEE_RATE",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"name": "bets",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "player",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					},
-					{
-						"internalType": "enum WheelGame.RiskLevel",
-						"name": "risk",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint8",
-						"name": "segments",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "blockNumber",
-						"type": "uint256"
-					},
-					{
-						"internalType": "bool",
-						"name": "isActive",
-						"type": "bool"
-					},
-					{
-						"internalType": "uint256",
-						"name": "timestamp",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "currentRound",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "_amount",
-						"type": "uint256"
-					}
-				],
-				"name": "depositForPayouts",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					}
-				],
-				"name": "emergencyRefund",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "_token",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "_amount",
-						"type": "uint256"
-					}
-				],
-				"name": "emergencyWithdraw",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "gameOperator",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					}
-				],
-				"name": "getBet",
-				"outputs": [
-					{
-						"components": [
-							{
-								"internalType": "address",
-								"name": "player",
-								"type": "address"
-							},
-							{
-								"internalType": "uint256",
-								"name": "amount",
-								"type": "uint256"
-							},
-							{
-								"internalType": "enum WheelGame.RiskLevel",
-								"name": "risk",
-								"type": "uint8"
-							},
-							{
-								"internalType": "uint8",
-								"name": "segments",
-								"type": "uint8"
-							},
-							{
-								"internalType": "uint256",
-								"name": "round",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "blockNumber",
-								"type": "uint256"
-							},
-							{
-								"internalType": "bool",
-								"name": "isActive",
-								"type": "bool"
-							},
-							{
-								"internalType": "uint256",
-								"name": "timestamp",
-								"type": "uint256"
-							}
-						],
-						"internalType": "struct WheelGame.Bet",
-						"name": "",
-						"type": "tuple"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "getContractBalance",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "getGameOperator",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					}
-				],
-				"name": "getResult",
-				"outputs": [
-					{
-						"components": [
-							{
-								"internalType": "uint256",
-								"name": "multiplier",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "segmentIndex",
-								"type": "uint256"
-							},
-							{
-								"internalType": "bool",
-								"name": "isWin",
-								"type": "bool"
-							}
-						],
-						"internalType": "struct WheelGame.WheelResult",
-						"name": "",
-						"type": "tuple"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "enum WheelGame.RiskLevel",
-						"name": "risk",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint8",
-						"name": "segments",
-						"type": "uint8"
-					}
-				],
-				"name": "getValidMultipliers",
-				"outputs": [
-					{
-						"internalType": "uint256[]",
-						"name": "",
-						"type": "uint256[]"
-					}
-				],
-				"stateMutability": "pure",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint8",
-						"name": "risk",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint8",
-						"name": "segments",
-						"type": "uint8"
-					}
-				],
-				"name": "getWheelData",
-				"outputs": [
-					{
-						"internalType": "uint256[]",
-						"name": "multipliers",
-						"type": "uint256[]"
-					},
-					{
-						"internalType": "string[]",
-						"name": "colors",
-						"type": "string[]"
-					},
-					{
-						"internalType": "uint256[]",
-						"name": "probabilities",
-						"type": "uint256[]"
-					}
-				],
-				"stateMutability": "pure",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					}
-				],
-				"name": "isRoundProcessed",
-				"outputs": [
-					{
-						"internalType": "bool",
-						"name": "",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "lastBetBlock",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"name": "lastBetTime",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "minBet",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "owner",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "enum WheelGame.RiskLevel",
-						"name": "risk",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint8",
-						"name": "segments",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					}
-				],
-				"name": "placeBet",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "frontendMultiplier",
-						"type": "uint256"
-					}
-				],
-				"name": "processResult",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "renounceOwnership",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"name": "results",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "multiplier",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "segmentIndex",
-						"type": "uint256"
-					},
-					{
-						"internalType": "bool",
-						"name": "isWin",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"name": "roundProcessed",
-				"outputs": [
-					{
-						"internalType": "bool",
-						"name": "",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "token",
-				"outputs": [
-					{
-						"internalType": "contract IERC20",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "newOwner",
-						"type": "address"
-					}
-				],
-				"name": "transferOwnership",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "_newOperator",
-						"type": "address"
-					}
-				],
-				"name": "updateGameOperator",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "_minBet",
-						"type": "uint256"
-					}
-				],
-				"name": "updateMinBet",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			}
-		]
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "_amount",
+					"type": "uint256"
+				}
+			],
+			"name": "depositForPayouts",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				}
+			],
+			"name": "emergencyRefund",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "_token",
+					"type": "address"
+				},
+				{
+					"internalType": "uint256",
+					"name": "_amount",
+					"type": "uint256"
+				}
+			],
+			"name": "emergencyWithdraw",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "contract IERC20",
+					"name": "_token",
+					"type": "address"
+				},
+				{
+					"internalType": "address",
+					"name": "_gameOperator",
+					"type": "address"
+				}
+			],
+			"stateMutability": "nonpayable",
+			"type": "constructor"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "owner",
+					"type": "address"
+				}
+			],
+			"name": "OwnableInvalidOwner",
+			"type": "error"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "account",
+					"type": "address"
+				}
+			],
+			"name": "OwnableUnauthorizedAccount",
+			"type": "error"
+		},
+		{
+			"inputs": [],
+			"name": "ReentrancyGuardReentrantCall",
+			"type": "error"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "player",
+					"type": "address"
+				},
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "amount",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "enum WheelGame.RiskLevel",
+					"name": "risk",
+					"type": "uint8"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint8",
+					"name": "segments",
+					"type": "uint8"
+				}
+			],
+			"name": "BetPlaced",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "player",
+					"type": "address"
+				},
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "amount",
+					"type": "uint256"
+				}
+			],
+			"name": "BetRefunded",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "newOperator",
+					"type": "address"
+				}
+			],
+			"name": "GameOperatorUpdated",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "previousOwner",
+					"type": "address"
+				},
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "newOwner",
+					"type": "address"
+				}
+			],
+			"name": "OwnershipTransferred",
+			"type": "event"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "enum WheelGame.RiskLevel",
+					"name": "risk",
+					"type": "uint8"
+				},
+				{
+					"internalType": "uint8",
+					"name": "segments",
+					"type": "uint8"
+				},
+				{
+					"internalType": "uint256",
+					"name": "amount",
+					"type": "uint256"
+				}
+			],
+			"name": "placeBet",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "frontendMultiplier",
+					"type": "uint256"
+				}
+			],
+			"name": "processResult",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "renounceOwnership",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "newOwner",
+					"type": "address"
+				}
+			],
+			"name": "transferOwnership",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "_newOperator",
+					"type": "address"
+				}
+			],
+			"name": "updateGameOperator",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "_minBet",
+					"type": "uint256"
+				}
+			],
+			"name": "updateMinBet",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "player",
+					"type": "address"
+				},
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "multiplier",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "segmentIndex",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "bool",
+					"name": "isWin",
+					"type": "bool"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "payout",
+					"type": "uint256"
+				}
+			],
+			"name": "WheelSpun",
+			"type": "event"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "bets",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "player",
+					"type": "address"
+				},
+				{
+					"internalType": "uint256",
+					"name": "amount",
+					"type": "uint256"
+				},
+				{
+					"internalType": "enum WheelGame.RiskLevel",
+					"name": "risk",
+					"type": "uint8"
+				},
+				{
+					"internalType": "uint8",
+					"name": "segments",
+					"type": "uint8"
+				},
+				{
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "blockNumber",
+					"type": "uint256"
+				},
+				{
+					"internalType": "bool",
+					"name": "isActive",
+					"type": "bool"
+				},
+				{
+					"internalType": "uint256",
+					"name": "timestamp",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "user",
+					"type": "address"
+				}
+			],
+			"name": "checkUserAllowance",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "currentRound",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "gameOperator",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				}
+			],
+			"name": "getBet",
+			"outputs": [
+				{
+					"components": [
+						{
+							"internalType": "address",
+							"name": "player",
+							"type": "address"
+						},
+						{
+							"internalType": "uint256",
+							"name": "amount",
+							"type": "uint256"
+						},
+						{
+							"internalType": "enum WheelGame.RiskLevel",
+							"name": "risk",
+							"type": "uint8"
+						},
+						{
+							"internalType": "uint8",
+							"name": "segments",
+							"type": "uint8"
+						},
+						{
+							"internalType": "uint256",
+							"name": "round",
+							"type": "uint256"
+						},
+						{
+							"internalType": "uint256",
+							"name": "blockNumber",
+							"type": "uint256"
+						},
+						{
+							"internalType": "bool",
+							"name": "isActive",
+							"type": "bool"
+						},
+						{
+							"internalType": "uint256",
+							"name": "timestamp",
+							"type": "uint256"
+						}
+					],
+					"internalType": "struct WheelGame.Bet",
+					"name": "",
+					"type": "tuple"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "getContractBalance",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "getGameOperator",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				}
+			],
+			"name": "getResult",
+			"outputs": [
+				{
+					"components": [
+						{
+							"internalType": "uint256",
+							"name": "multiplier",
+							"type": "uint256"
+						},
+						{
+							"internalType": "uint256",
+							"name": "segmentIndex",
+							"type": "uint256"
+						},
+						{
+							"internalType": "bool",
+							"name": "isWin",
+							"type": "bool"
+						}
+					],
+					"internalType": "struct WheelGame.WheelResult",
+					"name": "",
+					"type": "tuple"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "enum WheelGame.RiskLevel",
+					"name": "risk",
+					"type": "uint8"
+				},
+				{
+					"internalType": "uint8",
+					"name": "segments",
+					"type": "uint8"
+				}
+			],
+			"name": "getValidMultipliers",
+			"outputs": [
+				{
+					"internalType": "uint256[]",
+					"name": "",
+					"type": "uint256[]"
+				}
+			],
+			"stateMutability": "pure",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint8",
+					"name": "risk",
+					"type": "uint8"
+				},
+				{
+					"internalType": "uint8",
+					"name": "segments",
+					"type": "uint8"
+				}
+			],
+			"name": "getWheelData",
+			"outputs": [
+				{
+					"internalType": "uint256[]",
+					"name": "multipliers",
+					"type": "uint256[]"
+				},
+				{
+					"internalType": "string[]",
+					"name": "colors",
+					"type": "string[]"
+				},
+				{
+					"internalType": "uint256[]",
+					"name": "probabilities",
+					"type": "uint256[]"
+				}
+			],
+			"stateMutability": "pure",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				}
+			],
+			"name": "isRoundProcessed",
+			"outputs": [
+				{
+					"internalType": "bool",
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "lastBetBlock",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"name": "lastBetTime",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "MIN_WAIT_BLOCK",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "minBet",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "owner",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "results",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "multiplier",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "segmentIndex",
+					"type": "uint256"
+				},
+				{
+					"internalType": "bool",
+					"name": "isWin",
+					"type": "bool"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "roundProcessed",
+			"outputs": [
+				{
+					"internalType": "bool",
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "token",
+			"outputs": [
+				{
+					"internalType": "contract IERC20",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "TREASURY",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "TREASURY_FEE_RATE",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		}
+	]
   },
 },
 
@@ -5102,775 +5121,775 @@ ETHEREUM_SEPOLIA: {
   wheel: { 
     address: '0xeb9F5df0e73f6e8C4337FC20c3f6Dd8Cf2841bA0', 
     abi: [
-			{
-				"inputs": [
-					{
-						"internalType": "contract IERC20",
-						"name": "_token",
-						"type": "address"
-					},
-					{
-						"internalType": "address",
-						"name": "_gameOperator",
-						"type": "address"
-					}
-				],
-				"stateMutability": "nonpayable",
-				"type": "constructor"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "owner",
-						"type": "address"
-					}
-				],
-				"name": "OwnableInvalidOwner",
-				"type": "error"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "account",
-						"type": "address"
-					}
-				],
-				"name": "OwnableUnauthorizedAccount",
-				"type": "error"
-			},
-			{
-				"inputs": [],
-				"name": "ReentrancyGuardReentrantCall",
-				"type": "error"
-			},
-			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "player",
-						"type": "address"
-					},
-					{
-						"indexed": true,
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					},
-					{
-						"indexed": false,
-						"internalType": "enum WheelGame.RiskLevel",
-						"name": "risk",
-						"type": "uint8"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint8",
-						"name": "segments",
-						"type": "uint8"
-					}
-				],
-				"name": "BetPlaced",
-				"type": "event"
-			},
-			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "player",
-						"type": "address"
-					},
-					{
-						"indexed": true,
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					}
-				],
-				"name": "BetRefunded",
-				"type": "event"
-			},
-			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "newOperator",
-						"type": "address"
-					}
-				],
-				"name": "GameOperatorUpdated",
-				"type": "event"
-			},
-			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "previousOwner",
-						"type": "address"
-					},
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "newOwner",
-						"type": "address"
-					}
-				],
-				"name": "OwnershipTransferred",
-				"type": "event"
-			},
-			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "player",
-						"type": "address"
-					},
-					{
-						"indexed": true,
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "multiplier",
-						"type": "uint256"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "segmentIndex",
-						"type": "uint256"
-					},
-					{
-						"indexed": false,
-						"internalType": "bool",
-						"name": "isWin",
-						"type": "bool"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "payout",
-						"type": "uint256"
-					}
-				],
-				"name": "WheelSpun",
-				"type": "event"
-			},
-			{
-				"inputs": [],
-				"name": "MIN_WAIT_BLOCK",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "TREASURY",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "TREASURY_FEE_RATE",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"name": "bets",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "player",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					},
-					{
-						"internalType": "enum WheelGame.RiskLevel",
-						"name": "risk",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint8",
-						"name": "segments",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "blockNumber",
-						"type": "uint256"
-					},
-					{
-						"internalType": "bool",
-						"name": "isActive",
-						"type": "bool"
-					},
-					{
-						"internalType": "uint256",
-						"name": "timestamp",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "user",
-						"type": "address"
-					}
-				],
-				"name": "checkUserAllowance",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "currentRound",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "_amount",
-						"type": "uint256"
-					}
-				],
-				"name": "depositForPayouts",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					}
-				],
-				"name": "emergencyRefund",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "_token",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "_amount",
-						"type": "uint256"
-					}
-				],
-				"name": "emergencyWithdraw",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "gameOperator",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					}
-				],
-				"name": "getBet",
-				"outputs": [
-					{
-						"components": [
-							{
-								"internalType": "address",
-								"name": "player",
-								"type": "address"
-							},
-							{
-								"internalType": "uint256",
-								"name": "amount",
-								"type": "uint256"
-							},
-							{
-								"internalType": "enum WheelGame.RiskLevel",
-								"name": "risk",
-								"type": "uint8"
-							},
-							{
-								"internalType": "uint8",
-								"name": "segments",
-								"type": "uint8"
-							},
-							{
-								"internalType": "uint256",
-								"name": "round",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "blockNumber",
-								"type": "uint256"
-							},
-							{
-								"internalType": "bool",
-								"name": "isActive",
-								"type": "bool"
-							},
-							{
-								"internalType": "uint256",
-								"name": "timestamp",
-								"type": "uint256"
-							}
-						],
-						"internalType": "struct WheelGame.Bet",
-						"name": "",
-						"type": "tuple"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "getContractBalance",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "getGameOperator",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					}
-				],
-				"name": "getResult",
-				"outputs": [
-					{
-						"components": [
-							{
-								"internalType": "uint256",
-								"name": "multiplier",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "segmentIndex",
-								"type": "uint256"
-							},
-							{
-								"internalType": "bool",
-								"name": "isWin",
-								"type": "bool"
-							}
-						],
-						"internalType": "struct WheelGame.WheelResult",
-						"name": "",
-						"type": "tuple"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "enum WheelGame.RiskLevel",
-						"name": "risk",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint8",
-						"name": "segments",
-						"type": "uint8"
-					}
-				],
-				"name": "getValidMultipliers",
-				"outputs": [
-					{
-						"internalType": "uint256[]",
-						"name": "",
-						"type": "uint256[]"
-					}
-				],
-				"stateMutability": "pure",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint8",
-						"name": "risk",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint8",
-						"name": "segments",
-						"type": "uint8"
-					}
-				],
-				"name": "getWheelData",
-				"outputs": [
-					{
-						"internalType": "uint256[]",
-						"name": "multipliers",
-						"type": "uint256[]"
-					},
-					{
-						"internalType": "string[]",
-						"name": "colors",
-						"type": "string[]"
-					},
-					{
-						"internalType": "uint256[]",
-						"name": "probabilities",
-						"type": "uint256[]"
-					}
-				],
-				"stateMutability": "pure",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					}
-				],
-				"name": "isRoundProcessed",
-				"outputs": [
-					{
-						"internalType": "bool",
-						"name": "",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "lastBetBlock",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"name": "lastBetTime",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "minBet",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "owner",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "enum WheelGame.RiskLevel",
-						"name": "risk",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint8",
-						"name": "segments",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					}
-				],
-				"name": "placeBet",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "round",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "frontendMultiplier",
-						"type": "uint256"
-					}
-				],
-				"name": "processResult",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "renounceOwnership",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"name": "results",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "multiplier",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "segmentIndex",
-						"type": "uint256"
-					},
-					{
-						"internalType": "bool",
-						"name": "isWin",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"name": "roundProcessed",
-				"outputs": [
-					{
-						"internalType": "bool",
-						"name": "",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "token",
-				"outputs": [
-					{
-						"internalType": "contract IERC20",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "newOwner",
-						"type": "address"
-					}
-				],
-				"name": "transferOwnership",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "_newOperator",
-						"type": "address"
-					}
-				],
-				"name": "updateGameOperator",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "_minBet",
-						"type": "uint256"
-					}
-				],
-				"name": "updateMinBet",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			}
-		]
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "_amount",
+					"type": "uint256"
+				}
+			],
+			"name": "depositForPayouts",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				}
+			],
+			"name": "emergencyRefund",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "_token",
+					"type": "address"
+				},
+				{
+					"internalType": "uint256",
+					"name": "_amount",
+					"type": "uint256"
+				}
+			],
+			"name": "emergencyWithdraw",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "contract IERC20",
+					"name": "_token",
+					"type": "address"
+				},
+				{
+					"internalType": "address",
+					"name": "_gameOperator",
+					"type": "address"
+				}
+			],
+			"stateMutability": "nonpayable",
+			"type": "constructor"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "owner",
+					"type": "address"
+				}
+			],
+			"name": "OwnableInvalidOwner",
+			"type": "error"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "account",
+					"type": "address"
+				}
+			],
+			"name": "OwnableUnauthorizedAccount",
+			"type": "error"
+		},
+		{
+			"inputs": [],
+			"name": "ReentrancyGuardReentrantCall",
+			"type": "error"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "player",
+					"type": "address"
+				},
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "amount",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "enum WheelGame.RiskLevel",
+					"name": "risk",
+					"type": "uint8"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint8",
+					"name": "segments",
+					"type": "uint8"
+				}
+			],
+			"name": "BetPlaced",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "player",
+					"type": "address"
+				},
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "amount",
+					"type": "uint256"
+				}
+			],
+			"name": "BetRefunded",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "newOperator",
+					"type": "address"
+				}
+			],
+			"name": "GameOperatorUpdated",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "previousOwner",
+					"type": "address"
+				},
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "newOwner",
+					"type": "address"
+				}
+			],
+			"name": "OwnershipTransferred",
+			"type": "event"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "enum WheelGame.RiskLevel",
+					"name": "risk",
+					"type": "uint8"
+				},
+				{
+					"internalType": "uint8",
+					"name": "segments",
+					"type": "uint8"
+				},
+				{
+					"internalType": "uint256",
+					"name": "amount",
+					"type": "uint256"
+				}
+			],
+			"name": "placeBet",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "frontendMultiplier",
+					"type": "uint256"
+				}
+			],
+			"name": "processResult",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "renounceOwnership",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "newOwner",
+					"type": "address"
+				}
+			],
+			"name": "transferOwnership",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "_newOperator",
+					"type": "address"
+				}
+			],
+			"name": "updateGameOperator",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "_minBet",
+					"type": "uint256"
+				}
+			],
+			"name": "updateMinBet",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "player",
+					"type": "address"
+				},
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "multiplier",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "segmentIndex",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "bool",
+					"name": "isWin",
+					"type": "bool"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "payout",
+					"type": "uint256"
+				}
+			],
+			"name": "WheelSpun",
+			"type": "event"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "bets",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "player",
+					"type": "address"
+				},
+				{
+					"internalType": "uint256",
+					"name": "amount",
+					"type": "uint256"
+				},
+				{
+					"internalType": "enum WheelGame.RiskLevel",
+					"name": "risk",
+					"type": "uint8"
+				},
+				{
+					"internalType": "uint8",
+					"name": "segments",
+					"type": "uint8"
+				},
+				{
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "blockNumber",
+					"type": "uint256"
+				},
+				{
+					"internalType": "bool",
+					"name": "isActive",
+					"type": "bool"
+				},
+				{
+					"internalType": "uint256",
+					"name": "timestamp",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "user",
+					"type": "address"
+				}
+			],
+			"name": "checkUserAllowance",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "currentRound",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "gameOperator",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				}
+			],
+			"name": "getBet",
+			"outputs": [
+				{
+					"components": [
+						{
+							"internalType": "address",
+							"name": "player",
+							"type": "address"
+						},
+						{
+							"internalType": "uint256",
+							"name": "amount",
+							"type": "uint256"
+						},
+						{
+							"internalType": "enum WheelGame.RiskLevel",
+							"name": "risk",
+							"type": "uint8"
+						},
+						{
+							"internalType": "uint8",
+							"name": "segments",
+							"type": "uint8"
+						},
+						{
+							"internalType": "uint256",
+							"name": "round",
+							"type": "uint256"
+						},
+						{
+							"internalType": "uint256",
+							"name": "blockNumber",
+							"type": "uint256"
+						},
+						{
+							"internalType": "bool",
+							"name": "isActive",
+							"type": "bool"
+						},
+						{
+							"internalType": "uint256",
+							"name": "timestamp",
+							"type": "uint256"
+						}
+					],
+					"internalType": "struct WheelGame.Bet",
+					"name": "",
+					"type": "tuple"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "getContractBalance",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "getGameOperator",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				}
+			],
+			"name": "getResult",
+			"outputs": [
+				{
+					"components": [
+						{
+							"internalType": "uint256",
+							"name": "multiplier",
+							"type": "uint256"
+						},
+						{
+							"internalType": "uint256",
+							"name": "segmentIndex",
+							"type": "uint256"
+						},
+						{
+							"internalType": "bool",
+							"name": "isWin",
+							"type": "bool"
+						}
+					],
+					"internalType": "struct WheelGame.WheelResult",
+					"name": "",
+					"type": "tuple"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "enum WheelGame.RiskLevel",
+					"name": "risk",
+					"type": "uint8"
+				},
+				{
+					"internalType": "uint8",
+					"name": "segments",
+					"type": "uint8"
+				}
+			],
+			"name": "getValidMultipliers",
+			"outputs": [
+				{
+					"internalType": "uint256[]",
+					"name": "",
+					"type": "uint256[]"
+				}
+			],
+			"stateMutability": "pure",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint8",
+					"name": "risk",
+					"type": "uint8"
+				},
+				{
+					"internalType": "uint8",
+					"name": "segments",
+					"type": "uint8"
+				}
+			],
+			"name": "getWheelData",
+			"outputs": [
+				{
+					"internalType": "uint256[]",
+					"name": "multipliers",
+					"type": "uint256[]"
+				},
+				{
+					"internalType": "string[]",
+					"name": "colors",
+					"type": "string[]"
+				},
+				{
+					"internalType": "uint256[]",
+					"name": "probabilities",
+					"type": "uint256[]"
+				}
+			],
+			"stateMutability": "pure",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "round",
+					"type": "uint256"
+				}
+			],
+			"name": "isRoundProcessed",
+			"outputs": [
+				{
+					"internalType": "bool",
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "lastBetBlock",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"name": "lastBetTime",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "MIN_WAIT_BLOCK",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "minBet",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "owner",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "results",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "multiplier",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "segmentIndex",
+					"type": "uint256"
+				},
+				{
+					"internalType": "bool",
+					"name": "isWin",
+					"type": "bool"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "roundProcessed",
+			"outputs": [
+				{
+					"internalType": "bool",
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "token",
+			"outputs": [
+				{
+					"internalType": "contract IERC20",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "TREASURY",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "TREASURY_FEE_RATE",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		}
+	]
   },
 },
 
