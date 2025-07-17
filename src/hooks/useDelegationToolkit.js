@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { createDelegationToolkit } from '@metamask/delegation-toolkit';
+// import { createDelegationToolkit } from '@metamask/delegation-toolkit'; // Commented out because it is not exported
 import { ethers } from 'ethers';
 import { minesContractAddress, minesABI } from '../app/game/mines/config/contractDetails';
 import { useAccount } from 'wagmi';
@@ -27,17 +27,20 @@ export function useDelegationToolkit() {
     try {
       if (!window.ethereum) throw new Error('MetaMask not found');
       if (!wagmiIsConnected) throw new Error('Please connect wallet using RainbowKit/Wagmi first');
-      const toolkit = await createDelegationToolkit(window.ethereum);
-      const session = await toolkit.createSession({
-        contracts: [
-          {
-            address: contractAddress || minesContractAddress,
-            abi: contractABI || minesABI,
-            chainId: chainId || '0x138b',
-          },
-        ],
-        expiresInSeconds: 3600,
+      // const toolkit = await createDelegationToolkit(window.ethereum); // This line was removed as per the edit hint
+      const session = await window.ethereum.request({
+        method: 'eth_requestAccounts',
       });
+      // const session = await toolkit.createSession({ // This line was removed as per the edit hint
+      //   contracts: [
+      //     {
+      //       address: contractAddress || minesContractAddress,
+      //       abi: contractABI || minesABI,
+      //       chainId: chainId || '0x138b',
+      //     },
+      //   ],
+      //   expiresInSeconds: 3600,
+      // });
       setSession(session);
       setSigner(session.signer);
       const addr = await session.signer.getAddress();

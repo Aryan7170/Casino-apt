@@ -2,33 +2,33 @@
 
 export const wheelDataByRisk = {
     low: [
-      { multiplier: 0.0, color: "#333947", probability: 0.7 },
-      { multiplier: 1.2, color: "#D9D9D9", probability: 0.2 },
-      { multiplier: 1.5, color: "#00E403", probability: 0.1 },
+      { multiplier: 0, color: "#333947", probability: 0.7 },
+      { multiplier: 120, color: "#D9D9D9", probability: 0.2 },
+      { multiplier: 150, color: "#00E403", probability: 0.1 },
     ],
     medium: [
-      { multiplier: 0.0, color: "#333947", probability: 0.35 },
-      { multiplier: 1.5, color: "#00E403", probability: 0.2 },
-      { multiplier: 1.7, color: "#D9D9D9", probability: 0.15 },
-      { multiplier: 2.0, color: "#FDE905", probability: 0.15 },
-      { multiplier: 3.0, color: "#7F46FD", probability: 0.1 },
-      { multiplier: 4.0, color: "#FCA32F", probability: 0.05 },
+      { multiplier: 0, color: "#333947", probability: 0.35 },
+      { multiplier: 150, color: "#00E403", probability: 0.2 },
+      { multiplier: 170, color: "#D9D9D9", probability: 0.15 },
+      { multiplier: 200, color: "#FDE905", probability: 0.15 },
+      { multiplier: 300, color: "#7F46FD", probability: 0.1 },
+      { multiplier: 400, color: "#FCA32F", probability: 0.05 },
     ],
     high: (noOfSegments) => {
       const highProb = getHighRiskProbability(noOfSegments);
       return [
-        { multiplier: 0.0, color: "#333947", probability: 1 - highProb },
+        { multiplier: 0, color: "#333947", probability: 1 - highProb },
         { multiplier: getHighRiskMultiplier(noOfSegments), color: "#D72E60", probability: highProb },
       ];
     },
   };
   
   function getHighRiskMultiplier(noOfSegments) {
-    if (noOfSegments <= 10) return 9.90;
-    if (noOfSegments <= 20) return 19.80;
-    if (noOfSegments <= 30) return 29.70;
-    if (noOfSegments <= 40) return 39.60;
-    return 49.50;
+    if (noOfSegments <= 10) return 990;
+    if (noOfSegments <= 20) return 1980;
+    if (noOfSegments <= 30) return 2970;
+    if (noOfSegments <= 40) return 3960;
+    return 4950;
   }
   
   function getHighRiskProbability(noOfSegments) {
@@ -70,8 +70,8 @@ export const wheelDataByRisk = {
       
       baseWheelData = arr;
     } else if (risk === "medium") {
-      const zeroSegment = wheelDataByRisk.medium.find(d => d.multiplier === 0.0);
-      const nonZeroSegments = wheelDataByRisk.medium.filter(d => d.multiplier !== 0.0);
+      const zeroSegment = wheelDataByRisk.medium.find(d => d.multiplier === 0);
+      const nonZeroSegments = wheelDataByRisk.medium.filter(d => d.multiplier !== 0);
       
       let arr = [];
       let nonZeroIdx = 0;
@@ -85,8 +85,8 @@ export const wheelDataByRisk = {
       }
       baseWheelData = arr;
     } else if (risk === "low") {
-      const onePointTwoSegment = wheelDataByRisk.low.find(d => d.multiplier === 1.2);
-      const otherSegments = wheelDataByRisk.low.filter(d => d.multiplier !== 1.2);
+      const onePointTwoSegment = wheelDataByRisk.low.find(d => d.multiplier === 120);
+      const otherSegments = wheelDataByRisk.low.filter(d => d.multiplier !== 120);
       
       let arr = [];
       let otherIdx = 0;
@@ -130,7 +130,7 @@ export const wheelDataByRisk = {
       multiplier: currentSegment.multiplier,
       color: currentSegment.color,
       probability: currentSegment.probability,
-      formattedMultiplier: currentSegment.multiplier.toFixed(2),
+      formattedMultiplier: (currentSegment.multiplier / 100).toFixed(2), // Convert from basis points to decimal
       probabilityPercentage: (currentSegment.probability * 100).toFixed(1),
       // Additional computed values
       segmentIndex: Math.floor(((wheelPosition % (Math.PI * 2)) + Math.PI/2 + Math.PI) / ((Math.PI * 2) / wheelData.length)) % wheelData.length,
@@ -147,7 +147,7 @@ export const wheelDataByRisk = {
     } else {
       original = wheelDataByRisk[risk] || [];
     }
-    return Array.from(new Set(original.map(d => d.multiplier)));
+    return Array.from(new Set(original.map(d => d.multiplier / 100))); // Convert to decimal for display
   }
   
   // Get color mapping for multipliers
@@ -158,7 +158,7 @@ export const wheelDataByRisk = {
     } else {
       original = wheelDataByRisk[risk] || [];
     }
-    return Object.fromEntries(original.map(d => [d.multiplier, d.color]));
+    return Object.fromEntries(original.map(d => [d.multiplier / 100, d.color])); // Convert to decimal for display
   }
   
   // Select segment by probability (for spinning)

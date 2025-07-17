@@ -44,17 +44,14 @@ import WheelHistory from "./components/WheelHistory";
 import ResultsPopup from "./components/ResultsPopup";
 import { useDelegationToolkit } from '@/hooks/useDelegationToolkit';
 
-const {
-  wheelContractAddress,
-  tokenContractAddress,
-  wheelABI,
-  tokenABI,
-  contractConfig
-} = useContractDetails();
-
-console.log('wheel contract details', wheelContractAddress, tokenContractAddress, wheelABI, tokenABI)
-
 export default function Home() {
+  const { wheelContractAddress, tokenContractAddress, wheelABI, tokenABI, contractConfig } = useContractDetails();
+
+  // Log contract details only when they change
+  useEffect(() => {
+    console.log('wheel contract details', wheelContractAddress, tokenContractAddress, wheelABI, tokenABI);
+  }, [wheelContractAddress, tokenContractAddress, wheelABI, tokenABI]);
+
   const [balance, setBalance] = useState(1000);
   const [betAmount, setBetAmount] = useState(10);
   const [risk, setRisk] = useState("medium");
@@ -79,6 +76,8 @@ export default function Home() {
   const [showResultsPopup, setShowResultsPopup] = useState(false);
   const [gameResult, setGameResult] = useState(null);
   const [wheelData, setWheelData] = useState([]);
+  const [selectedMultiplier, setSelectedMultiplier] = useState(null);
+  const { writeContractAsync } = useWriteContract();
 
   // Wallet connection
   const {
@@ -92,7 +91,6 @@ export default function Home() {
     executeBatch,
     cashOut,
   } = useDelegationToolkit();
-  const { writeContractAsync } = useWriteContract();
   const chainId = useChainId();
 
   // Contract state
@@ -329,7 +327,7 @@ export default function Home() {
           address: wheelContractAddress,
           abi: wheelABI,
           functionName: 'placeBet',
-          args: [risk === 'low' ? 0 : risk === 'medium' ? 1 : 2, noOfSegments, amount],
+          args: [risk === 'low' ? 0 : risk === 'medium' ? 1 : 2, noOfSegments, amount], // Remove multiplier
         });
       } catch (err) {
         setIsSpinning(false);
@@ -343,6 +341,40 @@ export default function Home() {
         console.log("result", result);
         if (result) {
           setContractResult(result);
+          // After wheel spin, send result to backend API instead of calling processResult directly
+          try {
+            const response = await fetch('/api/processResult', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                roundId,
+                multiplier: Math.round(selectedMultiplier * 100),
+              }),
+            });
+            const data = await response.json();
+            if (!data.success) {
+              setIsSpinning(false);
+              setResultPopup({ win: false, error: true, message: 'Backend processResult failed: ' + (data.error || 'Unknown error') });
+              return;
+            }
+            // Fetch and log the multiplier used by the contract
+            if (contract && contractReady) {
+              try {
+                const contractResult = await contract.methods.getResult(roundId).call();
+                if (contractResult && contractResult.multiplier !== undefined) {
+                  console.log('Multiplier used by contract:', contractResult.multiplier);
+                } else {
+                  console.log('No contract result or multiplier found for round', roundId);
+                }
+              } catch (err) {
+                console.error('Failed to fetch contract result:', err);
+              }
+            }
+          } catch (err) {
+            setIsSpinning(false);
+            setResultPopup({ win: false, error: true, message: 'Backend processResult failed: ' + (err?.message || JSON.stringify(err)) });
+            return;
+          }
           setTimeout(() => {
             setIsSpinning(false);
             const gameResultData = {
@@ -408,7 +440,7 @@ export default function Home() {
             address: wheelContractAddress,
             abi: wheelABI,
             functionName: 'placeBet',
-            args: [risk === 'low' ? 0 : risk === 'medium' ? 1 : 2, noOfSegments, amount],
+            args: [risk === 'low' ? 0 : risk === 'medium' ? 1 : 2, noOfSegments, amount], // Remove multiplier
           });
         } catch (err) {
           setIsSpinning(false);
@@ -421,6 +453,40 @@ export default function Home() {
         const result = await calculateResult(risk, noOfSegments);
         if (result) {
           setContractResult(result);
+          // After wheel spin, send result to backend API instead of calling processResult directly
+          try {
+            const response = await fetch('/api/processResult', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                roundId,
+                multiplier: Math.round(selectedMultiplier * 100),
+              }),
+            });
+            const data = await response.json();
+            if (!data.success) {
+              setIsSpinning(false);
+              setResultPopup({ win: false, error: true, message: 'Backend processResult failed: ' + (data.error || 'Unknown error') });
+              break;
+            }
+            // Fetch and log the multiplier used by the contract
+            if (contract && contractReady) {
+              try {
+                const contractResult = await contract.methods.getResult(roundId).call();
+                if (contractResult && contractResult.multiplier !== undefined) {
+                  console.log('Multiplier used by contract:', contractResult.multiplier);
+                } else {
+                  console.log('No contract result or multiplier found for round', roundId);
+                }
+              } catch (err) {
+                console.error('Failed to fetch contract result:', err);
+              }
+            }
+          } catch (err) {
+            setIsSpinning(false);
+            setResultPopup({ win: false, error: true, message: 'Backend processResult failed: ' + (err?.message || JSON.stringify(err)) });
+            break;
+          }
           await new Promise((resolve) => setTimeout(resolve, 3200));
           setIsSpinning(false);
           const gameResultData = {
@@ -459,6 +525,7 @@ export default function Home() {
 
   const handleSelectMultiplier = (value) => {
     setTargetMultiplier(value);
+    setSelectedMultiplier(value); // Store the selected multiplier
   };
 
   const handleCloseResultsPopup = () => {
@@ -714,11 +781,11 @@ export default function Home() {
       <WheelProbability />
       <WheelPayouts />
       <WheelHistory />
-      
+      {/* Results Popup for contract result and multiplier */}
       {/* <ResultsPopup
         isOpen={showResultsPopup}
         onClose={handleCloseResultsPopup}
-        result={gameResult}
+        result={contractResult}
       /> */}
     </div>
   );

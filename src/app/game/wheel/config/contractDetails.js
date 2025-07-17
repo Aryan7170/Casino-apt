@@ -1,8 +1,15 @@
 import { CHAIN_ID, CONTRACTS, RPC_URLS } from "@/config/contracts";
+import { useChainId } from 'wagmi';
+import { useEffect } from 'react';
 
 
-const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-console.log('Detected Chain ID:', chainId);
+// Remove top-level await for chainId
+export function getChainId() {
+  if (typeof window !== 'undefined' && window.ethereum) {
+    return window.ethereum.request({ method: 'eth_chainId' });
+  }
+  return null;
+}
 // Get contract configuration for current chain
 export const getContractConfig = (chainId) => {
 	if (chainId === CHAIN_ID.ETHEREUM_SEPOLIA) {
@@ -32,8 +39,20 @@ export const getRpcURLConfig = (chainId) => {
 
 // Hook to get contract details
 export const useContractDetails = () => {
-	const contractConfig = getContractConfig(chainId);
-	const rpcURLConfig = getRpcURLConfig(chainId);
+	const chainId = useChainId();
+	useEffect(() => {
+		console.log('Current chainId in useContractDetails:', chainId);
+	}, [chainId]);
+
+	// Try both number and string for config lookup
+	let contractConfig = getContractConfig(chainId);
+	if (!contractConfig) contractConfig = getContractConfig(String(chainId));
+	let rpcURLConfig = getRpcURLConfig(chainId);
+	if (!rpcURLConfig) rpcURLConfig = getRpcURLConfig(String(chainId));
+
+	if (!contractConfig) {
+		console.error('No contract config found for chainId:', chainId);
+	}
 	
 	return {
 		wheelContractAddress: contractConfig?.wheel?.address || null,

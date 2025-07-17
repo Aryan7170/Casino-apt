@@ -108,6 +108,12 @@ export const config = getDefaultConfig({
     [binanceTestnet.id]: http(binanceTestnet.rpcUrls.default.http[0]), // Add Binance Testnet transport
     [ethereumSepolia.id]: http(ethereumSepolia.rpcUrls.default.http[0]), // Add Ethereum Sepolia transport
   },
+  metadata: {
+    name: 'APT Casino',
+    description: 'A decentralized casino platform.',
+    url: 'http://localhost:3000', // <-- Set to base URL
+    icons: [],
+  },
 });
 
 // Create React Query client
