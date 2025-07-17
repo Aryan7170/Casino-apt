@@ -24,7 +24,6 @@ import {
   GiSpinningBlades,
   GiTrophyCup,
 } from "react-icons/gi";
-
 import { HiOutlineTrendingUp, HiOutlineChartBar } from "react-icons/hi";
 import ConnectWalletButton from '@/components/ConnectWalletButton';
 import TokenBalance from '@/components/TokenBalance';
@@ -46,19 +45,12 @@ import ResultsPopup from "./components/ResultsPopup";
 import { useDelegationToolkit } from '@/hooks/useDelegationToolkit';
 
 export default function Home() {
-  
-  const { 
-    wheelContractAddress, 
-    tokenContractAddress, 
-    wheelABI, 
-    tokenABI, 
-    contractConfig 
-  } = useContractDetails();
+  const { wheelContractAddress, tokenContractAddress, wheelABI, tokenABI, contractConfig } = useContractDetails();
 
   // Log contract details only when they change
   useEffect(() => {
-  console.log('wheel contract details', wheelContractAddress, tokenContractAddress, wheelABI, tokenABI);
-  },[wheelContractAddress, tokenContractAddress, wheelABI, tokenABI])
+    console.log('wheel contract details', wheelContractAddress, tokenContractAddress, wheelABI, tokenABI);
+  }, [wheelContractAddress, tokenContractAddress, wheelABI, tokenABI]);
 
   const [balance, setBalance] = useState(1000);
   const [betAmount, setBetAmount] = useState(10);
@@ -87,7 +79,6 @@ export default function Home() {
   const [selectedMultiplier, setSelectedMultiplier] = useState(null);
   const { writeContractAsync } = useWriteContract();
 
-  // const currentSegmentValues = getCurrentSegmentValues(wheelPosition, wheelData);
   // Wallet connection
   const {
     isConnected,
@@ -369,9 +360,9 @@ export default function Home() {
             // Fetch and log the multiplier used by the contract
             if (contract && contractReady) {
               try {
-                const result = await contract.methods.getResult(roundId).call();
-                if (result && result.multiplier !== undefined) {
-                  console.log('Multiplier used by contract:', result.multiplier);
+                const contractResult = await contract.methods.getResult(roundId).call();
+                if (contractResult && contractResult.multiplier !== undefined) {
+                  console.log('Multiplier used by contract:', contractResult.multiplier);
                 } else {
                   console.log('No contract result or multiplier found for round', roundId);
                 }

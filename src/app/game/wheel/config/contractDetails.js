@@ -4,12 +4,12 @@ import { useEffect } from 'react';
 
 
 // Remove top-level await for chainId
-// export function getChainId() {
-//   if (typeof window !== 'undefined' && window.ethereum) {
-//     return window.ethereum.request({ method: 'eth_chainId' });
-//   }
-//   return null;
-// }
+export function getChainId() {
+  if (typeof window !== 'undefined' && window.ethereum) {
+    return window.ethereum.request({ method: 'eth_chainId' });
+  }
+  return null;
+}
 // Get contract configuration for current chain
 export const getContractConfig = (chainId) => {
 	if (chainId === CHAIN_IDS.ETHEREUM_SEPOLIA) {
@@ -63,4 +63,3 @@ export const useContractDetails = () => {
 		contractConfig
 	};
 };
-
