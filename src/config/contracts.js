@@ -57,7 +57,7 @@ export const TOKEN_CONTRACTS = {
       decimals: 18
   },
   [CHAIN_IDS.MANTLE_SEPOLIA]: {
-      address: "0x3044BbF8d8F14D26E339fEC301f6e558a1967a10",
+      address: "0x18A8E2f85955921C7d84bAe02d5Ea6889047a607",
       name: "APT-Casino",
       symbol: "APTC",
       decimals: 18
@@ -109,7 +109,7 @@ export const WHEEL_CONTRACTS = {
       address: "0xcf4469d29aaae6f136b9cd171a01700895093c67", // Updated wheel contract address
   },
   [CHAIN_IDS.MANTLE_SEPOLIA]: {
-      address: "0xD7a0f0fFcB7b9DcA193ABE29bfCf33477764e99D",
+      address: "0x71a95790037986398e7e40CBe53058467125452F",
   },
   [CHAIN_IDS.PHAROS_DEVNET]: {
       address: "0x6d55c17495E176a16700D101596f543D00972481",
@@ -292,7 +292,7 @@ MANTLE_SEPOLIA: {
   chainId: CHAIN_IDS.MANTLE_SEPOLIA,
   chainName: 'Mantle Sepolia',
   token: {
-    address: '0x3044BbF8d8F14D26E339fEC301f6e558a1967a10',
+    address: '0x18A8E2f85955921C7d84bAe02d5Ea6889047a607',
     abi: [
 		{
 			"inputs": [],
@@ -1248,7 +1248,7 @@ MANTLE_SEPOLIA: {
     ]
   },
   wheel: {
-    address: '0xD7a0f0fFcB7b9DcA193ABE29bfCf33477764e99D',
+    address: '0x71a95790037986398e7e40CBe53058467125452F',
     abi: [
 		{
 			"inputs": [
