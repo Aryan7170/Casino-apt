@@ -344,15 +344,32 @@ export default function Home() {
           setContractResult(result);
           // After wheel spin, send result to backend API instead of calling processResult directly
           try {
-            const segmentValues = getCurrentSegmentValues(wheelPosition, wheelData);
-            const multiplierForContract = result.multiplier;
-            console.log("multiplierForContract", multiplierForContract); // This is the raw value (e.g., 120, 150, 990)
-            await writeContractAsync({
-              address: wheelContractAddress,
-              abi: wheelABI,
-              functionName: 'processResult',
-              args: [roundId, multiplierForContract],
+            console.log('About to call processResult API with:', {
+              roundId: roundId.toString(),
+              multiplier: result.multiplier
             });
+            
+            const response = await fetch('/api/processResult', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                roundId: roundId.toString(),
+                multiplier: result.multiplier,
+              }),
+            });
+            
+            console.log('API Response status:', response.status);
+            const data = await response.json();
+            console.log('API Response data:', data);
+            
+            if (!data.success) {
+              console.error('API call failed:', data.error);
+              setIsSpinning(false);
+              setResultPopup({ win: false, error: true, message: 'Backend processResult failed: ' + (data.error || 'Unknown error') });
+              return;
+            }
+            console.log('API call successful! Transaction hash:', data.txHash);
+            
             // Fetch and log the multiplier used by the contract
             if (contract && contractReady) {
               try {
@@ -367,6 +384,7 @@ export default function Home() {
               }
             }
           } catch (err) {
+            console.error('API call error:', err);
             setIsSpinning(false);
             setResultPopup({ win: false, error: true, message: 'Backend processResult failed: ' + (err?.message || JSON.stringify(err)) });
             return;

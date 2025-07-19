@@ -16,7 +16,7 @@ export const CHAIN_ID = {
   // Add more chains here as needed
 };
 
-export const treasuryAddress = '0xFfbfce3f171911044b6D91d700548AEd9A662420';
+export const treasuryAddress = '0xFF9582E3898599D2cF0Abdc06321789dc345e529';
 
 // Chain Names
 export const CHAIN_NAMES = {
