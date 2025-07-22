@@ -24,6 +24,28 @@ const SUPPORTED_NETWORKS = {
     },
     rpcUrls: ['https://devnet.dplabs-internal.com'],
     blockExplorerUrls: ['https://pharosscan.xyz']
+  },
+  BINANCE_TESTNET: {
+    chainId: '0x61', // 97 in decimal
+    chainName: 'Binance Smart Chain Testnet',
+    nativeCurrency: {
+      name: 'Binance Coin',
+      symbol: 'tBNB',
+      decimals: 18
+    },
+    rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545'],
+    blockExplorerUrls: ['https://testnet.bscscan.com']
+  },
+  ETHEREUM_SEPOLIA: {
+    chainId: '0xaa36a7', // 11155111 in decimal
+    chainName: 'Ethereum Sepolia',
+    nativeCurrency: {
+      name: 'Ethereum',
+      symbol: 'ETH',
+      decimals: 18
+    },
+    rpcUrls: ['https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3'],
+    blockExplorerUrls: ['https://sepolia.etherscan.io']
   }
 };
 
@@ -63,6 +85,8 @@ const NetworkSwitcher = () => {
       // Convert chainIds to lowercase for comparison
       const mantleChainId = SUPPORTED_NETWORKS.MANTLE_SEPOLIA.chainId.toLowerCase();
       const pharosChainId = SUPPORTED_NETWORKS.PHAROS_DEVNET.chainId.toLowerCase();
+      const binanceChainId = SUPPORTED_NETWORKS.BINANCE_TESTNET.chainId.toLowerCase();
+      const ethereumSepoliaChainId = SUPPORTED_NETWORKS.ETHEREUM_SEPOLIA.chainId.toLowerCase();
       const currentChainId = chainId.toLowerCase();
 
       if (currentChainId === mantleChainId) {
@@ -71,6 +95,12 @@ const NetworkSwitcher = () => {
       } else if (currentChainId === pharosChainId) {
         console.log('Setting network to Pharos Devnet');
         setCurrentNetwork('PHAROS_DEVNET');
+      } else if (currentChainId === binanceChainId) {
+        console.log('Setting network to Binance Testnet');
+        setCurrentNetwork('BINANCE_TESTNET');
+      } else if (currentChainId === ethereumSepoliaChainId) {
+        console.log('Setting network to Ethereum Sepolia');
+        setCurrentNetwork('ETHEREUM_SEPOLIA');
       } else {
         console.log('Unsupported network detected:', chainId);
         setCurrentNetwork(null);

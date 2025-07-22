@@ -1,17 +1,26 @@
+import { useContractDetails } from '../src/app/game/roulette/contractDetails';
+import { treasuryAddress } from "../src/config/contracts";
+
+
+const {
+    tokenContractAddress,
+    tokenABI,
+    rpcURL,
+  } = useContractDetails();
+
 const { ethers } = require("ethers");
 
 async function mintTokens() {
-    const provider = new ethers.providers.JsonRpcProvider("https://rpc.sepolia.mantle.xyz");
+    const provider = new ethers.providers.JsonRpcProvider(rpcURL);
     const privateKey = "cf4235da669935a29fa95d5afc417b5023675dc6ccb99dc13b1f8fdb398933d7";
     const wallet = new ethers.Wallet(privateKey, provider);
-    const contractAddress = "0x60672ccafd719eb569858003ed3b0ac0f6e63954";
-    const contractABI = [
-        "function mint(address to, uint256 amount) public",
-        "function balanceOf(address account) public view returns (uint256)",
-    ];
 
-    const contract = new ethers.Contract(contractAddress, contractABI, wallet);
-    const recipient = "0xFfbfce3f171911044b6D91d700548AEd9A662420";
+    const tokenAddress = tokenContractAddress;
+
+    const contractABI = tokenABI;
+
+    const contract = new ethers.Contract(tokenAddress, contractABI, wallet);
+    const recipient = treasuryAddress;
     const amount = 1000;
 
     try {

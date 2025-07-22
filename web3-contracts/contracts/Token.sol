@@ -15,7 +15,7 @@ contract Token is ERC20, Ownable, Pausable {
     event TokensMinted(address indexed to, uint256 amount);
 
     constructor() ERC20("APT-Casino", "APTC") Ownable(msg.sender) {
-        treasury = 0xFfbfce3f171911044b6D91d700548AEd9A662420;
+        treasury = 0xFF9582E3898599D2cF0Abdc06321789dc345e529;
         _mint(msg.sender, 1_000_000_000 * 10**decimals()); // Initial supply
     }
 

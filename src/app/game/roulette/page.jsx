@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useReducer, useMemo, useEffect, useRef, useCallback } from "react";
 import { Box, Typography, IconButton, CircularProgress } from "@mui/material";
-import Tooltip, { tooltipClasses } from "@mui/material/Tooltip"; 
+import Tooltip, { tooltipClasses } from "@mui/material/Tooltip";
 import { ThemeProvider, styled, createTheme } from "@mui/material/styles";
 import InfoIcon from "@mui/icons-material/Info";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -13,12 +13,9 @@ import TextFieldCurrency from "@/components/TextFieldCurrency";
 import Button from "@/components/Button";
 import { rouletteTutorial, rouletteOdds } from "./tutorials";
 import {
-  rouletteABI,
-  rouletteContractAddress,
-  tokenABI,
-  tokenContractAddress,
+  useContractDetails,
 } from "./contractDetails";
-import * as ViemClient from "./ViemClient";
+import { usePublicClient } from "./ViemClient";
 import { getContract, parseEther, waitForTransactionReceipt } from "viem";
 import { muiStyles } from "./styles";
 import Image from "next/image";
@@ -28,17 +25,29 @@ import GameDetail from "../../../components/GameDetail";
 import { gameData, bettingTableData } from "./config/gameDetail";
 import { useToken } from "@/hooks/useToken";
 import BettingHistory from '@/components/BettingHistory';
-import useWalletStatus from '@/hooks/useWalletStatus';
 import { FaVolumeMute, FaVolumeUp } from "react-icons/fa";
 import { TreasuryUI } from '../../../components/TreasuryUI';
 import { TreasuryTest } from '../../../components/TreasuryTest';
 import { TreasuryManager } from '../../../components/TreasuryManager';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useDelegationToolkit } from '@/hooks/useDelegationToolkit';
+import useWalletStatus from '@/hooks/useWalletStatus';
+
+const {
+  dynamicPublicClient,
+} = usePublicClient();
+
+const {
+  rouletteContractAddress,
+  tokenContractAddress,
+  rouletteABI,
+  tokenABI,
+  contractConfig
+} = useContractDetails();
 
 
 // Debug imports
-console.log("ViemClient:", ViemClient);
-console.log("publicPharosSepoliaClient:", ViemClient.publicPharosSepoliaClient);
+console.log("dynamicPublicClient", dynamicPublicClient);
 
 const TooltipWide = styled(({ className, ...props }) => (
   <Tooltip {...props} classes={{ popper: className }} />
@@ -632,6 +641,26 @@ const BettingStats = ({ history }) => {
 };
 
 export default function GameRoulette() {
+  // Delegation Toolkit for contract/session
+  const {
+    isConnected: dtIsConnected,
+    address: dtAddress,
+    loading: walletLoading,
+    error: walletError,
+    connectWallet,
+    startGame,
+    revealTile,
+    executeBatch,
+    cashOut,
+  } = useDelegationToolkit();
+
+  // Wallet status for UI
+  const {
+    address: walletStatusAddress,
+    isConnected: walletStatusIsConnected,
+    // ...other wallet status values
+  } = useWalletStatus();
+
   const [events, dispatchEvents] = useReducer(eventReducer, []);
   const [bet, setBet] = useState(0);
   const [inside, dispatchInside] = useReducer(arrayReducer, new Array(145).fill(0));
@@ -668,13 +697,15 @@ export default function GameRoulette() {
   const [error, setError] = useState(null);
   const [pendingBets, setPendingBets] = useState([]);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
-  const { address, isConnected } = useWalletStatus();
 
   const { data: hash, isPending, writeContract: wagmiWriteContract } = useWriteContract();
 
+  // Get contract details using the hook
+
+
   const checkTransactionStatus = async (hash) => {
     try {
-      const receipt = await ViemClient.publicPharosSepoliaClient.waitForTransactionReceipt({ hash });
+      const receipt = await dynamicPublicClient.waitForTransactionReceipt({ hash });
       return receipt.status; // 'success' or 'reverted'
     } catch (error) {
       console.error("Error checking transaction status:", error);
@@ -685,7 +716,7 @@ export default function GameRoulette() {
   
 
   // Get wallet status and balance
-  const { balance } = useToken(address);
+  const { balance } = useToken(dtAddress);
 
   // Add wagmi hooks for contract interactions
   const { writeContractAsync, data: wagmiWriteResult, error: wagmiWriteError, isPending: wagmiIsPending } = useWriteContract();
@@ -694,12 +725,12 @@ export default function GameRoulette() {
   // Add debug logging for wallet state
   useEffect(() => {
     console.log('Wallet Status:', {
-      isConnected,
-      address,
+      isConnected: true,
+      address: '',
       balance,
       correctNetwork
     });
-  }, [isConnected, address, balance, correctNetwork]);
+  }, [balance, correctNetwork]);
 
   // Sound refs
   const spinSoundRef = useRef(null);
@@ -827,16 +858,16 @@ export default function GameRoulette() {
   useEffect(() => {
     // Set up event listeners
     const setupEventListeners = () => {
-      if (!address || !isConnected) {
+      if (!dtAddress || !dtIsConnected) {
         console.log('Wallet not connected, skipping event listeners');
         return;
       }
 
       console.log('Setting up contract event listeners...');
       console.log('Contract address:', rouletteContractAddress);
-      console.log('Connected wallet:', address);
+      console.log('Connected wallet:', dtAddress);
 
-      const winningsListener = ViemClient.publicPharosSepoliaClient.watchContractEvent({
+      const winningsListener = dynamicPublicClient.watchContractEvent({
       address: rouletteContractAddress,
       abi: rouletteABI,
       eventName: "RandomGenerated",
@@ -862,7 +893,7 @@ export default function GameRoulette() {
       },
     });
 
-      const betResultListener = ViemClient.publicPharosSepoliaClient.watchContractEvent({
+      const betResultListener = dynamicPublicClient.watchContractEvent({
       address: rouletteContractAddress,
       abi: rouletteABI,
       eventName: "BetResult",
@@ -878,7 +909,7 @@ export default function GameRoulette() {
             
             // Safely compare addresses
             const playerAddress = player ? player.toLowerCase() : null;
-            const userAddress = address ? address.toLowerCase() : null;
+            const userAddress = dtAddress ? dtAddress.toLowerCase() : null;
             
             if (userAddress && playerAddress === userAddress) {
               // Safely convert amount to number
@@ -911,7 +942,7 @@ export default function GameRoulette() {
         },
       });
 
-      const vrfRequestListener = ViemClient.publicPharosSepoliaClient.watchContractEvent({
+      const vrfRequestListener = dynamicPublicClient.watchContractEvent({
         address: rouletteContractAddress,
         abi: rouletteABI,
         eventName: "RandomNumberRequested",
@@ -944,7 +975,7 @@ export default function GameRoulette() {
     };
 
     setupEventListeners();
-  }, [address, isConnected, currentBetType, rollResult, setNotificationIndex, setRollResult, setWinnings, setBettingHistory, setCurrentBetType]);
+  }, [dtAddress, dtIsConnected, currentBetType, rollResult, setNotificationIndex, setRollResult, setWinnings, setBettingHistory, setCurrentBetType]);
 
   // Check screen size for responsive layout
   useEffect(() => {
@@ -1270,12 +1301,37 @@ export default function GameRoulette() {
     try {
       setNotification({ open: true, message: 'Checking allowance...', severity: 'info' });
 
+      // // Get the current chain ID to determine which client to use
+      // let chainId;
+      // if (typeof window !== 'undefined' && window.ethereum) {
+      //   chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      //   console.log('Current chainId:', chainId);
+      // }
+
+      // // Select the appropriate client based on the current network
+      // let client;
+      // if (chainId === '0x138b') { // Mantle Sepolia
+      //   client = ViemClient.publicMantleSepoliaClient;
+      // } else if (chainId === '0xc352') { // Pharos Devnet
+      //   client = ViemClient.publicPharosSepoliaClient;
+      // } else if (chainId === '0x61') { // Binance Testnet
+      //   client = ViemClient.publicBinanceTestnetClient;
+      // } else if (chainId === '0xaa36a7') { // Binance Testnet
+      //   client = dynamicPublicClient;  
+      // } 
+
+      // console.log('Using client for chainId:', chainId, 'Client:', client);
+
+      // Get contract addresses for current network
+      const contractAddresses = tokenContractAddress;
+      console.log('Using contract addresses:', contractAddresses);
+
       // 1. Check current allowance
-      const currentAllowance = await ViemClient.publicPharosSepoliaClient.readContract({
+      const currentAllowance = await dynamicPublicClient.readContract({
         address: tokenContractAddress,
         abi: tokenABI,
         functionName: 'allowance',
-        args: [address, rouletteContractAddress],
+        args: [dtAddress, rouletteContractAddress],
       });
 
       // 2. Compare with the required amount
@@ -1288,7 +1344,7 @@ export default function GameRoulette() {
           functionName: 'approve',
           args: [rouletteContractAddress, amount],
         });
-        await ViemClient.publicPharosSepoliaClient.waitForTransactionReceipt({ hash });
+        await dynamicPublicClient.waitForTransactionReceipt({ hash });
         setNotification({ open: true, message: 'Approval successful!', severity: 'success' });
       } else {
         // 4. If allowance is sufficient, do nothing.
@@ -1304,8 +1360,8 @@ export default function GameRoulette() {
 
   // Modify the lockBet function to include approval
   const lockBet = async () => {
-    if (!isConnected || !address) {
-      console.error('Wallet connection check failed:', { isConnected, address });
+    if (!dtIsConnected || !dtAddress) {
+      console.error('Wallet connection check failed:', { dtIsConnected, dtAddress });
       alert("Please connect your wallet first");
       return;
     }
@@ -1329,7 +1385,7 @@ export default function GameRoulette() {
     try {
       console.log('Starting lockBet process...');
       console.log('Total bet amount:', total);
-      console.log('User address:', address);
+      console.log('User address:', dtAddress);
       console.log('Roulette contract address:', rouletteContractAddress);
       console.log('Pending bets:', pendingBets);
       console.log('Wagmi hooks state:', {
@@ -1376,7 +1432,7 @@ export default function GameRoulette() {
       // Check token balance before proceeding
       console.log('Checking token balance...');
       console.log('Total bet amount:', total);
-      console.log('User address:', address);
+      console.log('User address:', dtAddress);
       
       // Note: We'll rely on the contract to handle insufficient balance errors
       // The contract will revert if the user doesn't have enough tokens
@@ -1472,7 +1528,7 @@ export default function GameRoulette() {
       console.log('Waiting for transaction confirmation...');
       try {
         // Use ViemClient directly to wait for transaction
-        const receipt = await ViemClient.publicPharosSepoliaClient.waitForTransactionReceipt({ hash });
+        const receipt = await dynamicPublicClient.waitForTransactionReceipt({ hash });
         console.log('Transaction receipt:', receipt);
         
         if (receipt.status === 'success') {
@@ -1526,10 +1582,10 @@ export default function GameRoulette() {
       console.error("Debug info:", {
         pendingBets,
         total,
-        address,
+        address: dtAddress,
         rouletteContractAddress,
         correctNetwork,
-        isConnected,
+        isConnected: dtIsConnected,
         betTypes: pendingBets.map(bet => bet.betType),
         betValues: pendingBets.map(bet => bet.betValue),
         amounts: pendingBets.map(bet => parseEther(bet.amount.toString()).toString()),
@@ -1561,7 +1617,7 @@ export default function GameRoulette() {
     if (e) e.preventDefault();
     playSound(winSoundRef);
 
-    if (!address) {
+    if (!dtAddress) {
       console.error("Wallet not connected.");
       alert("Please connect your wallet.");
       return;
@@ -1633,7 +1689,7 @@ export default function GameRoulette() {
     try {
       // Ensure hash is a string, not an object
       const hashStr = typeof hash === 'object' && hash.hash ? hash.hash : hash;
-      const receipt = await ViemClient.publicPharosSepoliaClient.waitForTransactionReceipt({ hash: hashStr });
+      const receipt = await dynamicPublicClient.waitForTransactionReceipt({ hash: hashStr });
       return receipt;
     } catch (error) {
       console.error("Wait for transaction error:", error);
@@ -1647,7 +1703,7 @@ export default function GameRoulette() {
         const chainId = await window.ethereum.request({ method: "eth_chainId" });
         // Support Mantle Sepolia (0x138b) and Local Hardhat (0x7a69)
         // Comment out Pharos Devnet (0xc352) - using Mantle Sepolia instead
-        setCorrectNetwork(chainId === "0x138b" || chainId === "0x7a69");
+        setCorrectNetwork(chainId === "0x138b" || chainId === "0x61" || chainId === "0x7a69" || chainId === "0xaa36a7");
       } catch (error) {
         console.error("Error checking network:", error);
         setCorrectNetwork(false);
@@ -1672,7 +1728,7 @@ export default function GameRoulette() {
         // Try switching to Local Hardhat first
         await window.ethereum.request({
           method: "wallet_switchEthereumChain",
-          params: [{ chainId: "0x7a69" }],
+          params: [{ chainId: "0xaa36a7" }],
         });
       } catch (switchError) {
         // If Local Hardhat is not added, add it
@@ -1682,7 +1738,7 @@ export default function GameRoulette() {
               method: "wallet_addEthereumChain",
               params: [
                 {
-                  chainId: "0x7a69",
+                  chainId: "0xaa36a7",
                   chainName: "Local Hardhat",
                   nativeCurrency: {
                     name: "Ethereum",
@@ -1775,16 +1831,7 @@ export default function GameRoulette() {
   //   }
   // }, [address, total, rollResult, winnings]);
 
-  const { data: playerBalance, isError, isLoading: isBalanceLoading } = useReadContract({
-    address: tokenContractAddress,
-    abi: tokenABI,
-    functionName: 'balanceOf',
-    args: [address],
-    enabled: Boolean(address),
-    watch: true,
-    onSuccess: (data) => console.log('Balance data:', data),
-    onError: (error) => console.error('Balance error:', error)
-  });
+  // Balance is now handled by useToken hook
 
   // Test contract connection
   const testContractConnection = async () => {
@@ -1794,7 +1841,7 @@ export default function GameRoulette() {
       const contract = getContract({
         address: rouletteContractAddress,
         abi: rouletteABI,
-        client: ViemClient.publicPharosSepoliaClient,
+        client: dynamicPublicClient,
       });
       
       // Try to call a simple view function
@@ -2231,11 +2278,11 @@ export default function GameRoulette() {
               />
               <Box sx={{ mt: 2, mb: 1 }}>
                 <Typography variant="body1" color="white">
-                  Total Balance:{" "}
-                  {balance === '0' ? (
-                    <CircularProgress size={16} />
+                  Total Balance:{' '}
+                  {balance ? (
+                    `${currency(parseFloat(balance), { pattern: "#", precision: 4 }).format()} APTC`
                   ) : (
-                    `${currency(balance, { pattern: "#", precision: 4 }).format()} APTC`
+                    <CircularProgress size={16} />
                   )}
               </Typography>
             </Box>

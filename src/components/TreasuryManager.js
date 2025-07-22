@@ -1,21 +1,24 @@
 import { useWriteContract, useReadContract, useAccount, useWaitForTransactionReceipt } from 'wagmi';
 import { useState } from "react";
 import { parseEther, formatEther } from 'viem';
+import { treasuryAddress } from '@/config/contracts';
+import { useContractDetails } from '@/app/game/roulette/contractDetails';
 
-const TREASURY_ADDRESS = "0xFfbfce3f171911044b6D91d700548AEd9A662420";
-const TOKEN_CONTRACT_ADDRESS = "0x60672ccafd719eb569858003ed3b0ac0f6e63954";
+const TREASURY_ADDRESS = treasuryAddress;
 
-const TOKEN_ABI = [
-    "function transfer(address to, uint256 amount) public returns (bool)",
-    "function transferFrom(address from, address to, uint256 amount) public returns (bool)",
-    "function balanceOf(address account) public view returns (uint256)",
-    "function approve(address spender, uint256 amount) public returns (bool)",
-];
+const {
+    tokenABI,
+    tokenContractAddress,
+  } = useContractDetails();
 
 export const TreasuryManager = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const { address } = useAccount();
+
+
+    const TOKEN_CONTRACT_ADDRESS = tokenContractAddress;
+    const TOKEN_ABI = tokenABI;
 
     const { writeContractAsync } = useWriteContract();
     const { waitForTransactionReceipt } = useWaitForTransactionReceipt();

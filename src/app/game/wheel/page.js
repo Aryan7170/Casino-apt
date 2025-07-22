@@ -25,13 +25,12 @@ import {
   GiTrophyCup,
 } from "react-icons/gi";
 import { HiOutlineTrendingUp, HiOutlineChartBar } from "react-icons/hi";
-import useWalletStatus from '@/hooks/useWalletStatus';
 import ConnectWalletButton from '@/components/ConnectWalletButton';
 import TokenBalance from '@/components/TokenBalance';
 import { useWriteContract, useReadContract } from 'wagmi';
 import { readContract } from 'wagmi/actions';
-import { wheelContractAddress, wheelABI } from './config/contractDetails';
-import { tokenContractAddress, tokenABI } from '../roulette/contractDetails';
+
+import { useContractDetails } from "./config/contractDetails";
 import { useChainId } from 'wagmi';
 import { config } from '@/app/providers';
 
@@ -43,8 +42,17 @@ import WheelProbability from "./components/WheelProbability";
 import WheelPayouts from "./components/WheelPayouts";
 import WheelHistory from "./components/WheelHistory";
 import ResultsPopup from "./components/ResultsPopup";
+import { useDelegationToolkit } from '@/hooks/useDelegationToolkit';
+import { getCurrentSegmentValues } from './config/wheelUtils';
 
 export default function Home() {
+  const { wheelContractAddress, tokenContractAddress, wheelABI, tokenABI, contractConfig } = useContractDetails();
+
+  // Log contract details only when they change
+  useEffect(() => {
+    console.log('wheel contract details', wheelContractAddress, tokenContractAddress, wheelABI, tokenABI);
+  }, [wheelContractAddress, tokenContractAddress, wheelABI, tokenABI]);
+
   const [balance, setBalance] = useState(1000);
   const [betAmount, setBetAmount] = useState(10);
   const [risk, setRisk] = useState("medium");
@@ -68,10 +76,22 @@ export default function Home() {
   const [resultPopup, setResultPopup] = useState(null);
   const [showResultsPopup, setShowResultsPopup] = useState(false);
   const [gameResult, setGameResult] = useState(null);
+  const [wheelData, setWheelData] = useState([]);
+  const [selectedMultiplier, setSelectedMultiplier] = useState(null);
+  const { writeContractAsync } = useWriteContract();
 
   // Wallet connection
-  const { isConnected, address } = useWalletStatus();
-  const { writeContractAsync } = useWriteContract();
+  const {
+    isConnected,
+    address,
+    loading: walletLoading,
+    error: walletError,
+    connectWallet,
+    startGame,
+    revealTile,
+    executeBatch,
+    cashOut,
+  } = useDelegationToolkit();
   const chainId = useChainId();
 
   // Contract state
@@ -146,6 +166,17 @@ export default function Home() {
                     chainId: Number(chainId),
                   });
                 }
+              }),
+              getWheelData: (riskLevel, segments) => ({
+                call: async () => {
+                  return await readContract(config, {
+                    address: wheelContractAddress,
+                    abi: wheelABI,
+                    functionName: 'getWheelData',
+                    args: [riskLevel, segments],
+                    chainId: Number(chainId),
+                  });
+                }
               })
             }
           };
@@ -162,7 +193,7 @@ export default function Home() {
           console.error('Chain ID not available');
         }
       } catch (error) {
-        setContractError(`Contract initialization failed: ${error.message}`);
+        setContractError('Contract initialization failed: ${error.message}');
         console.error('Contract initialization error:', error);
       }
     };
@@ -283,53 +314,6 @@ export default function Home() {
     }
   };
 
-  const setWheelToContractResult = (segmentIndex, multiplier) => {
-    const segmentAngle = (Math.PI * 2) / noOfSegments;
-    const totalSpins = 5;
-    const segmentCenter = segmentIndex * segmentAngle + segmentAngle / 2;
-    const targetPosition = (Math.PI * 2 * totalSpins) + (Math.PI * 2 - segmentCenter);
-    setWheelPosition(targetPosition);
-    setCurrentMultiplier(multiplier);
-    setHasSpun(true);
-    console.log('Wheel set to contract result:', { segmentIndex, multiplier, targetPosition, segmentCenter });
-  };
-
-  // Helper: Retry fetching contract result until contract is ready
-  const fetchContractResultWithRetry = async (roundId, retries = 5) => {
-    if (!contract || !contractReady) {
-      if (retries > 0) {
-        await new Promise(res => setTimeout(res, 500));
-        return fetchContractResultWithRetry(roundId, retries - 1);
-      }
-      console.error("Contract is not ready after retries, cannot fetch contract result");
-      return null;
-    }
-    return fetchContractResult(roundId);
-  };
-
-  const fetchContractResult = async (roundId) => {
-    if (!contract || !contractReady) {
-      console.error('Contract is not ready, aborting contract call');
-      return null;
-    }
-    try {
-      console.log("Fetching result for roundId:", roundId);
-      const result = await contract.methods.getResult(roundId).call();
-      if (!result || !Array.isArray(result) || result.length !== 3) {
-        console.error("Invalid contract result:", result);
-        return null;
-      }
-      const [multiplier, segmentIndex, isWin] = result;
-      return {
-        multiplier: Number(multiplier) / 100,
-        segmentIndex: Number(segmentIndex),
-        isWin
-      };
-    } catch (err) {
-      console.error("Error fetching contract result:", err);
-      return null;
-    }
-  };
 
   const manulBet = async () => {
     if (!canBet) return;
@@ -344,7 +328,7 @@ export default function Home() {
           address: wheelContractAddress,
           abi: wheelABI,
           functionName: 'placeBet',
-          args: [risk === 'low' ? 0 : risk === 'medium' ? 1 : 2, noOfSegments, amount],
+          args: [risk === 'low' ? 0 : risk === 'medium' ? 1 : 2, noOfSegments, amount], // Remove multiplier
         });
       } catch (err) {
         setIsSpinning(false);
@@ -352,42 +336,79 @@ export default function Home() {
         return;
       }
       setCooldown(3);
-      
-      // Start wheel spin immediately for visual feedback
       setIsSpinning(true);
-      
-      // Fetch contract result and update wheel
       setTimeout(async () => {
-        const result = await fetchContractResultWithRetry(roundId);
+        const result = await calculateResult(risk, noOfSegments);
+        console.log("result", result);
         if (result) {
           setContractResult(result);
-          
-          // Set wheel to contract result
-          setWheelToContractResult(result.segmentIndex, result.multiplier);
-          
-          // End wheel spin after animation duration
+          // After wheel spin, send result to backend API instead of calling processResult directly
+          try {
+            console.log('About to call processResult API with:', {
+              roundId: roundId.toString(),
+              multiplier: result.multiplier
+            });
+            
+            const response = await fetch('/api/processResult', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                roundId: roundId.toString(),
+                multiplier: result.multiplier,
+              }),
+            });
+            
+            console.log('API Response status:', response.status);
+            const data = await response.json();
+            console.log('API Response data:', data);
+            
+            if (!data.success) {
+              console.error('API call failed:', data.error);
+              setIsSpinning(false);
+              setResultPopup({ win: false, error: true, message: 'Backend processResult failed: ' + (data.error || 'Unknown error') });
+              return;
+            }
+            console.log('API call successful! Transaction hash:', data.txHash);
+            
+            // Fetch and log the multiplier used by the contract
+            if (contract && contractReady) {
+              try {
+                const contractResult = await contract.methods.getResult(roundId).call();
+                if (contractResult && contractResult.multiplier !== undefined) {
+                  console.log('Multiplier used by contract:', contractResult.multiplier);
+                } else {
+                  console.log('No contract result or multiplier found for round', roundId);
+                }
+              } catch (err) {
+                console.error('Failed to fetch contract result:', err);
+              }
+            }
+          } catch (err) {
+            console.error('API call error:', err);
+            setIsSpinning(false);
+            setResultPopup({ win: false, error: true, message: 'Backend processResult failed: ' + (err?.message || JSON.stringify(err)) });
+            return;
+          }
           setTimeout(() => {
             setIsSpinning(false);
-            // Set up the game result for the popup
             const gameResultData = {
-              multiplier: BigInt(Math.floor(result.multiplier * 100)), // Convert back to contract format
+              multiplier: result.multiplier * 100,
               segmentIndex: result.segmentIndex,
               isWin: result.isWin,
-              payout: result.isWin ? BigInt(Math.floor(result.multiplier * betAmount * 1e18)) : 0n,
-              betAmount: BigInt(Math.floor(betAmount * 1e18)),
+              payout: result.isWin ? (amount * BigInt(Math.floor(result.multiplier * 100))) / 100n : 0n,
+              betAmount: amount,
               roundId: roundId.toString(),
               risk: risk,
               segments: noOfSegments,
-              color: result.isWin ? "#00E403" : "#333947" // Green for win, dark for loss
+              color: result.color,
             };
             setGameResult(gameResultData);
             setShowResultsPopup(true);
-          }, 3200); // match wheel animation duration
+          }, 3200);
         } else {
           setIsSpinning(false);
           setResultPopup({ win: false, error: true, message: 'Failed to fetch contract result. Please try again later.' });
         }
-        // Refresh current round
         if (contract && contractReady) {
           try {
             const round = await contract.methods.currentRound().call();
@@ -403,99 +424,116 @@ export default function Home() {
     }
   };
 
-  const autoBet = async ({
-    numberOfBets,
-    betAmount: initialBetAmount,
-    risk,
-    noOfSegments,
-  }) => {
-    if (isSpinning) return;
-    let currentBet = initialBetAmount;
-    for (let i = 0; i < numberOfBets; i++) {
-      setHasSpun(false);
-      if (cooldown > 0) {
-        await new Promise((resolve) => {
-          const interval = setInterval(() => {
-            if (cooldown === 0) {
-              clearInterval(interval);
-              resolve();
-            }
-          }, 500);
-        });
-      }
-      try {
-        const amount = BigInt(Math.floor(currentBet * 1e18));
-        const roundId = currentRound !== null ? currentRound : 0n;
-        await approveTokens(amount);
-        let tx;
-        try {
-          tx = await writeContractAsync({
-            address: wheelContractAddress,
-            abi: wheelABI,
-            functionName: 'placeBet',
-            args: [risk === 'low' ? 0 : risk === 'medium' ? 1 : 2, noOfSegments, amount],
-          });
-        } catch (err) {
-          setIsSpinning(false);
-          setResultPopup({ win: false, error: true, message: 'Auto bet failed at bet #' + (i + 1) + ': ' + (err?.message || JSON.stringify(err)) });
-          break;
-        }
-        setCooldown(3);
-        
-        // Start wheel spin immediately for visual feedback
-        setIsSpinning(true);
-        
-        // Fetch contract result and update wheel
-        await new Promise((resolve) => setTimeout(resolve, 10000));
-        const result = await fetchContractResultWithRetry(roundId);
-        if (result) {
-          setContractResult(result);
-          
-          // Set wheel to contract result
-          setWheelToContractResult(result.segmentIndex, result.multiplier);
-          
-          // End wheel spin after animation duration
-          await new Promise((resolve) => setTimeout(resolve, 3200));
-          setIsSpinning(false);
-          
-          // Set up the game result for the popup
-          const gameResultData = {
-            multiplier: BigInt(Math.floor(result.multiplier * 100)), // Convert back to contract format
-            segmentIndex: result.segmentIndex,
-            isWin: result.isWin,
-            payout: result.isWin ? BigInt(Math.floor(result.multiplier * currentBet * 1e18)) : 0n,
-            betAmount: BigInt(Math.floor(currentBet * 1e18)),
-            roundId: roundId.toString(),
-            risk: risk,
-            segments: noOfSegments,
-            color: result.isWin ? "#00E403" : "#333947" // Green for win, dark for loss
-          };
-          setGameResult(gameResultData);
-          setShowResultsPopup(true);
-        } else {
-          setIsSpinning(false);
-          setResultPopup({ win: false, error: true, message: `Auto bet #${i + 1}: Failed to fetch contract result. Stopping auto-bet.` });
-          break;
-        }
-        // Refresh current round
-        if (contract && contractReady) {
-          try {
-            const round = await contract.methods.currentRound().call();
-            setCurrentRound(BigInt(round));
-          } catch (error) {
-            console.error('Error refreshing current round:', error);
-          }
-        }
-      } catch (err) {
-        setIsSpinning(false);
-        setResultPopup({ win: false, error: true, message: 'Auto bet failed: ' + (err?.message || JSON.stringify(err)) });
-        break;
-      }
-    }
-  };
+  // const autoBet = async ({
+  //   numberOfBets,
+  //   betAmount: initialBetAmount,
+  //   risk,
+  //   noOfSegments,
+  // }) => {
+  //   if (isSpinning) return;
+  //   let currentBet = initialBetAmount;
+  //   for (let i = 0; i < numberOfBets; i++) {
+  //     setHasSpun(false);
+  //     if (cooldown > 0) {
+  //       await new Promise((resolve) => {
+  //         const interval = setInterval(() => {
+  //           if (cooldown === 0) {
+  //             clearInterval(interval);
+  //             resolve();
+  //           }
+  //         }, 500);
+  //       });
+  //     }
+  //     try {
+  //       const amount = BigInt(Math.floor(currentBet * 1e18));
+  //       const roundId = currentRound !== null ? currentRound : 0n;
+  //       await approveTokens(amount);
+  //       let tx;
+  //       try {
+  //         tx = await writeContractAsync({
+  //           address: wheelContractAddress,
+  //           abi: wheelABI,
+  //           functionName: 'placeBet',
+  //           args: [risk === 'low' ? 0 : risk === 'medium' ? 1 : 2, noOfSegments, amount], // Remove multiplier
+  //         });
+  //       } catch (err) {
+  //         setIsSpinning(false);
+  //         setResultPopup({ win: false, error: true, message: 'Auto bet failed at bet #' + (i + 1) + ': ' + (err?.message || JSON.stringify(err)) });
+  //         break;
+  //       }
+  //       setCooldown(3);
+  //       setIsSpinning(true);
+  //       await new Promise((resolve) => setTimeout(resolve, 10000));
+  //       const result = await calculateResult(risk, noOfSegments);
+  //       if (result) {
+  //         setContractResult(result);
+  //         // After wheel spin, send result to backend API instead of calling processResult directly
+  //         try {
+  //           const segmentValues = getCurrentSegmentValues(wheelPosition, wheelData);
+  //           const multiplierForContract = segmentValues.multiplier; // This is the raw value (e.g., 120, 150, 990)
+  //           await writeContractAsync({
+  //             address: wheelContractAddress,
+  //             abi: wheelABI,
+  //             functionName: 'processResult',
+  //             args: [roundId, multiplierForContract],
+  //           });
+  //           // Fetch and log the multiplier used by the contract
+  //           if (contract && contractReady) {
+  //             try {
+  //               const contractResult = await contract.methods.getResult(roundId).call();
+  //               if (contractResult && contractResult.multiplier !== undefined) {
+  //                 console.log('Multiplier used by contract:', contractResult.multiplier);
+  //               } else {
+  //                 console.log('No contract result or multiplier found for round', roundId);
+  //               }
+  //             } catch (err) {
+  //               console.error('Failed to fetch contract result:', err);
+  //             }
+  //           }
+  //         } catch (err) {
+  //           setIsSpinning(false);
+  //           setResultPopup({ win: false, error: true, message: 'Backend processResult failed: ' + (err?.message || JSON.stringify(err)) });
+  //           break;
+  //         }
+  //         await new Promise((resolve) => setTimeout(resolve, 3200));
+  //         setIsSpinning(false);
+  //         const gameResultData = {
+  //           multiplier: result.multiplier * 100,
+  //           segmentIndex: result.segmentIndex,
+  //           isWin: result.isWin,
+  //           payout: result.isWin ? (amount * BigInt(Math.floor(result.multiplier * 100))) / 100n : 0n,
+  //           betAmount: amount,
+  //           roundId: roundId.toString(),
+  //           risk: risk,
+  //           segments: noOfSegments,
+  //           color: result.color,
+  //         };
+  //         setGameResult(gameResultData);
+  //         setShowResultsPopup(true);
+  //       } else {
+  //         setIsSpinning(false);
+  //         setResultPopup({ win: false, error: true, message: Auto bet #${i + 1}: Failed to fetch contract result. Stopping auto-bet. });
+  //         break;
+  //       }
+  //       if (contract && contractReady) {
+  //         try {
+  //           const round = await contract.methods.currentRound().call();
+  //           setCurrentRound(BigInt(round));
+  //         } catch (error) {
+  //           console.error('Error refreshing current round:', error);
+  //         }
+  //       }
+  //     } catch (err) {
+  //       setIsSpinning(false);
+  //       setResultPopup({ win: false, error: true, message: 'Auto bet failed: ' + (err?.message || JSON.stringify(err)) });
+  //       break;
+  //     }
+  //   }
+  // };
 
   const handleSelectMultiplier = (value) => {
     setTargetMultiplier(value);
+    setSelectedMultiplier(value); // Store the selected multiplier
   };
 
   const handleCloseResultsPopup = () => {
@@ -504,6 +542,24 @@ export default function Home() {
     setHasSpun(false);
     setContractResult(null);
   };
+
+  // Fetch wheel segment data from contract whenever risk or noOfSegments changes
+  useEffect(() => {
+    const fetchWheelData = async () => {
+      if (!contract || !contractReady) return;
+      try {
+        // RiskLevel: 0=low, 1=medium, 2=high
+        const riskLevel = risk === 'low' ? 0 : risk === 'medium' ? 1 : 2;
+        const segments = noOfSegments;
+        const data = await contract.methods.getWheelData(riskLevel, segments).call();
+        setWheelData(data);
+      } catch (err) {
+        setWheelData([]);
+        console.error('Error fetching wheel data from contract:', err);
+      }
+    };
+    fetchWheelData();
+  }, [contract, contractReady, risk, noOfSegments]);
 
   const renderHeader = () => {
     const gameStatistics = {
@@ -705,6 +761,7 @@ export default function Home() {
               setWheelPosition={setWheelPosition}
               hasSpun={hasSpun}
               contractResult={contractResult}
+              wheelData={wheelData}
             />
           </div>
           <div className="w-full lg:w-1/3">
@@ -720,7 +777,7 @@ export default function Home() {
               setSegments={setSegments}
               manulBet={manulBet}
               isSpinning={isSpinning}
-              autoBet={autoBet}
+              // autoBet={autoBet}
               canBet={canBet}
             />
           </div>
@@ -732,13 +789,12 @@ export default function Home() {
       <WheelProbability />
       <WheelPayouts />
       <WheelHistory />
-      
-      {/* Results Popup */}
-      <ResultsPopup
+      {/* Results Popup for contract result and multiplier */}
+      {/* <ResultsPopup
         isOpen={showResultsPopup}
         onClose={handleCloseResultsPopup}
-        result={gameResult}
-      />
+        result={contractResult}
+      /> */}
     </div>
   );
 }

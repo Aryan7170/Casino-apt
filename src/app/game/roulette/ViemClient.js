@@ -43,6 +43,46 @@ const pharosDevnet = {
   testnet: true,
 };
 
+// Define Binance Smart Chain Testnet
+const binanceTestnet = {
+  id: 97,
+  name: 'Binance Smart Chain Testnet',
+  network: 'bsc-testnet',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Binance Coin',
+    symbol: 'BNB',
+  },
+  rpcUrls: {
+    default: { http: ['https://data-seed-prebsc-1-s1.binance.org:8545'] },
+    public: { http: ['https://data-seed-prebsc-1-s1.binance.org:8545'] },
+  },
+  blockExplorers: {
+    default: { name: 'BscScan Testnet', url: 'https://testnet.bscscan.com' },
+  },
+  testnet: true,
+};
+
+// Define Ethereum Sepolia chain
+const ethereumSepolia = {
+  id: 11155111,
+  name: 'Ethereum Sepolia',
+  network: 'ethereum-sepolia',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Ethereum',
+    symbol: 'ETH',
+  },
+  rpcUrls: {
+    default: { http: ['https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3'] },
+    public: { http: ['https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3'] },
+  },
+  blockExplorers: {
+    default: { name: 'Etherscan Sepolia', url: 'https://sepolia.etherscan.io' },
+  },
+  testnet: true,
+};
+
 // Configure transport with improved settings
 const configureTransport = (url) => http(url, {
   batch: { batchSize: 1 },  // Disable batching for more reliable connections
@@ -74,14 +114,41 @@ export const publicMantleSepoliaClient = createPublicClient({
   transport: configureTransport('https://rpc.sepolia.mantle.xyz'),
 });
 
-// Comment out Pharos Devnet - using Mantle Sepolia instead
-// export const publicPharosSepoliaClient = createPublicClient({
-//   chain: pharosDevnet,
-//   transport: configureTransport('https://devnet.dplabs-internal.com'),
-// });
 
-// Use Mantle Sepolia as the primary client
 export const publicPharosSepoliaClient = publicMantleSepoliaClient;
+
+export const publicBinanceTestnetClient = createPublicClient({
+  chain: binanceTestnet,
+  transport: configureTransport('https://data-seed-prebsc-1-s1.binance.org:8545'),
+});
+
+export const publicEthereumSepoliaClient = createPublicClient({
+  chain: ethereumSepolia,
+  transport: configureTransport('https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3'),
+});
+
+const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+// Get contract configuration for current chain
+export const getPublicClient = (chainId) => {
+	if (chainId === '0x138b') {
+		return publicMantleSepoliaClient;
+	} else if (chainId === '0xc352') {
+		return publicPharosSepoliaClient;
+	} else if (chainId === '0x61') {
+		return publicBinanceTestnetClient;
+	} else if (chainId === '0xaa36a7') {
+		return publicEthereumSepoliaClient;
+	}
+	return null;
+};
+
+export const usePublicClient = () => {
+	const publicClient = getPublicClient(chainId);
+	
+	return {
+		dynamicPublicClient: publicClient,
+	};
+};
 
 let walletClient = null;
 
@@ -97,8 +164,19 @@ export const getWalletClient = async () => {
     // Create wallet client if not already created
     if (!walletClient) {
       const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      // Prefer Mantle Sepolia (0x138b), fallback to Pharos Devnet
-      const chain = chainId === '0x138b' ? mantleSepolia : pharosDevnet;
+      // Prefer Mantle Sepolia (0x138b), fallback to Pharos Devnet, then Binance Testnet, then Ethereum Sepolia
+      let chain;
+      if (chainId === '0x138b') {
+        chain = mantleSepolia;
+      } else if (chainId === '0xc352') {
+        chain = pharosDevnet;
+      } else if (chainId === '0x61') { // 0x61 is chainId for Binance Smart Chain Testnet
+        chain = binanceTestnet;
+      } else if (chainId === '0xaa36a7') { // 0xaa36a7 is chainId for Ethereum Sepolia
+        chain = ethereumSepolia;
+      } else {
+        chain = mantleSepolia; // Default fallback
+      }
       
       walletClient = createWalletClient({
         chain,
@@ -114,14 +192,27 @@ export const getWalletClient = async () => {
   }
 };
 
-export const createCustomWalletClient = (account) => {
+export const createCustomWalletClient = (account, providedChainId) => {
   if (typeof window === 'undefined' || !window.ethereum) {
     throw new Error('No ethereum provider found');
   }
   
+  let chain;
+  if (providedChainId === '0x138b') {
+    chain = mantleSepolia;
+  } else if (providedChainId === '0xc352') {
+    chain = pharosDevnet;
+  } else if (providedChainId === '0x61') {
+    chain = binanceTestnet;
+  } else if (providedChainId === '0xaa36a7') {
+    chain = ethereumSepolia;
+  } else {
+    chain = pharosDevnet; // Default to pharosDevnet
+  }
+
   return createWalletClient({
     account,
-    chain: pharosDevnet,
+    chain,
     transport: custom(window.ethereum)
   });
 };
@@ -133,11 +224,13 @@ export const checkNetwork = async () => {
   
   try {
     const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-    if (chainId !== '0x138b' && chainId !== '0xc352') { // Mantle or Pharos Devnet chainId
+    // Support Mantle Sepolia (0x138b), Local Hardhat (0x7a69), Binance Testnet (0x61), and Ethereum Sepolia (0xaa36a7)
+    if (chainId !== '0x138b' && chainId !== '0x7a69' && chainId !== '0x61' && chainId !== '0xaa36a7') {
       try {
+        // Try switching to Mantle Sepolia first
         await window.ethereum.request({
           method: 'wallet_switchEthereumChain',
-          params: [{ chainId: '0x138b' }], // Default to Mantle Sepolia
+          params: [{ chainId: '0x138b' }],
         });
       } catch (switchError) {
         if (switchError.code === 4902) {
@@ -155,6 +248,22 @@ export const checkNetwork = async () => {
                 },
                 rpcUrls: ['https://rpc.sepolia.mantle.xyz'],
                 blockExplorerUrls: ['https://sepolia.mantlescan.xyz']
+              }],
+            });
+            
+            // Add Ethereum Sepolia network
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0xaa36a7',
+                chainName: 'Ethereum Sepolia',
+                nativeCurrency: {
+                  name: 'Ethereum',
+                  symbol: 'ETH',
+                  decimals: 18
+                },
+                rpcUrls: ['https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3'],
+                blockExplorerUrls: ['https://sepolia.etherscan.io']
               }],
             });
             

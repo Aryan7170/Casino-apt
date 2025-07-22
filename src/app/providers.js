@@ -53,6 +53,46 @@ const pharosDevnet = {
   testnet: true,
 };
 
+// Define Binance Smart Chain Testnet
+const binanceTestnet = {
+  id: 97,
+  name: "Binance Smart Chain Testnet",
+  network: "bsc-testnet",
+  nativeCurrency: {
+    decimals: 18,
+    name: "Binance Coin",
+    symbol: "BNB",
+  },
+  rpcUrls: {
+    default: { http: ["https://data-seed-prebsc-1-s1.binance.org:8545"] },
+    public: { http: ["https://data-seed-prebsc-1-s1.binance.org:8545"] },
+  },
+  blockExplorers: {
+    default: { name: "BscScan Testnet", url: "https://testnet.bscscan.com" },
+  },
+  testnet: true,
+};
+
+// Define Ethereum Sepolia chain
+const ethereumSepolia = {
+  id: 11155111,
+  name: "Ethereum Sepolia",
+  network: "ethereum-sepolia",
+  nativeCurrency: {
+    decimals: 18,
+    name: "Ethereum",
+    symbol: "ETH",
+  },
+  rpcUrls: {
+    default: { http: ["https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3"] },
+    public: { http: ["https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3"] },
+  },
+  blockExplorers: {
+    default: { name: "Etherscan Sepolia", url: "https://sepolia.etherscan.io" },
+  },
+  testnet: true,
+};
+
 // Hardcoded project ID as a fallback
 const fallbackProjectId = "64df6621925fa7d0680ba510ac3788df";
 const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || fallbackProjectId;
@@ -61,10 +101,18 @@ const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || fallbackP
 export const config = getDefaultConfig({
   appName: 'APT Casino',
   projectId: projectId,
-  chains: [mantleSepolia, pharosDevnet],
+  chains: [mantleSepolia, pharosDevnet, binanceTestnet, ethereumSepolia], // Add Ethereum Sepolia here
   transports: {
     [mantleSepolia.id]: http(mantleSepolia.rpcUrls.default.http[0]),
     [pharosDevnet.id]: http(pharosDevnet.rpcUrls.default.http[0]),
+    [binanceTestnet.id]: http(binanceTestnet.rpcUrls.default.http[0]), // Add Binance Testnet transport
+    [ethereumSepolia.id]: http(ethereumSepolia.rpcUrls.default.http[0]), // Add Ethereum Sepolia transport
+  },
+  metadata: {
+    name: 'APT Casino',
+    description: 'A decentralized casino platform.',
+    url: 'http://localhost:3000', // <-- Set to base URL
+    icons: [],
   },
 });
 
@@ -132,7 +180,7 @@ export default function Providers({ children }) {
     const handleChainChange = (chainId) => {
       console.log('Chain changed:', chainId);
       // Check if the new chain is supported
-      const supportedChainIds = [mantleSepolia.id, pharosDevnet.id];
+      const supportedChainIds = [mantleSepolia.id, pharosDevnet.id, binanceTestnet.id, ethereumSepolia.id];
       if (!supportedChainIds.includes(Number(chainId))) {
         setConnectionError(true);
       } else {
