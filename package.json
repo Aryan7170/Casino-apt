@@ -70,6 +70,7 @@
     "wagmi": "^2.15.2"
   },
   "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.11.6",
     "@types/node": "22.15.15",
     "tailwind-scrollbar": "^3.0.4",
     "typescript": "5.8.3"

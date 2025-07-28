@@ -9,7 +9,7 @@ contract Roulette is ReentrancyGuard, Ownable {
     IERC20 public immutable token;
     uint256 public minBet;
     uint256 public maxBet;
-    address public constant TREASURY = 0xFfbfce3f171911044b6D91d700548AEd9A662420;
+    address public constant TREASURY = 0xFF9582E3898599D2cF0Abdc06321789dc345e529;
     uint256 public constant TREASURY_FEE_RATE = 5; // 0.5%
     uint256 public constant MIN_WAIT_BLOCK = 1;
 

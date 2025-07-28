@@ -23,31 +23,22 @@ import MuiAlert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 import GameDetail from "../../../components/GameDetail";
 import { gameData, bettingTableData } from "./config/gameDetail";
+import { motion } from "framer-motion";
 import { useToken } from "@/hooks/useToken";
 import BettingHistory from '@/components/BettingHistory';
-import { FaVolumeMute, FaVolumeUp } from "react-icons/fa";
+import { FaVolumeMute, FaVolumeUp, FaChartLine, FaCoins, FaTrophy, FaDice, FaBalanceScale, FaRandom, FaPercentage, FaPlayCircle } from "react-icons/fa";
+import { GiCardRandom, GiDiceTarget, GiRollingDices, GiPokerHand } from "react-icons/gi";
+import RouletteLeaderboard from './components/RouletteLeaderboard';
+import StrategyGuide from './components/StrategyGuide';
+import RoulettePayout from './components/RoulettePayout';
+import WinProbabilities from './components/WinProbabilities';
+import RouletteHistory from './components/RouletteHistory';
 import { TreasuryUI } from '../../../components/TreasuryUI';
 import { TreasuryTest } from '../../../components/TreasuryTest';
 import { TreasuryManager } from '../../../components/TreasuryManager';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useDelegationToolkit } from '@/hooks/useDelegationToolkit';
 import useWalletStatus from '@/hooks/useWalletStatus';
-
-const {
-  dynamicPublicClient,
-} = usePublicClient();
-
-const {
-  rouletteContractAddress,
-  tokenContractAddress,
-  rouletteABI,
-  tokenABI,
-  contractConfig
-} = useContractDetails();
-
-
-// Debug imports
-console.log("dynamicPublicClient", dynamicPublicClient);
 
 const TooltipWide = styled(({ className, ...props }) => (
   <Tooltip {...props} classes={{ popper: className }} />
@@ -660,6 +651,172 @@ export default function GameRoulette() {
     isConnected: walletStatusIsConnected,
     // ...other wallet status values
   } = useWalletStatus();
+
+  const {
+    dynamicPublicClient,
+  } = usePublicClient();
+
+  const {
+    rouletteContractAddress,
+    tokenContractAddress,
+    rouletteABI,
+    tokenABI,
+    contractConfig,
+
+  } = useContractDetails();
+
+
+  // Debug imports
+  console.log("dynamicPublicClient", dynamicPublicClient);
+
+  const RouletteHeader = () => {
+    // Sample statistics
+    const gameStatistics = {
+      totalBets: '1,856,342',
+      totalVolume: '8.3M APTC',
+      maxWin: '243,500 APTC'
+    };
+    
+    return (
+      <div className="relative text-white px-4 md:px-8 lg:px-20 mb-8 pt-20 md:pt-24 mt-4">
+        {/* Background Elements */}
+        <div className="absolute top-5 -right-32 w-64 h-64 bg-red-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-28 left-1/3 w-32 h-32 bg-green-500/10 rounded-full blur-2xl"></div>
+        <div className="absolute -bottom-20 left-1/4 w-48 h-48 bg-purple-500/5 rounded-full blur-3xl"></div>
+        
+        <div className="relative">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6">
+            {/* Left Column - Game Info */}
+            <div className="md:w-1/2">
+              <div className="flex items-center">
+                <div className="mr-3 p-3 bg-gradient-to-br from-red-900/40 to-red-700/10 rounded-lg shadow-lg shadow-red-900/10 border border-red-800/20">
+                  <GiRollingDices className="text-3xl text-red-300" />
+                </div>
+                <div>
+                  <motion.div 
+                    className="flex items-center gap-2"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <p className="text-sm text-gray-400 font-sans">Games / Roulette</p>
+                    <span className="text-xs px-2 py-0.5 bg-red-900/30 rounded-full text-red-300 font-display">Classic</span>
+                    <span className="text-xs px-2 py-0.5 bg-green-900/30 rounded-full text-green-300 font-display">Live</span>
+                  </motion.div>
+                  <motion.h1 
+                    className="text-3xl md:text-4xl font-bold font-display bg-gradient-to-r from-red-300 to-amber-300 bg-clip-text text-transparent"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: 0.1 }}
+                  >
+                    European Roulette
+                  </motion.h1>
+                </div>
+              </div>
+              <motion.p 
+                className="text-white/70 mt-2 max-w-xl font-sans"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                Place your bets and experience the thrill of the spinning wheel. From simple red/black bets to complex number combinations, the choice is yours.
+              </motion.p>
+              
+              {/* Game highlights */}
+              <motion.div 
+                className="flex flex-wrap gap-4 mt-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <div className="flex items-center text-sm bg-gradient-to-r from-red-900/30 to-red-800/10 px-3 py-1.5 rounded-full">
+                  <FaPercentage className="mr-1.5 text-amber-400" />
+                  <span className="font-sans">2.7% house edge</span>
+                </div>
+                <div className="flex items-center text-sm bg-gradient-to-r from-red-900/30 to-red-800/10 px-3 py-1.5 rounded-full">
+                  <GiPokerHand className="mr-1.5 text-blue-400" />
+                  <span className="font-sans">Multiple betting options</span>
+                </div>
+                <div className="flex items-center text-sm bg-gradient-to-r from-red-900/30 to-red-800/10 px-3 py-1.5 rounded-full">
+                  <FaBalanceScale className="mr-1.5 text-green-400" />
+                  <span className="font-sans">Provably fair gaming</span>
+                </div>
+              </motion.div>
+            </div>
+            
+            {/* Right Column - Stats and Controls */}
+            <div className="md:w-1/2">
+              <div className="bg-gradient-to-br from-red-900/20 to-red-800/5 rounded-xl p-4 border border-red-800/20 shadow-lg shadow-red-900/10">
+                {/* Quick stats in top row */}
+                <motion.div 
+                  className="grid grid-cols-3 gap-2 mb-4"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                >
+                  <div className="flex flex-col items-center p-2 bg-black/20 rounded-lg">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600/20 mb-1">
+                      <FaChartLine className="text-blue-400" />
+                    </div>
+                    <div className="text-xs text-white/50 font-sans text-center">Total Bets</div>
+                    <div className="text-white font-display text-sm md:text-base">{gameStatistics.totalBets}</div>
+                  </div>
+                  
+                  <div className="flex flex-col items-center p-2 bg-black/20 rounded-lg">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-600/20 mb-1">
+                      <FaCoins className="text-yellow-400" />
+                    </div>
+                    <div className="text-xs text-white/50 font-sans text-center">Volume</div>
+                    <div className="text-white font-display text-sm md:text-base">{gameStatistics.totalVolume}</div>
+                  </div>
+                  
+                  <div className="flex flex-col items-center p-2 bg-black/20 rounded-lg">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-red-600/20 mb-1">
+                      <FaTrophy className="text-yellow-500" />
+                    </div>
+                    <div className="text-xs text-white/50 font-sans text-center">Max Win</div>
+                    <div className="text-white font-display text-sm md:text-base">{gameStatistics.maxWin}</div>
+                  </div>
+                </motion.div>
+                
+                {/* Quick actions */}
+                <motion.div
+                  className="flex flex-wrap justify-between gap-2"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                >
+                  <button 
+                    onClick={() => scrollToElement('strategy')}
+                    className="flex items-center justify-center px-4 py-2 bg-gradient-to-r from-red-800/40 to-red-900/20 rounded-lg text-white font-medium text-sm hover:from-red-700/40 hover:to-red-800/20 transition-all duration-300"
+                  >
+                    <GiCardRandom className="mr-2" />
+                    Strategy Guide
+                  </button>
+                  <button 
+                    onClick={() => scrollToElement('payouts')}
+                    className="flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-800/40 to-blue-900/20 rounded-lg text-white font-medium text-sm hover:from-blue-700/40 hover:to-blue-800/20 transition-all duration-300"
+                  >
+                    <FaCoins className="mr-2" />
+                    Payout Tables
+                  </button>
+                  <button 
+                    onClick={() => scrollToElement('history')}
+                    className="flex items-center justify-center px-4 py-2 bg-gradient-to-r from-purple-800/40 to-purple-900/20 rounded-lg text-white font-medium text-sm hover:from-purple-700/40 hover:to-purple-800/20 transition-all duration-300"
+                  >
+                    <FaChartLine className="mr-2" />
+                    Game History
+                  </button>
+                </motion.div>
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full h-0.5 bg-gradient-to-r from-red-600 via-blue-500/30 to-transparent mt-6"></div>
+        </div>
+      </div>
+    );
+  };
 
   const [events, dispatchEvents] = useReducer(eventReducer, []);
   const [bet, setBet] = useState(0);
@@ -1299,34 +1456,39 @@ export default function GameRoulette() {
 
   const approveTokens = async (amount) => {
     try {
+       setNotification({ open: true, message: 'Checking allowance...', severity: 'info' });
+
+      // Get the current chain ID to determine which client to use
+      let chainId;
+      if (typeof window !== 'undefined' && window.ethereum) {
+        chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        console.log('Current chainId:', chainId);
+      }
+
+      const approvalKey = `rouletteUnlimitedApproval_${dtAddress}_${chainId}`;
+      const approvalDataRaw = typeof window !== 'undefined' ? localStorage.getItem(approvalKey) : null;
+      let approvalData = null;
+      if (approvalDataRaw) {
+        try {
+          approvalData = JSON.parse(approvalDataRaw);
+        } catch (e) {
+          approvalData = null;
+        }
+      }
+      const now = Date.now();
+      const ONE_DAY_MS = 30 * 24 * 60 * 60 * 1000;
+      // If unlimited approval is still valid, skip approval
+      if (approvalData && approvalData.timestamp && (now - approvalData.timestamp < ONE_DAY_MS)) {
+        setNotification({ open: true, message: 'Unlimited approval active for roulette.', severity: 'info' });
+        return true;
+      }
       setNotification({ open: true, message: 'Checking allowance...', severity: 'info' });
-
-      // // Get the current chain ID to determine which client to use
-      // let chainId;
-      // if (typeof window !== 'undefined' && window.ethereum) {
-      //   chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      //   console.log('Current chainId:', chainId);
-      // }
-
-      // // Select the appropriate client based on the current network
-      // let client;
-      // if (chainId === '0x138b') { // Mantle Sepolia
-      //   client = ViemClient.publicMantleSepoliaClient;
-      // } else if (chainId === '0xc352') { // Pharos Devnet
-      //   client = ViemClient.publicPharosSepoliaClient;
-      // } else if (chainId === '0x61') { // Binance Testnet
-      //   client = ViemClient.publicBinanceTestnetClient;
-      // } else if (chainId === '0xaa36a7') { // Binance Testnet
-      //   client = dynamicPublicClient;  
-      // } 
-
-      // console.log('Using client for chainId:', chainId, 'Client:', client);
 
       // Get contract addresses for current network
       const contractAddresses = tokenContractAddress;
       console.log('Using contract addresses:', contractAddresses);
 
-      // 1. Check current allowance
+      // 1. Check current allowance using the appropriate client
       const currentAllowance = await dynamicPublicClient.readContract({
         address: tokenContractAddress,
         abi: tokenABI,
@@ -1334,20 +1496,23 @@ export default function GameRoulette() {
         args: [dtAddress, rouletteContractAddress],
       });
 
-      // 2. Compare with the required amount
-      if (currentAllowance < amount) {
-        // 3. If allowance is insufficient, request approval
-        setNotification({ open: true, message: 'Requesting approval to place bet...', severity: 'info' });
+      // 2. If allowance is less than max, request unlimited approval
+      const MAX_UINT256 = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+      if (currentAllowance < MAX_UINT256) {
+        setNotification({ open: true, message: 'Requesting unlimited approval for 24 hours...', severity: 'info' });
         const hash = await writeContractAsync({
           address: tokenContractAddress,
           abi: tokenABI,
           functionName: 'approve',
-          args: [rouletteContractAddress, amount],
+          args: [rouletteContractAddress, MAX_UINT256],
         });
         await dynamicPublicClient.waitForTransactionReceipt({ hash });
-        setNotification({ open: true, message: 'Approval successful!', severity: 'success' });
+        setNotification({ open: true, message: 'Unlimited approval granted for 24 hours!', severity: 'success' });
+        // Store approval timestamp with chain ID
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(approvalKey, JSON.stringify({ timestamp: now, chainId }));
+        }
       } else {
-        // 4. If allowance is sufficient, do nothing.
         setNotification({ open: true, message: 'Allowance confirmed.', severity: 'info' });
       }
       return true;
@@ -1857,7 +2022,7 @@ export default function GameRoulette() {
 
   return (
     <ThemeProvider theme={theme}>
-      <div className="font-sans" style={{ backgroundColor: "#080005", minHeight: "100vh", overflowX: 'hidden' }}>
+      <div className="font-sans" style={{ backgroundColor: "#080005", minHeight: "100vh", overflowX: 'hidden', }}>
         {/* Audio elements */}
         <audio ref={spinSoundRef} src="/sounds/ball-spin.mp3" preload="auto" />
         <audio ref={winSoundRef} src="/sounds/win-chips.mp3" preload="auto" />
@@ -1867,12 +2032,14 @@ export default function GameRoulette() {
         <audio ref={backgroundMusicRef} src="/sounds/background-music.mp3" preload="auto" loop />
         <audio ref={ambientSoundsRef} src="/sounds/ambient-sounds.mp3" preload="auto" loop />
 
+        <RouletteHeader />
+
         <Box
           sx={{
             display: "flex",
             flexDirection: "column",
             alignItems: "stretch",
-            pt: { xs: 12, md: 14 },
+            pt: { xs: 12, md: 1 },
           }}
         >
           {/* Recent Results Bar */}
@@ -2478,10 +2645,237 @@ export default function GameRoulette() {
             </Box>
           )}
           
-          <GameDetail gameData={gameData} bettingTableData={bettingTableData} />
+          {/* New enhanced sections */}
+          <Box sx={{ 
+            mt: 8, 
+            px: { xs: 2, md: 8 },
+            mx: 'auto',
+            maxWidth: '1600px'
+          }}>
+            {/* Section Header */}
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                mb: 5, 
+                textAlign: 'center', 
+                fontWeight: 'bold',
+                background: 'linear-gradient(90deg, #d82633, #681DDB)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                letterSpacing: '1px',
+                textShadow: '0 4px 8px rgba(0,0,0,0.5)'
+              }}
+            >
+              Master European Roulette
+            </Typography>
+
+            {/* Video and Description Section */}
+            <Grid container spacing={4} sx={{ mb: 7 }}>
+              {/* Video on left */}
+              <Grid xs={12} md={6}>
+                <Box
+                  sx={{
+                    position: 'relative',
+                    width: '100%',
+                    paddingTop: { xs: '56.25%', md: '56.25%' },
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
+                    border: '2px solid rgba(104, 29, 219, 0.4)',
+                    transition: 'all 0.3s ease-in-out',
+                    '&:hover': {
+                      transform: 'scale(1.02)',
+                      boxShadow: '0 25px 50px rgba(0, 0, 0, 0.7)',
+                      border: '2px solid rgba(216, 38, 51, 0.5)',
+                    },
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: '-3px',
+                      left: '-3px',
+                      right: '-3px',
+                      bottom: '-3px',
+                      borderRadius: '20px',
+                      background: 'linear-gradient(45deg, #d82633, #681DDB, #14D854, #d82633)',
+                      backgroundSize: '400% 400%',
+                      zIndex: -1,
+                      filter: 'blur(10px)',
+                      opacity: 0.7,
+                      animation: 'gradient 15s ease infinite',
+                      '@keyframes gradient': {
+                        '0%': { backgroundPosition: '0% 50%' },
+                        '50%': { backgroundPosition: '100% 50%' },
+                        '100%': { backgroundPosition: '0% 50%' }
+                      }
+                    }
+                  }}
+                >
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      py: 1.5,
+                      background: 'linear-gradient(to bottom, rgba(9, 0, 5, 0.8), rgba(9, 0, 5, 0))',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      zIndex: 2
+                    }}
+                  >
+                  </Box>
+                  <iframe
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      border: 'none',
+                      zIndex: 1
+                    }}
+                    src={gameData.youtube}
+                    title="Roulette Masterclass Tutorial"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </Box>
+              </Grid>
+              
+              {/* Description on right */}
+              <Grid xs={12} md={6}>
+                                 <Box
+                   sx={{
+                     background: 'linear-gradient(135deg, rgba(9, 0, 5, 0.6) 0%, rgba(9, 0, 5, 0.3) 100%)',
+                     backdropFilter: 'blur(10px)',
+                     borderRadius: '16px',
+                     p: { xs: 2.5, md: 3 },
+                     minHeight: '280px',
+                     display: 'flex',
+                     flexDirection: 'column',
+                     justifyContent: 'center',
+                    border: '1px solid rgba(104, 29, 219, 0.2)',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '5px',
+                      height: '100%',
+                      background: 'linear-gradient(to bottom, #d82633, #681DDB)',
+                    }
+                  }}
+                >
+                                     <Typography 
+                     variant="h6" 
+                     sx={{ 
+                       mb: 2,
+                       fontWeight: 'bold',
+                       background: 'linear-gradient(90deg, #FFFFFF, #FFA500)',
+                       WebkitBackgroundClip: 'text',
+                       WebkitTextFillColor: 'transparent',
+                       display: 'inline-block'
+                     }}
+                   >
+                     European Roulette
+                   </Typography>
+                  
+                                     {/* Only show first two paragraphs with condensed content */}
+                   <Typography 
+                     variant="body1" 
+                     sx={{ 
+                       mb: 2.5,
+                       lineHeight: 1.8,
+                       fontSize: '1rem',
+                       color: 'rgba(255, 255, 255, 0.92)',
+                       textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                     }}
+                   >
+                     European Roulette with a single zero and just 2.7% house edge - better odds than traditional casinos. Provably fair and powered by blockchain technology.
+                   </Typography>
+                   
+                   <Typography 
+                     variant="body1" 
+                     sx={{ 
+                       mb: 1,
+                       lineHeight: 1.8,
+                       fontSize: '1rem',
+                       color: 'rgba(255, 255, 255, 0.92)',
+                       textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                     }}
+                   >
+                     Bet on numbers, colors, or combinations for payouts up to 35:1. Every spin is secure and transparent on the blockchain.
+                   </Typography>
+                </Box>
+              </Grid>
+            </Grid>
+
+            {/* First row - Strategy Guide and Win Probabilities (most important for players) */}
+            <Grid container spacing={4} sx={{ mb: 6, pt: 4 }}>
+              <Grid xs={12} md={7}>
+                <div id="strategy" className="scroll-mt-16">
+                  <StrategyGuide />
+                </div>
+              </Grid>
+              <Grid xs={12} md={5}>
+                <WinProbabilities />
+              </Grid>
+            </Grid>
+            
+            {/* Second row - Roulette Payout (full width for clarity) */}
+            <Grid container spacing={4} sx={{ mb: 6, pt: 4 }}>
+              <Grid xs={12}>
+                <div id="payouts" className="scroll-mt-16">
+                  <RoulettePayout />
+                </div>
+              </Grid>
+            </Grid>
+            
+            {/* Third row - Roulette History and Leaderboard */}
+            <Grid container spacing={4} sx={{ mb: 6, pt: 4 }}>
+              <Grid xs={12} md={7}>
+                <div id="history" className="scroll-mt-16">
+                  <RouletteHistory />
+                </div>
+              </Grid>
+              <Grid xs={12} md={5}>
+                <RouletteLeaderboard />
+              </Grid>
+            </Grid>
+            
+            {/* Decorative elements */}
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '400px',
+                left: '-50px',
+                width: '200px',
+                height: '200px',
+                borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(104, 29, 219, 0.4) 0%, rgba(104, 29, 219, 0) 70%)',
+                filter: 'blur(50px)',
+                zIndex: -1,
+              }}
+            />
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '800px',
+                right: '-100px',
+                width: '350px',
+                height: '350px',
+                borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(216, 38, 51, 0.3) 0%, rgba(216, 38, 51, 0) 70%)',
+                filter: 'blur(70px)',
+                zIndex: -1,
+              }}
+            />
+          </Box>
         </Box>
-{/* <TreasuryUI /> */}
-{/* <TreasuryTest /> */}
 
         <Snackbar
           open={showNotification}

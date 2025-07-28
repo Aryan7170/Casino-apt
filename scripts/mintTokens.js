@@ -1,16 +1,16 @@
 import { useContractDetails } from '../src/app/game/roulette/contractDetails';
 import { treasuryAddress } from "../src/config/contracts";
 
-
-const {
-    tokenContractAddress,
-    tokenABI,
-    rpcURL,
-  } = useContractDetails();
-
 const { ethers } = require("ethers");
 
 async function mintTokens() {
+
+    const {
+        tokenContractAddress,
+        tokenABI,
+        rpcURL,
+    } = useContractDetails();
+
     const provider = new ethers.providers.JsonRpcProvider(rpcURL);
     const privateKey = "cf4235da669935a29fa95d5afc417b5023675dc6ccb99dc13b1f8fdb398933d7";
     const wallet = new ethers.Wallet(privateKey, provider);

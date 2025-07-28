@@ -1,14 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  distDir: 'build',
   transpilePackages: ['three'],
   images: {
     domains: ['images.unsplash.com'],
   },
   // Increase chunk loading timeout to 60 seconds
-  experimental: {
-    pageLoadTimeout: 60, // 60 seconds
-  },
+  // experimental: {
+  //   pageLoadTimeout: 60, // 60 seconds
+  // },
   // Performance optimizations
   poweredByHeader: false,
   reactStrictMode: false, // Disable strict mode to prevent double-renders and potential issues

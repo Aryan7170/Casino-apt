@@ -2,11 +2,15 @@ export const gameData = {
   title: "European Roulette",
   label: "CLASSIC CASINO GAME",
   image: "/images/games/roulette.png",
+  youtube: "https://www.youtube.com/embed/6nKBlWaRI8w?si=qm4t8wyxXRo9O4IK",
   paragraphs: [
-    "Welcome to our European Roulette game, where elegance meets excitement! Experience the thrill of the wheel with our provably fair, blockchain-powered roulette game. With a single zero and a house edge of just 2.70%, we offer better odds than traditional casinos. European Roulette features 37 pockets (numbers 0-36), offering better odds than American Roulette. Players bet on where the ball will land after the wheel is spun.",
-    "",
-    "Video Tutorial: How to Play Roulette",
-    "https://www.youtube.com/embed/6nKBlWaRI8w?si=24sWw5ftQ2dpOop8",
+    "Step into the world of European Roulette, where fortune favors the bold and every spin could change your fate. Our provably fair, blockchain-powered roulette game combines classic casino elegance with cutting-edge cryptocurrency technology.",
+    
+    "With a single zero and a house edge of just 2.70%, our European Roulette offers better odds than traditional casinos and American Roulette variants. The wheel features 37 pockets (numbers 0-36), creating the perfect balance of risk and reward for both beginners and seasoned players.",
+    
+    "Place your bets on individual numbers, colors, odds/evens, or dozens and watch as the wheel spins, the ball dances, and destiny unfolds. Will you play it safe with outside bets or chase the thrill of a 35:1 payout on a straight-up number?",
+    
+    "All bets are secured on the blockchain, ensuring complete transparency and fairness on every spin. Join thousands of players who've already experienced the exhilaration of crypto roulette - your winning streak begins now!"
   ],
 };
 

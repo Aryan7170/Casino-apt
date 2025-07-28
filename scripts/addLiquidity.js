@@ -2,12 +2,13 @@ import { useContractDetails } from '../src/app/game/roulette/contractDetails';
 
 const { ethers } = require("hardhat");
 
-const {
-  rouletteContractAddress,
-  tokenContractAddress,
-} = useContractDetails();
-
 async function main() {
+
+  const {
+    rouletteContractAddress,
+    tokenContractAddress,
+  } = useContractDetails();
+
   const amount = ethers.parseEther("1000"); // Add 1000 tokens
   
   const tokenAddress = tokenContractAddress;

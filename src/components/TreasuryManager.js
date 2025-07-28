@@ -6,12 +6,12 @@ import { useContractDetails } from '@/app/game/roulette/contractDetails';
 
 const TREASURY_ADDRESS = treasuryAddress;
 
-const {
-    tokenABI,
-    tokenContractAddress,
-  } = useContractDetails();
-
 export const TreasuryManager = () => {
+    const {
+        tokenABI,
+        tokenContractAddress,
+    } = useContractDetails();
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const { address } = useAccount();

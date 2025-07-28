@@ -735,7 +735,7 @@ export default function Home() {
         </div>
       )}
       
-      {contractReady && !contractError && (
+      {/* {contractReady && !contractError && (
         <div className="px-4 md:px-8 lg:px-20 mb-4">
           <div className="bg-green-900/20 border border-green-800/20 rounded-lg p-4 text-center">
             <div className="text-green-400 font-bold mb-2">Contract Connected</div>
@@ -744,7 +744,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
       
       {/* Main Game Section */}
       <div className="px-4 md:px-8 lg:px-20">

@@ -1,6 +1,8 @@
 "use client";
 import { createPublicClient, http, createWalletClient, custom } from 'viem'
 import { polygon, mainnet, mantleSepoliaTestnet } from 'viem/chains'
+import { useChainId } from 'wagmi';
+import { CHAIN_IDS } from '@/config/contracts';
 import dynamic from 'next/dynamic';
 
 // Define Mantle Sepolia chain
@@ -127,22 +129,23 @@ export const publicEthereumSepoliaClient = createPublicClient({
   transport: configureTransport('https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3'),
 });
 
-const chainId = await window.ethereum.request({ method: 'eth_chainId' });
 // Get contract configuration for current chain
 export const getPublicClient = (chainId) => {
-	if (chainId === '0x138b') {
-		return publicMantleSepoliaClient;
-	} else if (chainId === '0xc352') {
-		return publicPharosSepoliaClient;
-	} else if (chainId === '0x61') {
-		return publicBinanceTestnetClient;
-	} else if (chainId === '0xaa36a7') {
-		return publicEthereumSepoliaClient;
-	}
-	return null;
+
+  if (chainId === CHAIN_IDS.ETHEREUM_SEPOLIA) {
+      return publicEthereumSepoliaClient;
+    } else if (chainId === CHAIN_IDS.MANTLE_SEPOLIA) {
+      return publicMantleSepoliaClient;
+    } else if (chainId === CHAIN_IDS.PHAROS_DEVNET) {
+      return publicPharosSepoliaClient;
+    } else if (chainId === CHAIN_IDS.BINANCE_TESTNET) {
+      return publicBinanceTestnetClient;
+    }
+    return null;
 };
 
 export const usePublicClient = () => {
+  const chainId = useChainId();
 	const publicClient = getPublicClient(chainId);
 	
 	return {

@@ -89,7 +89,7 @@ export const ROULETTE_CONTRACTS = {
       address: "0xc3e58B9Dc37Fa64cBe18DAC234465E2B5CCF80a1", // Updated local roulette address
   },
   [CHAIN_IDS.MANTLE_SEPOLIA]: {
-      address: "0xfa339164994ea5d08fd898af81ffa8a5c4982974",
+      address: "0x1e9C03aD12859e416f2987C000ffe755D7c24CD6",
   },
   [CHAIN_IDS.PHAROS_DEVNET]: {
       address: "0xc3e58B9Dc37Fa64cBe18DAC234465E2B5CCF80a1",
@@ -906,7 +906,7 @@ MANTLE_SEPOLIA: {
 	]
   },
   roulette: {
-    address: '0xfa339164994ea5d08fd898af81ffa8a5c4982974',
+    address: '0x1e9C03aD12859e416f2987C000ffe755D7c24CD6',
     abi: [
       // Roulette ABI - same as PHAROS_DEVNET
       {
@@ -2749,7 +2749,7 @@ PHAROS_DEVNET: {
     ]
   },
   roulette: {
-    address: '0xfa339164994ea5d08fd898af81ffa8a5c4982974',
+    address: '0x1e9C03aD12859e416f2987C000ffe755D7c24CD6',
     abi: [
       {
         "inputs": [
