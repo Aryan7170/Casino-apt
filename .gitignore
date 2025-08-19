@@ -36,10 +36,28 @@ yarn-error.log*
 .env
 .env.development
 .env.test
-.env.production
+.env.production*
 
 # vercel
 .vercel
+.vercel.json
+
+# production builds
+/build
+/dist
+/out
+
+# logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+
+# deployment
+deploy.zip
 
 # typescript
 *.tsbuildinfo

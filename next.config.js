@@ -3,14 +3,42 @@ const nextConfig = {
   transpilePackages: ['three'],
   images: {
     domains: ['images.unsplash.com'],
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60,
   },
-  // Increase chunk loading timeout to 60 seconds
-  // experimental: {
-  //   pageLoadTimeout: 60, // 60 seconds
-  // },
+  // Security headers
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+    ];
+  },
   // Performance optimizations
   poweredByHeader: false,
-  reactStrictMode: false, // Disable strict mode to prevent double-renders and potential issues
+  reactStrictMode: true, // Enable strict mode for production
+  swcMinify: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
   webpack: (config, { isServer, dev }) => {
     config.resolve.alias = {
       ...config.resolve.alias,

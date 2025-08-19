@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "analyze": "cross-env ANALYZE=true next build",
+    "export": "next export",
+    "deploy": "./deploy.sh",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf .next out dist build"
   },
   "dependencies": {
     "@babel/runtime": "^7.24.0",
@@ -72,6 +78,7 @@
   "devDependencies": {
     "@netlify/plugin-nextjs": "^5.11.6",
     "@types/node": "22.15.15",
+    "cross-env": "^7.0.3",
     "tailwind-scrollbar": "^3.0.4",
     "typescript": "5.8.3"
   }
