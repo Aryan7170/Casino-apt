@@ -6,13 +6,14 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 /**
  * @title Mines Game Contract with Advanced Treasury Protection
  * @notice A provably fair Mines game with comprehensive risk management
  * @dev Implements multiple layers of protection: payout caps, daily limits, circuit breakers, and insurance pools
  */
-contract SecureMines is ReentrancyGuard, Ownable, Pausable {
+contract SecureMines is ReentrancyGuard, Ownable, Pausable, ERC2771Context {
     using Math for uint256;
 
     // ============ STATE VARIABLES ============
@@ -170,8 +171,9 @@ contract SecureMines is ReentrancyGuard, Ownable, Pausable {
     constructor(
         IERC20 _token,
         address _treasury,
-        address _initialOwner
-    ) Ownable(_initialOwner) {
+        address _initialOwner,
+        address _trustedForwarder
+    ) Ownable(_initialOwner) ERC2771Context(_trustedForwarder) {
         require(address(_token) != address(0), "Invalid token address");
         require(_treasury != address(0), "Invalid treasury address");
         
@@ -703,6 +705,15 @@ contract SecureMines is ReentrancyGuard, Ownable, Pausable {
     }
 
     // ============ VIEW FUNCTIONS ============
+
+    // Override _msgSender to support meta-transactions
+    function _msgSender() internal view override(Context, ERC2771Context) returns (address) {
+        return ERC2771Context._msgSender();
+    }
+
+    function _msgData() internal view override(Context, ERC2771Context) returns (bytes calldata) {
+        return ERC2771Context._msgData();
+    }
 
     function getRiskMetrics() external view returns (RiskMetrics memory) {
         uint256 treasuryBalance = token.balanceOf(treasury);
