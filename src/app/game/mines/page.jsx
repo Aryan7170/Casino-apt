@@ -58,7 +58,7 @@ export default function Mines() {
     executeContract
   } = useDelegationToolkit();
 
-  // Initialize off-chain session
+  // Initialize off-chain session (doesn't require wallet address for off-chain gaming)
   const {
     offChainBalance,
     gameSession,
@@ -68,20 +68,23 @@ export default function Mines() {
     playMinesOffChain,
     isSessionActive,
     initializeSession
-  } = useOffChainCasinoGames(address);
+  } = useOffChainCasinoGames();
 
   // Initialize session when component mounts
   useEffect(() => {
     const initSession = async () => {
       try {
+        console.log('Initializing off-chain mines session...');
         await initializeSession();
-        console.log('Off-chain mines session initialized');
+        console.log('Off-chain mines session initialized successfully');
       } catch (error) {
         console.error('Failed to initialize off-chain mines session:', error);
       }
     };
 
-    initSession();
+    // Add a small delay to ensure the hook is ready
+    const timer = setTimeout(initSession, 100);
+    return () => clearTimeout(timer);
   }, [initializeSession]);
 
   // Game State
@@ -264,6 +267,32 @@ export default function Mines() {
           <p className="text-white/70 mb-6 font-sans">
             Setting up your off-chain mining session...
           </p>
+          <div className="text-xs text-white/50 mt-4">
+            Session Active: {isSessionActive ? 'Yes' : 'No'}<br/>
+            Loading: {offChainLoading ? 'Yes' : 'No'}<br/>
+            {offChainError && <span className="text-red-400">Error: {offChainError}</span>}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if session fails to initialize
+  if (offChainError) {
+    return (
+      <div className="min-h-screen bg-[#070005] bg-gradient-to-b from-[#070005] to-[#0e0512] flex flex-col items-center justify-center text-white">
+        <div className="bg-gradient-to-br from-red-900/40 to-red-700/10 rounded-xl p-8 max-w-md text-center border-2 border-red-700/30 shadow-xl shadow-red-900/20">
+          <GiMineExplosion className="text-5xl text-red-400 mx-auto mb-4" />
+          <h3 className="text-2xl font-bold mb-2 font-display">Session Error</h3>
+          <p className="text-white/70 mb-6 font-sans">
+            Failed to initialize game session: {offChainError}
+          </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );

@@ -885,8 +885,25 @@ export default function GameRoulette() {
     error: offChainError,
     gameHistory: offChainHistory,
     playRouletteOffChain,
-    isSessionActive
-  } = useOffChainCasinoGames(dtAddress);
+    isSessionActive,
+    initializeSession
+  } = useOffChainCasinoGames();
+
+  // Initialize off-chain session
+  useEffect(() => {
+    const initSession = async () => {
+      try {
+        console.log('Initializing off-chain roulette session...');
+        await initializeSession();
+        console.log('Off-chain roulette session initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize off-chain roulette session:', error);
+      }
+    };
+
+    const timer = setTimeout(initSession, 100);
+    return () => clearTimeout(timer);
+  }, [initializeSession]);
 
   // State to store last successful bet for "Go Again" functionality
   const [lastSuccessfulBet, setLastSuccessfulBet] = useState(null);
@@ -1723,36 +1740,29 @@ export default function GameRoulette() {
     if (e) e.preventDefault();
     playSound(winSoundRef);
 
-    if (!dtAddress) {
-      console.error("Wallet not connected.");
-      alert("Please connect your wallet.");
-      return;
-    }
-
     try {
-      const amount = parseEther(winnings.toString()); // Use winnings as the amount to withdraw
-
-      reset(e); // Reset the state after withdrawing
-
-      // Use wagmi writeContractAsync instead of ViemClient
-      const withdrawResponse = await writeContractAsync({
-        address: rouletteContractAddress,
-        abi: rouletteABI,
-        functionName: "withdrawTokens",
-        args: [amount.toString()], // Convert BigInt to string
+      // For off-chain games, winnings are already credited to the balance
+      // Just reset the game state and show confirmation
+      const collectedAmount = winnings;
+      
+      reset(e); // Reset the state after collecting
+      
+      console.log("Off-chain winnings collected:", collectedAmount);
+      setNotification({ 
+        open: true, 
+        message: `Collected ${collectedAmount} APTC! New balance: ${offChainBalance}`, 
+        severity: 'success' 
       });
-
-      if (withdrawResponse) {
-        console.log("Winnings withdrawn successfully:", withdrawResponse);
-        alert("Winnings withdrawn successfully!");
-      } else {
-        throw new Error("Withdrawal transaction failed.");
-      }
+      
     } catch (error) {
-      console.error("Error withdrawing winnings:", error);
-      alert(`Failed to withdraw winnings: ${error.message}`);
+      console.error("Error collecting winnings:", error);
+      setNotification({ 
+        open: true, 
+        message: `Failed to collect winnings: ${error.message}`, 
+        severity: 'error' 
+      });
     }
-  }, [playSound, winnings, reset, writeContractAsync]);
+  }, [playSound, winnings, reset, offChainBalance]);
 
   // Go Again function for off-chain betting
   const goAgain = useCallback(async () => {
