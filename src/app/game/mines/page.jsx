@@ -67,7 +67,8 @@ export default function Mines() {
     gameHistory: offChainHistory,
     playMinesOffChain,
     isSessionActive,
-    initializeSession
+    initializeSession,
+    setError: setOffChainError
   } = useOffChainCasinoGames();
 
   // Session auto-initializes via the hook - no manual initialization needed
@@ -272,12 +273,23 @@ export default function Mines() {
           <p className="text-white/70 mb-6 font-sans">
             Failed to initialize game session: {offChainError}
           </p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
-          >
-            Retry
-          </button>
+          <div className="flex gap-2 justify-center">
+            <button 
+              onClick={() => {
+                setOffChainError(null);
+                initializeSession();
+              }} 
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
+            >
+              Retry Session
+            </button>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+            >
+              Reload Page
+            </button>
+          </div>
         </div>
       </div>
     );

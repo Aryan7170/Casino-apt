@@ -15,6 +15,9 @@ export function useOffChainCasino(userAddress = null) {
   const [gameHistory, setGameHistory] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [lastResult, setLastResult] = useState(null);
+  const [initAttempted, setInitAttempted] = useState(false); // Track if initialization was attempted
+
+  console.log('🎯 Hook state:', { gameSession: !!gameSession, isLoading, error, offChainBalance, initAttempted });
 
   // Game server URL - make it reactive to ensure proper dependency tracking
   const gameServerUrl = process.env.NEXT_PUBLIC_GAME_SERVER_URL || 
@@ -23,8 +26,8 @@ export function useOffChainCasino(userAddress = null) {
   /**
    * Initialize off-chain game session
    */
-  const initializeSession = useCallback(async () => {
-    console.log("🎲 Starting session initialization...");
+  const initializeSession = useCallback(async (retryCount = 0) => {
+    console.log(`🎲 Starting session initialization (attempt ${retryCount + 1})...`);
     setIsLoading(true);
     setError(null);
 
@@ -63,7 +66,18 @@ export function useOffChainCasino(userAddress = null) {
       
       console.log("✅ Off-chain session initialized successfully:", result);
     } catch (err) {
-      console.error("❌ Failed to initialize off-chain session:", err);
+      console.error(`❌ Failed to initialize off-chain session (attempt ${retryCount + 1}):`, err);
+      
+      // Retry up to 3 times with exponential backoff
+      if (retryCount < 2) {
+        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+        console.log(`🔄 Retrying in ${delay}ms...`);
+        setTimeout(() => {
+          initializeSession(retryCount + 1);
+        }, delay);
+        return;
+      }
+      
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -280,18 +294,21 @@ export function useOffChainCasino(userAddress = null) {
   // Initialize session automatically when hook loads
   useEffect(() => {
     const autoInit = async () => {
-      if (!gameSession && !isLoading) {
-        console.log('Auto-initializing off-chain session...');
+      if (!gameSession && !isLoading && !error && !initAttempted) {
+        console.log('🚀 Auto-initializing off-chain session...');
+        setInitAttempted(true);
         try {
           await initializeSession();
+          console.log('✅ Auto-initialization completed successfully');
         } catch (error) {
-          console.error('Auto-initialization failed:', error);
+          console.error('❌ Auto-initialization failed:', error);
         }
       }
     };
     
+    // Only run auto-init once when the hook mounts
     autoInit();
-  }, [gameSession, isLoading, initializeSession]);
+  }, []); // Empty dependency array to run only once
 
   // Load game history when session is initialized
   useEffect(() => {
@@ -320,6 +337,7 @@ export function useOffChainCasino(userAddress = null) {
     withdrawFromOffChain,
     initializeSession,
     getGameHistory,
+    setError, // Export setError for manual error clearing
 
     // Utilities
     isSessionActive: !!gameSession,

@@ -2459,10 +2459,14 @@ export default function GameRoulette() {
                 </Typography>
                 <Typography variant="body1" color="lightgreen" sx={{ mt: 1 }}>
                   Off-Chain Balance:{' '}
-                  {gameSession ? (
+                  {offChainLoading ? (
+                    <CircularProgress size={16} />
+                  ) : offChainError ? (
+                    <span style={{ color: 'red' }}>Error loading balance</span>
+                  ) : gameSession ? (
                     `${currency(offChainBalance, { pattern: "#", precision: 4 }).format()} APTC`
                   ) : (
-                    <CircularProgress size={16} />
+                    <span style={{ color: 'orange' }}>Initializing session...</span>
                   )}
                 </Typography>
               </Box>
