@@ -30,9 +30,9 @@ NEXT_PUBLIC_WHEEL_CONTRACT_ADDRESS=0x594b03d2f01b7Ad08788cCB208D8c5aCfe7cE5eF
 NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=acd2a9118b0931623f1fe73b621f5c85
 NEXT_PUBLIC_SERVER_SIGNER_ADDRESS=0x0B5ccb67b8536F352150745191fC53dd17994F78
 
-# NEW: Gasless Configuration
-NEXT_PUBLIC_RELAYER_URL=https://your-vercel-app.vercel.app/api/relay
-NEXT_PUBLIC_GAME_SERVER_URL=https://your-vercel-app.vercel.app/api/game-server
+# NEW: Gasless Configuration (UPDATE WITH YOUR ACTUAL VERCEL URL)
+NEXT_PUBLIC_RELAYER_URL=https://casino-mjr4jx8js-aryan-duhoons-projects.vercel.app/api/relay
+NEXT_PUBLIC_GAME_SERVER_URL=https://casino-mjr4jx8js-aryan-duhoons-projects.vercel.app/api/game-server
 ```
 
 ### Backend Configuration (Server-only)

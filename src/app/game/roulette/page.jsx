@@ -39,6 +39,7 @@ import { TreasuryManager } from '../../../components/TreasuryManager';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useDelegationToolkit } from '@/hooks/useDelegationToolkit';
 import useWalletStatus from '@/hooks/useWalletStatus';
+import { useEnhancedRoulette } from '@/hooks/useEnhancedRoulette';
 
 const TooltipWide = styled(({ className, ...props }) => (
   <Tooltip {...props} classes={{ popper: className }} />
@@ -879,6 +880,16 @@ export default function GameRoulette() {
   const { writeContractAsync, data: wagmiWriteResult, error: wagmiWriteError, isPending: wagmiIsPending } = useWriteContract();
   const { data: wagmiTransactionReceipt } = useWaitForTransactionReceipt({ hash: wagmiWriteResult?.hash });
 
+  // Initialize Enhanced Roulette with gasless functionality
+  const {
+    placeMultipleBets: placeMultipleBetsGasless,
+    isGaslessAvailable,
+    gasAllowanceRemaining,
+    isWhitelisted,
+    isLoading: gaslessLoading,
+    error: gaslessError
+  } = useEnhancedRoulette(rouletteContractAddress, rouletteABI, dtAddress);
+
   // Add debug logging for wallet state
   useEffect(() => {
     console.log('Wallet Status:', {
@@ -1667,40 +1678,35 @@ export default function GameRoulette() {
         throw new Error('writeContractAsync is not available. Please check wallet connection.');
       }
       
-      // Place multiple bets using placeMultipleBets function
-      console.log('Calling writeContractAsync...');
+      // Place multiple bets using Enhanced Roulette (gasless when available)
+      console.log('Using Enhanced Roulette with gasless support...');
+      console.log('Gasless available:', isGaslessAvailable);
       
       // Log the exact parameters being sent
-      const contractConfig = {
-        address: rouletteContractAddress,
-        abi: rouletteABI,
-        functionName: 'placeMultipleBets',
-        args: [betTypes, betValues, amountsAsStrings, betNumbers],
-      };
+      console.log('Bet parameters:', {
+        betTypes,
+        betValues, 
+        amounts: amountsAsStrings,
+        betNumbers
+      });
       
-      console.log('Contract config:', JSON.stringify(contractConfig, (key, value) =>
-        typeof value === 'bigint' ? value.toString() : value, 2)
-      );
-      console.log('Contract address:', rouletteContractAddress);
-      console.log('ABI function exists:', rouletteABI.find(f => f.name === 'placeMultipleBets'));
+      const result = await placeMultipleBetsGasless(betTypes, betValues, amountsAsStrings, betNumbers);
       
-      const hash = await writeContractAsync(contractConfig);
+      console.log('Bet transaction result:', result);
+      console.log('Transaction hash:', result.hash);
+      console.log('Used gasless:', result.gasless);
       
-      console.log('Bet transaction hash:', hash);
-      console.log('Bet transaction submitted successfully');
-      
-      // Wait for transaction confirmation and check for failures
+      // Wait for transaction confirmation
       console.log('Waiting for transaction confirmation...');
       try {
-        // Use ViemClient directly to wait for transaction
-        const receipt = await dynamicPublicClient.waitForTransactionReceipt({ hash });
+        const receipt = await result.wait();
         console.log('Transaction receipt:', receipt);
         
-        if (receipt.status === 'success') {
+        if (receipt.status === 1 || receipt.status === 'success') {
           console.log('Transaction confirmed successfully');
           // Clear pending bets after successful placement
           setPendingBets([]);
-          console.log("Bets placed successfully:", hash);
+          console.log("Bets placed successfully:", result.hash);
           setWheelSpinning(true);
           playSound(spinSoundRef);
         } else {

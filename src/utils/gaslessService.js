@@ -20,7 +20,7 @@ export class GaslessService {
     this.paymasterAddress = paymasterAddress;
     this.paymasterAbi = paymasterAbi;
     this.relayerUrl =
-      process.env.NEXT_PUBLIC_RELAYER_URL || "http://localhost:3001";
+      process.env.NEXT_PUBLIC_RELAYER_URL || "https://casino-mjr4jx8js-aryan-duhoons-projects.vercel.app/api/relay";
   }
 
   /**
