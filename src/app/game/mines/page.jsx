@@ -1,4 +1,5 @@
 "use client";
+// Enhanced mines game with off-chain session management
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";

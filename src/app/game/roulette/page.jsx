@@ -1731,8 +1731,12 @@ export default function GameRoulette() {
       // Just show confirmation and reset winnings to show "Go Again" button
       const collectedAmount = winnings;
       
+      console.log("🎯 Before collecting - winnings:", winnings, "lastSuccessfulBet:", lastSuccessfulBet);
+      
       // Reset winnings to 0 so "Go Again" button appears, but don't reset everything else
       setWinnings(0);
+      
+      console.log("✅ After setWinnings(0) - should trigger Go Again button");
       
       console.log("Off-chain winnings collected:", collectedAmount);
       setNotification({ 
@@ -1740,6 +1744,11 @@ export default function GameRoulette() {
         message: `Collected ${collectedAmount} APTC! New balance: ${offChainBalance}`, 
         severity: 'success' 
       });
+      
+      // Force a small delay to ensure state update is processed
+      setTimeout(() => {
+        console.log("🔄 State after delay - winnings should be 0:", winnings);
+      }, 100);
       
     } catch (error) {
       console.error("Error collecting winnings:", error);
@@ -2526,7 +2535,9 @@ export default function GameRoulette() {
               <Box sx={{ mt: 3 }}>
               {rollResult >= 0 ? (
                 <Box>
-                  {winnings > 0 ? (
+                  {(() => {
+                    console.log("🎲 Button render - winnings:", winnings, "lastSuccessfulBet:", !!lastSuccessfulBet);
+                    return winnings > 0 ? (
                       <Button 
                         onClick={handleWithdrawWinnings}
                         sx={{
@@ -2542,7 +2553,8 @@ export default function GameRoulette() {
                       </Button>
                     ) : (
                       <Button onClick={goAgain}>Go Again</Button>
-                    )}
+                    );
+                  })()}
                     <Box sx={{ mt: 1, textAlign: 'center' }}>
                       <Typography variant="h5">
                         Result: <span style={{ 

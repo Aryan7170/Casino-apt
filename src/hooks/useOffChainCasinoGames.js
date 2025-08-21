@@ -38,21 +38,53 @@ export function useOffChainCasino(userAddress = null) {
       console.log("🎯 Game server URL:", gameServerUrl);
       console.log("👤 Session address:", sessionAddress);
       
+      // Create request payload
+      const requestPayload = {
+        action: "initialize",
+        userAddress: sessionAddress,
+      };
+      
+      console.log("📤 Request payload:", requestPayload);
+      
+      // Use a more robust fetch with better error handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
       const response = await fetch(gameServerUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "initialize",
-          userAddress: sessionAddress,
-        }),
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify(requestPayload),
+        signal: controller.signal,
+        mode: 'cors', // Explicitly set CORS mode
+        credentials: 'omit' // Don't send credentials
       });
 
+      clearTimeout(timeoutId);
+      
       console.log("📡 Response status:", response.status);
+      console.log("📡 Response headers:", Object.fromEntries(response.headers.entries()));
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const result = await response.json();
       console.log("📥 Response data:", result);
 
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to initialize session");
+      if (!result || typeof result !== 'object') {
+        throw new Error("Invalid response format from server");
+      }
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      // Validate required fields
+      if (!result.serverSeedHash || !result.clientSeed || result.balance === undefined) {
+        throw new Error("Missing required fields in server response");
       }
 
       setGameSession({
@@ -68,17 +100,26 @@ export function useOffChainCasino(userAddress = null) {
     } catch (err) {
       console.error(`❌ Failed to initialize off-chain session (attempt ${retryCount + 1}):`, err);
       
+      // Enhanced error information
+      if (err.name === 'AbortError') {
+        console.error("🕐 Request timed out after 30 seconds");
+        setError("Request timed out. Please check your internet connection.");
+      } else if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        console.error("🌐 Network error - possibly CORS or connection issue");
+        setError("Network error. Please check your internet connection.");
+      } else {
+        setError(err.message || "Unknown error occurred");
+      }
+      
       // Retry up to 3 times with exponential backoff
       if (retryCount < 2) {
-        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+        const delay = Math.pow(2, retryCount) * 2000; // 2s, 4s, 8s
         console.log(`🔄 Retrying in ${delay}ms...`);
         setTimeout(() => {
           initializeSession(retryCount + 1);
         }, delay);
         return;
       }
-      
-      setError(err.message);
     } finally {
       setIsLoading(false);
     }

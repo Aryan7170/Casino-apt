@@ -69,19 +69,7 @@ export default function Home() {
     console.log('wheel contract details', wheelContractAddress, tokenContractAddress, wheelABI, tokenABI);
   }, [wheelContractAddress, tokenContractAddress, wheelABI, tokenABI]);
 
-  // Initialize off-chain session
-  useEffect(() => {
-    const initSession = async () => {
-      try {
-        await initializeSession();
-        console.log('Off-chain wheel session initialized');
-      } catch (error) {
-        console.error('Failed to initialize off-chain wheel session:', error);
-      }
-    };
-
-    initSession();
-  }, [initializeSession]);
+  // Session auto-initializes via the hook - no manual initialization needed
 
   const [balance, setBalance] = useState(1000);
   const [betAmount, setBetAmount] = useState(10);
