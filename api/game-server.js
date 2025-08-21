@@ -28,6 +28,10 @@ export default async function handler(req, res) {
         return handleInitialize(req, res);
       case "playRoulette":
         return handlePlayRoulette(req, res);
+      case "playMines":
+        return handlePlayMines(req, res);
+      case "playWheel":
+        return handlePlayWheel(req, res);
       case "getHistory":
         return handleGetHistory(req, res);
       default:
@@ -163,4 +167,146 @@ function generateProvablyFairRandom(clientSeed, serverSeed, nonce) {
   const combined = `${clientSeed}:${serverSeed}:${nonce}`;
   const hash = crypto.createHash("sha256").update(combined).digest("hex");
   return parseInt(hash.substring(0, 8), 16) / 0xffffffff;
+}
+
+function handlePlayMines(req, res) {
+  const { userAddress, betAmount, minesCount, revealedTiles } = req.body;
+  const session = sessions.get(userAddress);
+
+  if (!session) {
+    return res.status(400).json({ error: "No active session" });
+  }
+
+  if (betAmount > session.balance) {
+    return res.status(400).json({ error: "Insufficient balance" });
+  }
+
+  // Generate mine positions
+  const random = generateProvablyFairRandom(
+    session.clientSeed,
+    session.serverSeed,
+    session.nonce
+  );
+  
+  // Generate mine positions based on random seed
+  const minePositions = [];
+  let tempRandom = random;
+  for (let i = 0; i < minesCount; i++) {
+    let position;
+    do {
+      tempRandom = (tempRandom * 1103515245 + 12345) % (2 ** 31);
+      position = Math.floor((tempRandom / (2 ** 31)) * 25);
+    } while (minePositions.includes(position));
+    minePositions.push(position);
+  }
+
+  // Check if revealed tiles hit mines
+  const hitMine = revealedTiles.some(tile => minePositions.includes(tile));
+  
+  // Calculate winnings
+  let winnings = 0;
+  if (!hitMine && revealedTiles.length > 0) {
+    // Mines payout calculation: more revealed tiles = higher multiplier
+    const safeSpots = 25 - minesCount;
+    const multiplier = Math.pow(safeSpots / (safeSpots - revealedTiles.length), 1.1);
+    winnings = betAmount * multiplier;
+  }
+
+  // Update session
+  session.balance = session.balance - betAmount + winnings;
+  session.nonce += 1;
+
+  const gameResult = {
+    game: "mines",
+    betAmount,
+    winnings,
+    newBalance: session.balance,
+    hitMine,
+    minePositions,
+    revealedTiles,
+    nonce: session.nonce - 1,
+    serverSeed: session.serverSeed,
+    timestamp: Date.now()
+  };
+
+  // Store in history
+  if (!gameHistory.has(userAddress)) {
+    gameHistory.set(userAddress, []);
+  }
+  gameHistory.get(userAddress).push(gameResult);
+
+  return res.json({ gameResult });
+}
+
+function handlePlayWheel(req, res) {
+  const { userAddress, betAmount, selectedColor } = req.body;
+  const session = sessions.get(userAddress);
+
+  if (!session) {
+    return res.status(400).json({ error: "No active session" });
+  }
+
+  if (betAmount > session.balance) {
+    return res.status(400).json({ error: "Insufficient balance" });
+  }
+
+  // Generate wheel result
+  const random = generateProvablyFairRandom(
+    session.clientSeed,
+    session.serverSeed,
+    session.nonce
+  );
+
+  // Wheel segments: Red (1x), Blue (2x), Green (5x), Gold (10x)
+  const segments = [
+    { color: "red", multiplier: 1, weight: 15 },
+    { color: "blue", multiplier: 2, weight: 10 },
+    { color: "green", multiplier: 5, weight: 4 },
+    { color: "gold", multiplier: 10, weight: 1 }
+  ];
+
+  // Calculate result based on weighted random
+  let totalWeight = segments.reduce((sum, seg) => sum + seg.weight, 0);
+  let randomWeight = random * totalWeight;
+  let result = segments[0];
+
+  for (const segment of segments) {
+    if (randomWeight <= segment.weight) {
+      result = segment;
+      break;
+    }
+    randomWeight -= segment.weight;
+  }
+
+  // Calculate winnings
+  let winnings = 0;
+  if (selectedColor === result.color) {
+    winnings = betAmount * result.multiplier;
+  }
+
+  // Update session
+  session.balance = session.balance - betAmount + winnings;
+  session.nonce += 1;
+
+  const gameResult = {
+    game: "wheel",
+    betAmount,
+    winnings,
+    newBalance: session.balance,
+    selectedColor,
+    resultColor: result.color,
+    multiplier: result.multiplier,
+    won: selectedColor === result.color,
+    nonce: session.nonce - 1,
+    serverSeed: session.serverSeed,
+    timestamp: Date.now()
+  };
+
+  // Store in history
+  if (!gameHistory.has(userAddress)) {
+    gameHistory.set(userAddress, []);
+  }
+  gameHistory.get(userAddress).push(gameResult);
+
+  return res.json({ gameResult });
 }

@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import { useDelegationToolkit } from '@/hooks/useDelegationToolkit';
+import { useOffChainCasinoGames } from '@/hooks/useOffChainCasinoGames';
 
 // Components
 import Button from "@/components/Button";
@@ -44,14 +45,29 @@ export default function Mines() {
   // Theme
   const { theme } = useTheme();
 
-  // Wallet connection
+    // Wallet connection
   const {
     isConnected,
     address,
-    loading: walletLoading,
+    correctNetwork,
+    handleConnection,
+    isLoading: walletLoading,
     error: walletError,
-    connectWallet
+    balance,
+    connectWallet,
+    executeContract
   } = useDelegationToolkit();
+
+  // Initialize off-chain casino functionality
+  const {
+    offChainBalance,
+    gameSession,
+    isLoading: offChainLoading,
+    error: offChainError,
+    gameHistory: offChainHistory,
+    playMinesOffChain,
+    isSessionActive
+  } = useOffChainCasinoGames(address);
 
   // Game State
   const [betSettings, setBetSettings] = useState({});

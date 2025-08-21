@@ -25,6 +25,7 @@ import GameDetail from "../../../components/GameDetail";
 import { gameData, bettingTableData } from "./config/gameDetail";
 import { motion } from "framer-motion";
 import { useToken } from "@/hooks/useToken";
+import { useOffChainCasinoGames } from "@/hooks/useOffChainCasinoGames";
 import BettingHistory from '@/components/BettingHistory';
 import { FaVolumeMute, FaVolumeUp, FaChartLine, FaCoins, FaTrophy, FaDice, FaBalanceScale, FaRandom, FaPercentage, FaPlayCircle } from "react-icons/fa";
 import { GiCardRandom, GiDiceTarget, GiRollingDices, GiPokerHand } from "react-icons/gi";
@@ -876,6 +877,17 @@ export default function GameRoulette() {
   // Get wallet status and balance
   const { balance } = useToken(dtAddress);
 
+  // Initialize off-chain casino functionality
+  const {
+    offChainBalance,
+    gameSession,
+    isLoading: offChainLoading,
+    error: offChainError,
+    gameHistory: offChainHistory,
+    playRouletteOffChain,
+    isSessionActive
+  } = useOffChainCasinoGames(dtAddress);
+
   // Add wagmi hooks for contract interactions
   const { writeContractAsync, data: wagmiWriteResult, error: wagmiWriteError, isPending: wagmiIsPending } = useWriteContract();
   const { data: wagmiTransactionReceipt } = useWaitForTransactionReceipt({ hash: wagmiWriteResult?.hash });
@@ -883,6 +895,7 @@ export default function GameRoulette() {
   // Initialize Enhanced Roulette with gasless functionality
   const {
     placeMultipleBets: placeMultipleBetsGasless,
+    approveTokens: approveTokensGasless,
     isGaslessAvailable,
     gasAllowanceRemaining,
     isWhitelisted,
@@ -1457,6 +1470,23 @@ export default function GameRoulette() {
     playSound(chipSelectRef);
   }, [playSound, chipSelectRef]);
 
+  // Helper function to convert bet type numbers to names
+  const getBetTypeName = (betType) => {
+    const betTypeMap = {
+      0: 'number',
+      1: 'red',
+      2: 'black', 
+      3: 'odd',
+      4: 'even',
+      5: 'high',
+      6: 'low',
+      7: 'dozen',
+      8: 'column',
+      9: 'split'
+    };
+    return betTypeMap[betType] || 'number';
+  };
+
   // Function to close the notification
   const handleCloseNotification = () => {
     setShowNotification(false);
@@ -1511,17 +1541,25 @@ export default function GameRoulette() {
       const MAX_UINT256 = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
       if (currentAllowance < MAX_UINT256) {
         setNotification({ open: true, message: 'Requesting unlimited approval for 24 hours...', severity: 'info' });
-        const hash = await writeContractAsync({
-          address: tokenContractAddress,
-          abi: tokenABI,
-          functionName: 'approve',
-          args: [rouletteContractAddress, MAX_UINT256],
-        });
-        await dynamicPublicClient.waitForTransactionReceipt({ hash });
-        setNotification({ open: true, message: 'Unlimited approval granted for 24 hours!', severity: 'success' });
-        // Store approval timestamp with chain ID
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(approvalKey, JSON.stringify({ timestamp: now, chainId }));
+        
+        try {
+          // Use the enhanced gasless approval function
+          console.log('Using enhanced gasless approval');
+          const approvalResult = await approveTokensGasless(tokenContractAddress, tokenABI, MAX_UINT256);
+          
+          if (approvalResult.gasless) {
+            setNotification({ open: true, message: 'Unlimited approval granted for 24 hours (gasless)!', severity: 'success' });
+          } else {
+            setNotification({ open: true, message: 'Unlimited approval granted for 24 hours!', severity: 'success' });
+          }
+          
+          // Store approval timestamp with chain ID
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(approvalKey, JSON.stringify({ timestamp: now, chainId }));
+          }
+        } catch (approvalError) {
+          console.error('Enhanced approval failed:', approvalError);
+          throw approvalError;
         }
       } else {
         setNotification({ open: true, message: 'Allowance confirmed.', severity: 'info' });
@@ -1605,27 +1643,60 @@ export default function GameRoulette() {
         }
       }
       
-      // Check token balance before proceeding
-      console.log('Checking token balance...');
+      // Use off-chain balance instead of on-chain
+      console.log('Checking off-chain balance...');
       console.log('Total bet amount:', total);
-      console.log('User address:', dtAddress);
+      console.log('Off-chain balance:', offChainBalance);
       
-      // Note: We'll rely on the contract to handle insufficient balance errors
-      // The contract will revert if the user doesn't have enough tokens
-      
-      // First, prepare the bet amounts in the correct format (wei)
-      const amountsInWei = pendingBets.map(bet => parseEther(bet.amount.toString()));
-      const totalAmountInWei = amountsInWei.reduce((acc, curr) => acc + curr, BigInt(0));
-
-      // Now, approve the total amount
-      console.log('Approving tokens for total amount:', totalAmountInWei.toString());
-      const approvalSuccessful = await approveTokens(totalAmountInWei);
-      if (!approvalSuccessful) {
-        console.error('Token approval failed. Aborting bet placement.');
-        setNotification({ open: true, message: 'Token approval failed. Please try again.', severity: 'error' });
+      if (total > offChainBalance) {
+        setNotification({ open: true, message: 'Insufficient off-chain balance. Please deposit more tokens.', severity: 'error' });
         return;
       }
-      console.log('Token approval successful');
+
+      if (!isSessionActive) {
+        setNotification({ open: true, message: 'Game session not active. Please wait for initialization.', severity: 'error' });
+        return;
+      }
+
+      // Prepare bets for off-chain processing
+      const offChainBets = pendingBets.map(bet => ({
+        type: getBetTypeName(bet.betType),
+        value: bet.betValue,
+        amount: parseFloat(bet.amount),
+        numbers: bet.numbers || []
+      }));
+
+      console.log('Placing off-chain bets:', offChainBets);
+
+      // Place bets off-chain
+      const gameResult = await playRouletteOffChain(offChainBets);
+      
+      console.log('Off-chain game result:', gameResult);
+      
+      // Update UI with results
+      setRollResult(gameResult.result);
+      setWinnings(gameResult.totalWinnings);
+      
+      // Clear pending bets after successful placement
+      setPendingBets([]);
+      console.log("Off-chain bets placed successfully");
+      setWheelSpinning(true);
+      playSound(spinSoundRef);
+
+      // Show notification
+      if (gameResult.totalWinnings > 0) {
+        setNotification({ 
+          open: true, 
+          message: `You won ${gameResult.totalWinnings} tokens! New balance: ${gameResult.newBalance}`, 
+          severity: 'success' 
+        });
+      } else {
+        setNotification({ 
+          open: true, 
+          message: `Better luck next time! New balance: ${gameResult.newBalance}`, 
+          severity: 'info' 
+        });
+      }
       
       // Prepare the rest of the bet parameters
       const betTypes = pendingBets.map(bet => bet.betType);
@@ -2451,14 +2522,22 @@ export default function GameRoulette() {
               />
               <Box sx={{ mt: 2, mb: 1 }}>
                 <Typography variant="body1" color="white">
-                  Total Balance:{' '}
+                  On-Chain Balance:{' '}
                   {balance ? (
                     `${currency(parseFloat(balance), { pattern: "#", precision: 4 }).format()} APTC`
                   ) : (
                     <CircularProgress size={16} />
                   )}
-              </Typography>
-            </Box>
+                </Typography>
+                <Typography variant="body1" color="lightgreen" sx={{ mt: 1 }}>
+                  Off-Chain Balance:{' '}
+                  {gameSession ? (
+                    `${currency(offChainBalance, { pattern: "#", precision: 4 }).format()} APTC`
+                  ) : (
+                    <CircularProgress size={16} />
+                  )}
+                </Typography>
+              </Box>
               <Typography color="white" sx={{ opacity: 0.8 }}>
                 Current Bet Total: {currency(total, { pattern: "#" }).format()} APTC
               </Typography>

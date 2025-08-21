@@ -33,6 +33,8 @@ import { readContract } from 'wagmi/actions';
 import { useContractDetails } from "./config/contractDetails";
 import { useChainId } from 'wagmi';
 import { config } from '@/app/providers';
+import { useOffChainCasinoGames } from '../../../hooks/useOffChainCasinoGames';
+import { useToken } from '../../../hooks/useToken';
 
 // Import new components
 import WheelVideo from "./components/WheelVideo";
@@ -48,10 +50,38 @@ import { getCurrentSegmentValues } from './config/wheelUtils';
 export default function Home() {
   const { wheelContractAddress, tokenContractAddress, wheelABI, tokenABI, contractConfig } = useContractDetails();
 
+  // Off-chain casino game integration
+  const {
+    offChainBalance,
+    playWheelOffChain,
+    isPlaying,
+    lastResult,
+    gameHistory: offChainHistory,
+    initializeSession,
+    error: gameError
+  } = useOffChainCasinoGames();
+
+  // Original token balance for display
+  const { balance: onChainBalance } = useToken();
+
   // Log contract details only when they change
   useEffect(() => {
     console.log('wheel contract details', wheelContractAddress, tokenContractAddress, wheelABI, tokenABI);
   }, [wheelContractAddress, tokenContractAddress, wheelABI, tokenABI]);
+
+  // Initialize off-chain session
+  useEffect(() => {
+    const initSession = async () => {
+      try {
+        await initializeSession();
+        console.log('Off-chain wheel session initialized');
+      } catch (error) {
+        console.error('Failed to initialize off-chain wheel session:', error);
+      }
+    };
+
+    initSession();
+  }, [initializeSession]);
 
   const [balance, setBalance] = useState(1000);
   const [betAmount, setBetAmount] = useState(10);
@@ -316,111 +346,51 @@ export default function Home() {
 
 
   const manulBet = async () => {
-    if (!canBet) return;
-    setHasSpun(false);
+    if (isPlaying) return;
+    
     try {
-      const amount = BigInt(Math.floor(betAmount * 1e18));
-      const roundId = currentRound !== null ? currentRound : 0n;
-      await approveTokens(amount);
-      let tx;
-      try {
-        tx = await writeContractAsync({
-          address: wheelContractAddress,
-          abi: wheelABI,
-          functionName: 'placeBet',
-          args: [risk === 'low' ? 0 : risk === 'medium' ? 1 : 2, noOfSegments, amount], // Remove multiplier
-        });
-      } catch (err) {
-        setIsSpinning(false);
-        setResultPopup({ win: false, error: true, message: 'Transaction failed: ' + (err?.message || JSON.stringify(err)) });
-        return;
-      }
-      setCooldown(3);
       setIsSpinning(true);
-      setTimeout(async () => {
-        const result = await calculateResult(risk, noOfSegments);
-        console.log("result", result);
-        if (result) {
-          setContractResult(result);
-          // After wheel spin, send result to backend API instead of calling processResult directly
-          try {
-            console.log('About to call processResult API with:', {
-              roundId: roundId.toString(),
-              multiplier: result.multiplier
-            });
-            
-            const response = await fetch('/api/processResult', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                roundId: roundId.toString(),
-                multiplier: result.multiplier,
-              }),
-            });
-            
-            console.log('API Response status:', response.status);
-            const data = await response.json();
-            console.log('API Response data:', data);
-            
-            if (!data.success) {
-              console.error('API call failed:', data.error);
-              setIsSpinning(false);
-              setResultPopup({ win: false, error: true, message: 'Backend processResult failed: ' + (data.error || 'Unknown error') });
-              return;
-            }
-            console.log('API call successful! Transaction hash:', data.txHash);
-            
-            // Fetch and log the multiplier used by the contract
-            if (contract && contractReady) {
-              try {
-                const contractResult = await contract.methods.getResult(roundId).call();
-                if (contractResult && contractResult.multiplier !== undefined) {
-                  console.log('Multiplier used by contract:', contractResult.multiplier);
-                } else {
-                  console.log('No contract result or multiplier found for round', roundId);
-                }
-              } catch (err) {
-                console.error('Failed to fetch contract result:', err);
-              }
-            }
-          } catch (err) {
-            console.error('API call error:', err);
-            setIsSpinning(false);
-            setResultPopup({ win: false, error: true, message: 'Backend processResult failed: ' + (err?.message || JSON.stringify(err)) });
-            return;
-          }
-          setTimeout(() => {
-            setIsSpinning(false);
-            const gameResultData = {
-              multiplier: result.multiplier * 100,
-              segmentIndex: result.segmentIndex,
-              isWin: result.isWin,
-              payout: result.isWin ? (amount * BigInt(Math.floor(result.multiplier * 100))) / 100n : 0n,
-              betAmount: amount,
-              roundId: roundId.toString(),
-              risk: risk,
-              segments: noOfSegments,
-              color: result.color,
-            };
-            setGameResult(gameResultData);
-            setShowResultsPopup(true);
-          }, 3200);
-        } else {
+      setHasSpun(false);
+      
+      // Use off-chain wheel game
+      const result = await playWheelOffChain(betAmount, risk, noOfSegments);
+      
+      if (result) {
+        // Simulate wheel spinning animation
+        setTimeout(() => {
           setIsSpinning(false);
-          setResultPopup({ win: false, error: true, message: 'Failed to fetch contract result. Please try again later.' });
-        }
-        if (contract && contractReady) {
-          try {
-            const round = await contract.methods.currentRound().call();
-            setCurrentRound(BigInt(round));
-          } catch (error) {
-            console.error('Error refreshing current round:', error);
-          }
-        }
-      }, 10000);
+          const gameResultData = {
+            multiplier: result.multiplier * 100,
+            segmentIndex: result.segmentIndex,
+            isWin: result.isWin,
+            payout: result.payout,
+            betAmount: betAmount,
+            roundId: Date.now().toString(), // Use timestamp as round ID for off-chain
+            risk: risk,
+            segments: noOfSegments,
+            color: result.color || 'green',
+          };
+          setGameResult(gameResultData);
+          setShowResultsPopup(true);
+          
+          // Update local game history
+          setGameHistory(prev => [gameResultData, ...prev.slice(0, 9)]);
+        }, 3200);
+      } else {
+        setIsSpinning(false);
+        setResultPopup({ 
+          win: false, 
+          error: true, 
+          message: gameError || 'Failed to play wheel game. Please try again.' 
+        });
+      }
     } catch (err) {
       setIsSpinning(false);
-      setResultPopup({ win: false, error: true, message: 'Bet failed: ' + (err?.message || JSON.stringify(err)) });
+      setResultPopup({ 
+        win: false, 
+        error: true, 
+        message: 'Bet failed: ' + (err?.message || JSON.stringify(err)) 
+      });
     }
   };
 
@@ -670,6 +640,38 @@ export default function Home() {
                   </div>
                 </motion.div>
                 
+                {/* Balance Display */}
+                <motion.div
+                  className="bg-black/30 rounded-lg p-3 mb-4 border border-white/10"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.5 }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-white/70 font-sans">Balance</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span className="text-xs text-green-400">Off-Chain</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Image src={coin} alt="APTC" width={20} height={20} />
+                      <span className="text-lg font-bold text-white">{offChainBalance?.toFixed(2) || '0.00'}</span>
+                      <span className="text-sm text-white/50">APTC</span>
+                    </div>
+                    <span className="text-xs text-white/40">Gaming Balance</span>
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-white/10">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-white/50">On-Chain: {onChainBalance?.toFixed(2) || '0.00'} APTC</span>
+                      <button className="text-blue-400 hover:text-blue-300 transition-colors">
+                        Deposit
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+                
                 {/* Quick actions */}
                 <motion.div
                   className="flex flex-wrap justify-between gap-2"
@@ -766,7 +768,8 @@ export default function Home() {
           </div>
           <div className="w-full lg:w-1/3">
             <BettingPanel
-              balance={balance}
+              balance={offChainBalance}
+              onChainBalance={onChainBalance}
               gameMode={gameMode}
               setGameMode={setGameMode}
               betAmount={betAmount}
@@ -778,7 +781,7 @@ export default function Home() {
               manulBet={manulBet}
               isSpinning={isSpinning}
               // autoBet={autoBet}
-              canBet={canBet}
+              canBet={!isPlaying && offChainBalance >= betAmount}
             />
           </div>
         </div>
