@@ -58,7 +58,7 @@ export default function Mines() {
     executeContract
   } = useDelegationToolkit();
 
-  // Initialize off-chain casino functionality
+  // Initialize off-chain session
   const {
     offChainBalance,
     gameSession,
@@ -66,8 +66,23 @@ export default function Mines() {
     error: offChainError,
     gameHistory: offChainHistory,
     playMinesOffChain,
-    isSessionActive
+    isSessionActive,
+    initializeSession
   } = useOffChainCasinoGames(address);
+
+  // Initialize session when component mounts
+  useEffect(() => {
+    const initSession = async () => {
+      try {
+        await initializeSession();
+        console.log('Off-chain mines session initialized');
+      } catch (error) {
+        console.error('Failed to initialize off-chain mines session:', error);
+      }
+    };
+
+    initSession();
+  }, [initializeSession]);
 
   // Game State
   const [betSettings, setBetSettings] = useState({});
@@ -194,14 +209,11 @@ export default function Mines() {
     }
   };
 
-  // Check wallet connection
+  // Check wallet connection for off-chain games
   const checkWalletConnection = () => {
-    if (!isConnected) {
-      alert('Please connect your wallet first');
-      return false;
-    }
-    if (walletLoading) {
-      alert('Wallet is initializing, please wait');
+    // For off-chain games, just check if session is active
+    if (!isSessionActive) {
+      alert('Game session not initialized. Please wait for initialization.');
       return false;
     }
     return true;
@@ -242,26 +254,16 @@ export default function Mines() {
     element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  // Wallet connection guard
-  if (!isConnected || walletLoading) {
+  // Show loading while off-chain session initializes
+  if (offChainLoading) {
     return (
       <div className="min-h-screen bg-[#070005] bg-gradient-to-b from-[#070005] to-[#0e0512] flex flex-col items-center justify-center text-white">
         <div className="bg-gradient-to-br from-purple-900/40 to-purple-700/10 rounded-xl p-8 max-w-md text-center border-2 border-purple-700/30 shadow-xl shadow-purple-900/20">
-          <GiMineExplosion className="text-5xl text-purple-400 mx-auto mb-4" />
-          <h3 className="text-2xl font-bold mb-2 font-display">Wallet Required</h3>
+          <GiMineExplosion className="text-5xl text-purple-400 mx-auto mb-4 animate-pulse" />
+          <h3 className="text-2xl font-bold mb-2 font-display">Initializing Game</h3>
           <p className="text-white/70 mb-6 font-sans">
-            Connect your wallet to start playing Mines
+            Setting up your off-chain mining session...
           </p>
-          <ConnectWalletButton 
-            onClick={connectWallet}
-            loading={walletLoading}
-            className="mx-auto"
-          />
-          {walletError && (
-            <div className="mt-4 text-red-400 text-sm font-mono">
-              {walletError.message || 'Connection failed'}
-            </div>
-          )}
         </div>
       </div>
     );

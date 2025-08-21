@@ -888,6 +888,9 @@ export default function GameRoulette() {
     isSessionActive
   } = useOffChainCasinoGames(dtAddress);
 
+  // State to store last successful bet for "Go Again" functionality
+  const [lastSuccessfulBet, setLastSuccessfulBet] = useState(null);
+
   // Add wagmi hooks for contract interactions
   const { writeContractAsync, data: wagmiWriteResult, error: wagmiWriteError, isPending: wagmiIsPending } = useWriteContract();
   const { data: wagmiTransactionReceipt } = useWaitForTransactionReceipt({ hash: wagmiWriteResult?.hash });
@@ -1673,6 +1676,12 @@ export default function GameRoulette() {
       
       console.log('Off-chain game result:', gameResult);
       
+      // Store the successful bet for "Go Again" functionality
+      setLastSuccessfulBet({
+        pendingBets: [...pendingBets], // Store a copy of the pending bets
+        events: [...events] // Store a copy of the events
+      });
+      
       // Update UI with results
       setRollResult(gameResult.result);
       setWinnings(gameResult.totalWinnings);
@@ -1744,6 +1753,73 @@ export default function GameRoulette() {
       alert(`Failed to withdraw winnings: ${error.message}`);
     }
   }, [playSound, winnings, reset, writeContractAsync]);
+
+  // Go Again function for off-chain betting
+  const goAgain = useCallback(async () => {
+    if (!lastSuccessfulBet) {
+      console.log('No previous bet to replay');
+      return;
+    }
+
+    if (wheelSpinning) {
+      console.log('Wheel is still spinning, cannot place new bet');
+      return;
+    }
+
+    try {
+      console.log('Replaying last successful bet:', lastSuccessfulBet);
+      
+      // Reset the game state first
+      reset();
+      
+      // Wait a moment for the reset to complete
+      setTimeout(async () => {
+        // Restore the pending bets from the last successful bet
+        setPendingBets([...lastSuccessfulBet.pendingBets]);
+        
+        // Restore the events (for UI display)
+        dispatchEvents({ type: "update", payload: [...lastSuccessfulBet.events] });
+        
+        // Restore the bet amounts on the board for visual feedback
+        lastSuccessfulBet.events.forEach(event => {
+          switch(event.type) {
+            case 'red':
+              setRed(event.newVal);
+              break;
+            case 'black':
+              setBlack(event.newVal);
+              break;
+            case 'odd':
+              setOdd(event.newVal);
+              break;
+            case 'even':
+              setEven(event.newVal);
+              break;
+            case 'over':
+              setOver(event.newVal);
+              break;
+            case 'under':
+              setUnder(event.newVal);
+              break;
+            // Add other bet types as needed
+          }
+        });
+        
+        // Automatically place the bet after a short delay
+        setTimeout(() => {
+          lockBet();
+        }, 500);
+      }, 100);
+      
+    } catch (error) {
+      console.error('Error in Go Again:', error);
+      setNotification({ 
+        open: true, 
+        message: `Failed to replay bet: ${error.message}`, 
+        severity: 'error' 
+      });
+    }
+  }, [lastSuccessfulBet, wheelSpinning, reset, lockBet]);
 
   const writeContract = async (config) => {
     if (isDev) {
@@ -2464,7 +2540,7 @@ export default function GameRoulette() {
                         Collect {winnings} APTC
                       </Button>
                     ) : (
-                      <Button onClick={() => placeBet(null, null, null, 0, true)}>Go Again</Button>
+                      <Button onClick={goAgain}>Go Again</Button>
                     )}
                     <Box sx={{ mt: 1, textAlign: 'center' }}>
                       <Typography variant="h5">
