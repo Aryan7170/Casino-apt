@@ -70,22 +70,7 @@ export default function Mines() {
     initializeSession
   } = useOffChainCasinoGames();
 
-  // Initialize session when component mounts
-  useEffect(() => {
-    const initSession = async () => {
-      try {
-        console.log('Initializing off-chain mines session...');
-        await initializeSession();
-        console.log('Off-chain mines session initialized successfully');
-      } catch (error) {
-        console.error('Failed to initialize off-chain mines session:', error);
-      }
-    };
-
-    // Add a small delay to ensure the hook is ready
-    const timer = setTimeout(initSession, 100);
-    return () => clearTimeout(timer);
-  }, [initializeSession]);
+  // Session auto-initializes via the hook - no manual initialization needed
 
   // Game State
   const [betSettings, setBetSettings] = useState({});

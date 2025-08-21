@@ -889,21 +889,7 @@ export default function GameRoulette() {
     initializeSession
   } = useOffChainCasinoGames();
 
-  // Initialize off-chain session
-  useEffect(() => {
-    const initSession = async () => {
-      try {
-        console.log('Initializing off-chain roulette session...');
-        await initializeSession();
-        console.log('Off-chain roulette session initialized successfully');
-      } catch (error) {
-        console.error('Failed to initialize off-chain roulette session:', error);
-      }
-    };
-
-    const timer = setTimeout(initSession, 100);
-    return () => clearTimeout(timer);
-  }, [initializeSession]);
+  // Session auto-initializes via the hook - no manual initialization needed
 
   // State to store last successful bet for "Go Again" functionality
   const [lastSuccessfulBet, setLastSuccessfulBet] = useState(null);

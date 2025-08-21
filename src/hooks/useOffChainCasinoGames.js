@@ -24,18 +24,19 @@ export function useOffChainCasino(userAddress = null) {
    * Initialize off-chain game session
    */
   const initializeSession = useCallback(async () => {
-    if (!userAddress) return;
-
     setIsLoading(true);
     setError(null);
 
     try {
+      // For off-chain games, use provided address or create anonymous session
+      const sessionAddress = userAddress || `anonymous_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
       const response = await fetch(gameServerUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "initialize",
-          userAddress,
+          userAddress: sessionAddress,
         }),
       });
 
@@ -46,7 +47,7 @@ export function useOffChainCasino(userAddress = null) {
       }
 
       setGameSession({
-        userAddress,
+        userAddress: sessionAddress,
         serverSeedHash: result.serverSeedHash,
         clientSeed: result.clientSeed,
         nonce: 0,
@@ -61,7 +62,7 @@ export function useOffChainCasino(userAddress = null) {
     } finally {
       setIsLoading(false);
     }
-  }, [userAddress, gameServerUrl]);
+  }, [gameServerUrl]);
 
   /**
    * Play Roulette off-chain
@@ -81,7 +82,7 @@ export function useOffChainCasino(userAddress = null) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "playRoulette",
-          userAddress,
+          userAddress: gameSession.userAddress,
           bets,
         }),
       });
@@ -112,7 +113,7 @@ export function useOffChainCasino(userAddress = null) {
       setIsLoading(false);
       setIsPlaying(false);
     }
-  }, [gameSession, userAddress, gameServerUrl]);
+  }, [gameSession, gameServerUrl]);
 
   /**
    * Play Mines off-chain
@@ -132,7 +133,7 @@ export function useOffChainCasino(userAddress = null) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "playMines",
-          userAddress,
+          userAddress: gameSession.userAddress,
           ...gameData,
         }),
       });
@@ -163,7 +164,7 @@ export function useOffChainCasino(userAddress = null) {
       setIsLoading(false);
       setIsPlaying(false);
     }
-  }, [gameSession, userAddress, gameServerUrl]);
+  }, [gameSession, gameServerUrl]);
 
   /**
    * Play Wheel off-chain
@@ -183,7 +184,7 @@ export function useOffChainCasino(userAddress = null) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "playWheel",
-          userAddress,
+          userAddress: gameSession.userAddress,
           ...betData,
         }),
       });
@@ -214,7 +215,7 @@ export function useOffChainCasino(userAddress = null) {
       setIsLoading(false);
       setIsPlaying(false);
     }
-  }, [gameSession, userAddress, gameServerUrl]);
+  }, [gameSession, gameServerUrl]);
 
   /**
    * Get game history
@@ -228,7 +229,7 @@ export function useOffChainCasino(userAddress = null) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "getHistory",
-          userAddress,
+          userAddress: gameSession?.userAddress || userAddress,
         }),
       });
 
@@ -240,7 +241,7 @@ export function useOffChainCasino(userAddress = null) {
     } catch (err) {
       console.error("Failed to get history:", err);
     }
-  }, [userAddress, gameServerUrl]);
+  }, [gameSession, gameServerUrl]);
 
   /**
    * Deposit tokens to off-chain balance
@@ -270,12 +271,21 @@ export function useOffChainCasino(userAddress = null) {
     setOffChainBalance(prev => Math.max(0, prev - parseFloat(amount)));
   }, []);
 
-  // Initialize session when user address changes
+  // Initialize session automatically when hook loads
   useEffect(() => {
-    if (userAddress) {
-      initializeSession();
-    }
-  }, [userAddress, initializeSession]);
+    const autoInit = async () => {
+      if (!gameSession && !isLoading) {
+        console.log('Auto-initializing off-chain session...');
+        try {
+          await initializeSession();
+        } catch (error) {
+          console.error('Auto-initialization failed:', error);
+        }
+      }
+    };
+    
+    autoInit();
+  }, [gameSession, isLoading, initializeSession]);
 
   // Load game history when session is initialized
   useEffect(() => {
