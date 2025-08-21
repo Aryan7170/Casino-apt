@@ -1728,10 +1728,11 @@ export default function GameRoulette() {
 
     try {
       // For off-chain games, winnings are already credited to the balance
-      // Just reset the game state and show confirmation
+      // Just show confirmation and reset winnings to show "Go Again" button
       const collectedAmount = winnings;
       
-      reset(e); // Reset the state after collecting
+      // Reset winnings to 0 so "Go Again" button appears, but don't reset everything else
+      setWinnings(0);
       
       console.log("Off-chain winnings collected:", collectedAmount);
       setNotification({ 
@@ -1748,7 +1749,7 @@ export default function GameRoulette() {
         severity: 'error' 
       });
     }
-  }, [playSound, winnings, reset, offChainBalance]);
+  }, [playSound, winnings, offChainBalance]);
 
   // Go Again function for off-chain betting
   const goAgain = useCallback(async () => {

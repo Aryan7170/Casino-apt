@@ -16,7 +16,7 @@ export function useOffChainCasino(userAddress = null) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [lastResult, setLastResult] = useState(null);
 
-  // Game server URL
+  // Game server URL - make it reactive to ensure proper dependency tracking
   const gameServerUrl = process.env.NEXT_PUBLIC_GAME_SERVER_URL || 
     "https://casino-mjr4jx8js-aryan-duhoons-projects.vercel.app/api/game-server";
 
@@ -24,12 +24,16 @@ export function useOffChainCasino(userAddress = null) {
    * Initialize off-chain game session
    */
   const initializeSession = useCallback(async () => {
+    console.log("🎲 Starting session initialization...");
     setIsLoading(true);
     setError(null);
 
     try {
       // For off-chain games, use provided address or create anonymous session
       const sessionAddress = userAddress || `anonymous_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      console.log("🎯 Game server URL:", gameServerUrl);
+      console.log("👤 Session address:", sessionAddress);
       
       const response = await fetch(gameServerUrl, {
         method: "POST",
@@ -40,7 +44,9 @@ export function useOffChainCasino(userAddress = null) {
         }),
       });
 
+      console.log("📡 Response status:", response.status);
       const result = await response.json();
+      console.log("📥 Response data:", result);
 
       if (!response.ok) {
         throw new Error(result.error || "Failed to initialize session");
@@ -55,14 +61,14 @@ export function useOffChainCasino(userAddress = null) {
 
       setOffChainBalance(result.balance || 1000); // Starting balance
       
-      console.log("Off-chain session initialized:", result);
+      console.log("✅ Off-chain session initialized successfully:", result);
     } catch (err) {
-      console.error("Failed to initialize off-chain session:", err);
+      console.error("❌ Failed to initialize off-chain session:", err);
       setError(err.message);
     } finally {
       setIsLoading(false);
     }
-  }, [gameServerUrl]);
+  }, []); // Remove gameServerUrl dependency since it's static
 
   /**
    * Play Roulette off-chain
