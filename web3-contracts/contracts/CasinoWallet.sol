@@ -105,7 +105,7 @@ contract CasinoWallet is ReentrancyGuard, Ownable, EIP712 {
      */
     function deposit(uint256 amount) external nonReentrant {
         require(amount >= minDeposit, "Deposit too small");
-        require(token.transferFrom(msg.sender, address(this), amount), "Transfer failed");
+        require(IERC20(address(token)).transferFrom(msg.sender, address(this), amount), "Transfer failed");
 
         totalDeposits[msg.sender] += amount;
         netDeposits[msg.sender] += amount;
@@ -156,7 +156,7 @@ contract CasinoWallet is ReentrancyGuard, Ownable, EIP712 {
             permitS
         );
 
-        require(token.transferFrom(depositRequest.player, address(this), depositRequest.amount), "Transfer failed");
+        require(IERC20(address(token)).transferFrom(depositRequest.player, address(this), depositRequest.amount), "Transfer failed");
 
         // Update state
         nonces[depositRequest.player]++;
@@ -200,7 +200,7 @@ contract CasinoWallet is ReentrancyGuard, Ownable, EIP712 {
         }
 
         // Transfer tokens to player
-        require(token.transfer(withdrawalRequest.player, withdrawalRequest.amount), "Transfer failed");
+        require(IERC20(address(token)).transfer(withdrawalRequest.player, withdrawalRequest.amount), "Transfer failed");
 
         emit WithdrawalProcessed(
             withdrawalRequest.player,
@@ -261,7 +261,7 @@ contract CasinoWallet is ReentrancyGuard, Ownable, EIP712 {
         }
 
         // Transfer tokens to player
-        require(token.transfer(withdrawalRequest.player, withdrawalRequest.amount), "Transfer failed");
+        require(IERC20(address(token)).transfer(withdrawalRequest.player, withdrawalRequest.amount), "Transfer failed");
 
         emit GaslessWithdraw(withdrawalRequest.player, withdrawalRequest.amount, totalWithdraws[withdrawalRequest.player], msg.sender);
         emit WithdrawalProcessed(
@@ -277,10 +277,10 @@ contract CasinoWallet is ReentrancyGuard, Ownable, EIP712 {
      */
     function emergencyWithdraw(address player, uint256 amount) external onlyOwner {
         require(amount > 0, "Amount must be positive");
-        require(token.balanceOf(address(this)) >= amount, "Insufficient contract balance");
+        require(IERC20(address(token)).balanceOf(address(this)) >= amount, "Insufficient contract balance");
         
         totalWithdraws[player] += amount;
-        require(token.transfer(player, amount), "Transfer failed");
+        require(IERC20(address(token)).transfer(player, amount), "Transfer failed");
         
         emit Withdraw(player, amount, totalWithdraws[player]);
     }
@@ -359,6 +359,6 @@ contract CasinoWallet is ReentrancyGuard, Ownable, EIP712 {
      * @notice Get contract token balance
      */
     function getContractBalance() external view returns (uint256) {
-        return token.balanceOf(address(this));
+        return IERC20(address(token)).balanceOf(address(this));
     }
 }

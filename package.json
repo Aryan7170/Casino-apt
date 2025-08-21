@@ -73,13 +73,13 @@
     "tailwindcss": "3.4.3",
     "three": "^0.176.0",
     "viem": "^2.29.0",
-    "wagmi": "^2.15.2"
+    "wagmi": "^2.15.2",
+    "tailwind-scrollbar": "^3.0.4"
   },
   "devDependencies": {
     "@netlify/plugin-nextjs": "^5.11.6",
     "@types/node": "22.15.15",
     "cross-env": "^7.0.3",
-    "tailwind-scrollbar": "^3.0.4",
     "typescript": "5.8.3"
   }
 }

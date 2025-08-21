@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -12,8 +12,8 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     // Log error to monitoring service (e.g., Sentry)
-    if (process.env.NODE_ENV === 'production') {
-      console.error('Error caught by boundary:', error, errorInfo);
+    if (process.env.NODE_ENV === "production") {
+      console.error("Error caught by boundary:", error, errorInfo);
       // You can integrate with error tracking services here
     }
   }

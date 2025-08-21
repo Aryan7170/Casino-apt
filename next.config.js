@@ -35,7 +35,6 @@ const nextConfig = {
   // Performance optimizations
   poweredByHeader: false,
   reactStrictMode: true, // Enable strict mode for production
-  swcMinify: true,
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },

@@ -25,6 +25,7 @@ In your Vercel dashboard, configure these environment variables:
 #### 🔑 Required Environment Variables
 
 ##### Frontend Configuration (Client-side)
+
 ```
 NEXT_PUBLIC_GAME_SERVER_URL=https://your-game-server.vercel.app
 NEXT_PUBLIC_RELAYER_URL=https://your-relayer-service.vercel.app
@@ -35,6 +36,7 @@ NEXT_PUBLIC_PAYMASTER_ADDRESS=0x0000000000000000000000000000000000000000
 ```
 
 ##### Blockchain Configuration
+
 ```
 NEXT_PUBLIC_MANTLE_RPC_URL=https://rpc.mantle.xyz
 NEXT_PUBLIC_ETHEREUM_RPC_URL=https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID
@@ -43,6 +45,7 @@ NEXT_PUBLIC_BSC_RPC_URL=https://bsc-dataseed.binance.org
 ```
 
 ##### Server-side Configuration
+
 ```
 PRIVATE_KEY=your_private_key_here
 RELAYER_PRIVATE_KEY=your_relayer_private_key_here
@@ -50,6 +53,7 @@ NODE_ENV=production
 ```
 
 ##### API Keys (Optional but recommended)
+
 ```
 INFURA_PROJECT_ID=your_infura_project_id
 ALCHEMY_API_KEY=your_alchemy_api_key
@@ -59,6 +63,7 @@ GOOGLE_ANALYTICS_ID=GA-XXXXXXXXX
 ### Step 3: Deploy to Vercel
 
 #### Option A: Vercel CLI (Recommended)
+
 ```bash
 # Install Vercel CLI
 npm i -g vercel
@@ -71,6 +76,7 @@ vercel --prod
 ```
 
 #### Option B: Vercel Dashboard
+
 1. Go to [vercel.com/new](https://vercel.com/new)
 2. Import your Git repository
 3. Configure environment variables
@@ -85,10 +91,12 @@ vercel --prod
 ### Step 5: Performance Optimization
 
 #### Image Optimization
+
 - Images are automatically optimized by Vercel
 - WebP and AVIF formats are enabled
 
 #### Caching
+
 - Static assets are cached automatically
 - API routes have appropriate cache headers
 
@@ -119,40 +127,45 @@ The casino supports multiple blockchain networks:
 ### 📊 Monitoring & Analytics
 
 #### Error Tracking
+
 - Built-in error boundaries
 - Console logging for production issues
 
 #### Performance Monitoring
+
 - Web Vitals tracking
 - Custom analytics integration ready
 
 ### 🛠️ Troubleshooting
 
 #### Build Failures
+
 1. Check environment variables are set correctly
 2. Ensure all dependencies are installed
 3. Verify TypeScript compilation
 
 #### Runtime Errors
+
 1. Check browser console for client-side errors
 2. Monitor Vercel function logs for server-side issues
 3. Verify Web3 provider connections
 
 #### Performance Issues
+
 1. Use Vercel Analytics to identify bottlenecks
 2. Check image optimization settings
 3. Monitor bundle size in build output
 
 ### 📝 Environment Variables Reference
 
-| Variable | Type | Required | Description |
-|----------|------|----------|-------------|
-| `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID` | Public | Yes | WalletConnect project ID |
-| `NEXT_PUBLIC_GAME_SERVER_URL` | Public | Yes | Game server endpoint |
-| `NEXT_PUBLIC_RELAYER_URL` | Public | Yes | Gasless transaction relayer |
-| `NEXT_PUBLIC_CASINO_WALLET_ADDRESS` | Public | Yes | Casino treasury wallet |
-| `PRIVATE_KEY` | Secret | Yes | Backend private key |
-| `INFURA_PROJECT_ID` | Secret | No | Infura API access |
+| Variable                                | Type   | Required | Description                 |
+| --------------------------------------- | ------ | -------- | --------------------------- |
+| `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID` | Public | Yes      | WalletConnect project ID    |
+| `NEXT_PUBLIC_GAME_SERVER_URL`           | Public | Yes      | Game server endpoint        |
+| `NEXT_PUBLIC_RELAYER_URL`               | Public | Yes      | Gasless transaction relayer |
+| `NEXT_PUBLIC_CASINO_WALLET_ADDRESS`     | Public | Yes      | Casino treasury wallet      |
+| `PRIVATE_KEY`                           | Secret | Yes      | Backend private key         |
+| `INFURA_PROJECT_ID`                     | Secret | No       | Infura API access           |
 
 ### 🚨 Security Considerations
 
@@ -165,6 +178,7 @@ The casino supports multiple blockchain networks:
 ### 📞 Support
 
 For deployment issues:
+
 1. Check Vercel documentation
 2. Review project logs in Vercel dashboard
 3. Contact the development team

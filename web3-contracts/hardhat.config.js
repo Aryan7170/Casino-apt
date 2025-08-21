@@ -4,7 +4,8 @@ require("dotenv").config();
 const MANTLE_SEPOLIA_RPC = "https://rpc.sepolia.mantle.xyz";
 const PHAROS_DEVNET_RPC = "https://devnet.dplabs-internal.com";
 const BINANCE_TESTNET_RPC = "https://data-seed-prebsc-1-s1.binance.org:8545"; // Fill your Binance Testnet RPC URL
-const ETHEREUM_SEPOLIA_RPC = "https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3"; // Ethereum Sepolia RPC URL
+const ETHEREUM_SEPOLIA_RPC =
+  "https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3"; // Ethereum Sepolia RPC URL
 
 const MANTLE_SEPOLIA_EXPLORER_API = process.env.MANTLE_SEPOLIA_EXPLORER_API;
 const PHAROS_DEVNET_EXPLORER_API = process.env.PHAROS_DEVNET_EXPLORER_API;
@@ -15,7 +16,15 @@ const PRIVATE_KEY = process.env.PRIVATE_KEY;
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  solidity: "0.8.20",
+  solidity: {
+    version: "0.8.20",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200,
+      },
+    },
+  },
   networks: {
     hardhat: {
       chainId: 31337,
@@ -83,4 +92,4 @@ module.exports = {
       },
     ],
   },
-}; 
+};
