@@ -2,13 +2,13 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
-import { useDelegationToolkit } from '@/hooks/useDelegationToolkit';
-import { useOffChainCasinoGames } from '@/hooks/useOffChainCasinoGames';
+import { useDelegationToolkit } from "@/hooks/useDelegationToolkit";
+import { useOffChainCasinoGames } from "@/hooks/useOffChainCasinoGames";
 
 // Components
 import Button from "@/components/Button";
 import Tabs from "@/components/Tabs";
-import ConnectWalletButton from '@/components/ConnectWalletButton';
+import ConnectWalletButton from "@/components/ConnectWalletButton";
 import GameDetail from "@/components/GameDetail";
 import DynamicForm from "./Form";
 import Game from "./game";
@@ -24,19 +24,43 @@ import AIAutoBetting from "./components/AIAutoBetting";
 import AISettingsModal from "./components/AISettingsModal";
 
 // Config
-import { gameData, bettingTableData, gameStatistics, winProbabilities } from "./config/gameDetail";
+import {
+  gameData,
+  bettingTableData,
+  gameStatistics,
+  winProbabilities,
+} from "./config/gameDetail";
 import { manualFormConfig, autoFormConfig } from "./config/formConfig";
 
 // Icons
-import { 
-  FaCrown, FaHistory, FaTrophy, FaInfoCircle, FaChartLine, FaBomb, 
-  FaDiscord, FaTelegram, FaTwitter, FaDice, FaCoins, FaChevronDown 
+import {
+  FaCrown,
+  FaHistory,
+  FaTrophy,
+  FaInfoCircle,
+  FaChartLine,
+  FaBomb,
+  FaDiscord,
+  FaTelegram,
+  FaTwitter,
+  FaDice,
+  FaCoins,
+  FaChevronDown,
 } from "react-icons/fa";
-import { 
-  GiMining, GiDiamonds, GiCardRandom, GiMineExplosion, 
-  GiCrystalGrowth, GiChestArmor, GiGoldBar 
+import {
+  GiMining,
+  GiDiamonds,
+  GiCardRandom,
+  GiMineExplosion,
+  GiCrystalGrowth,
+  GiChestArmor,
+  GiGoldBar,
 } from "react-icons/gi";
-import { HiLightningBolt, HiOutlineTrendingUp, HiOutlineChartBar } from "react-icons/hi";
+import {
+  HiLightningBolt,
+  HiOutlineTrendingUp,
+  HiOutlineChartBar,
+} from "react-icons/hi";
 
 // Styles
 import "./mines.css";
@@ -45,7 +69,7 @@ export default function Mines() {
   // Theme
   const { theme } = useTheme();
 
-    // Wallet connection
+  // Wallet connection
   const {
     isConnected,
     address,
@@ -55,7 +79,7 @@ export default function Mines() {
     error: walletError,
     balance,
     connectWallet,
-    executeContract
+    executeContract,
   } = useDelegationToolkit();
 
   // Initialize off-chain session (doesn't require wallet address for off-chain gaming)
@@ -68,10 +92,46 @@ export default function Mines() {
     playMinesOffChain,
     isSessionActive,
     initializeSession,
-    setError: setOffChainError
+    setError: setOffChainError,
   } = useOffChainCasinoGames();
 
   // Session auto-initializes via the hook - no manual initialization needed
+  
+  // Force initialization for debugging and fallback
+  useEffect(() => {
+    const initMinesSession = async () => {
+      console.log('🎯 Mines component mounted, checking session state:', {
+        gameSession: !!gameSession,
+        offChainLoading,
+        offChainError,
+        isSessionActive
+      });
+      
+      // If no session and not loading, try to initialize
+      if (!gameSession && !offChainLoading && !offChainError) {
+        console.log('� Manually triggering session initialization from mines component...');
+        try {
+          await initializeSession();
+          console.log('✅ Mines session initialization successful');
+        } catch (error) {
+          console.error('❌ Mines session initialization failed:', error);
+        }
+      }
+    };
+    
+    // Try immediate init
+    initMinesSession();
+    
+    // Also try after a delay in case the hook needs time to set up
+    const timer = setTimeout(() => {
+      if (!gameSession && !offChainLoading && !offChainError) {
+        console.log('🔄 Retrying session initialization after delay...');
+        initializeSession();
+      }
+    }, 2000);
+    
+    return () => clearTimeout(timer);
+  }, []); // Run once on mount
 
   // Game State
   const [betSettings, setBetSettings] = useState({});
@@ -81,12 +141,12 @@ export default function Mines() {
   const [isStatsExpanded, setIsStatsExpanded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submissionRef = useRef(null);
-  
+
   // AI State
   const [isAIActive, setIsAIActive] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false);
   const [aiSettings, setAISettings] = useState({
-    strategy: 'balanced',
+    strategy: "balanced",
     maxBet: 100,
     stopLoss: 500,
     targetProfit: 1000,
@@ -94,16 +154,16 @@ export default function Mines() {
       adaptToHistory: true,
       maxConsecutiveLosses: 3,
       increaseOnWin: false,
-      decreaseOnLoss: true
+      decreaseOnLoss: true,
     },
     tiles: {
       min: 3,
-      max: 8
+      max: 8,
     },
     mines: {
       min: 3,
-      max: 10
-    }
+      max: 10,
+    },
   });
 
   // Reset game when wallet disconnects
@@ -116,7 +176,7 @@ export default function Mines() {
   const resetGameState = () => {
     setBetSettings({});
     setIsAIActive(false);
-    setGameInstance(prev => prev + 1);
+    setGameInstance((prev) => prev + 1);
   };
 
   // Handle AI toggle
@@ -128,28 +188,28 @@ export default function Mines() {
       const minesCount = randomInRange(mines.min, mines.max);
       const tilesToReveal = randomInRange(tiles.min, tiles.max);
       const betAmount = getBetAmountByStrategy(strategy);
-      
+
       setBetSettings({
         betAmount,
         mines: minesCount,
         tilesToReveal,
         isAutoBetting: true,
-        aiAssist: true
+        aiAssist: true,
       });
-      setGameInstance(prev => prev + 1);
+      setGameInstance((prev) => prev + 1);
     }
-    
+
     setIsAIActive(!isAIActive);
   };
 
-  const randomInRange = (min, max) => 
+  const randomInRange = (min, max) =>
     Math.floor(Math.random() * (max - min + 1)) + min;
 
   const getBetAmountByStrategy = (strategy) => {
     const strategies = {
       conservative: [10, 25, 50],
       balanced: [50, 100, 250],
-      aggressive: [100, 250, 500]
+      aggressive: [100, 250, 500],
     };
     const amounts = strategies[strategy] || [50];
     return amounts[Math.floor(Math.random() * amounts.length)];
@@ -162,19 +222,19 @@ export default function Mines() {
 
     const submissionKey = JSON.stringify(formData) + Date.now();
     if (submissionRef.current === submissionKey) return;
-    
+
     submissionRef.current = submissionKey;
     setIsSubmitting(true);
-    
+
     if (isAIActive) setIsAIActive(false);
-    
+
     setBetSettings({
       ...formData,
-      isAutoBetting: activeTab === "Auto"
+      isAutoBetting: activeTab === "Auto",
     });
-    
-    setGameInstance(prev => prev + 1);
-    
+
+    setGameInstance((prev) => prev + 1);
+
     setTimeout(() => {
       setIsSubmitting(false);
       submissionRef.current = null;
@@ -184,7 +244,7 @@ export default function Mines() {
   // Handle AI settings save
   const handleAISettingsSave = (newSettings) => {
     setAISettings(newSettings);
-    
+
     if (isAIActive) {
       const { strategy, tiles, mines } = newSettings;
       setBetSettings({
@@ -192,9 +252,9 @@ export default function Mines() {
         mines: randomInRange(mines.min, mines.max),
         tilesToReveal: randomInRange(tiles.min, tiles.max),
         isAutoBetting: true,
-        aiAssist: true
+        aiAssist: true,
       });
-      setGameInstance(prev => prev + 1);
+      setGameInstance((prev) => prev + 1);
     }
   };
 
@@ -202,35 +262,38 @@ export default function Mines() {
   const checkWalletConnection = () => {
     // For off-chain games, just check if session is active
     if (!isSessionActive) {
-      alert('Game session not initialized. Please wait for initialization.');
+      alert("Game session not initialized. Please wait for initialization.");
       return false;
     }
     return true;
   };
 
   // Tabs configuration
-  const tabs = useMemo(() => [
-    {
-      label: "Manual",
-      content: (
-        <DynamicForm 
-          config={manualFormConfig} 
-          onSubmit={handleFormSubmit} 
-          isSubmitting={isSubmitting} 
-        />
-      ),
-    },
-    {
-      label: "Auto",
-      content: (
-        <DynamicForm 
-          config={autoFormConfig} 
-          onSubmit={handleFormSubmit} 
-          isSubmitting={isSubmitting} 
-        />
-      ),
-    },
-  ], [isSubmitting]);
+  const tabs = useMemo(
+    () => [
+      {
+        label: "Manual",
+        content: (
+          <DynamicForm
+            config={manualFormConfig}
+            onSubmit={handleFormSubmit}
+            isSubmitting={isSubmitting}
+          />
+        ),
+      },
+      {
+        label: "Auto",
+        content: (
+          <DynamicForm
+            config={autoFormConfig}
+            onSubmit={handleFormSubmit}
+            isSubmitting={isSubmitting}
+          />
+        ),
+      },
+    ],
+    [isSubmitting]
+  );
 
   const handleTabChange = (tabLabel) => {
     setActiveTab(tabLabel);
@@ -240,7 +303,7 @@ export default function Mines() {
 
   const scrollToElement = (elementId) => {
     const element = document.getElementById(elementId);
-    element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    element?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   // Show loading while off-chain session initializes
@@ -249,14 +312,20 @@ export default function Mines() {
       <div className="min-h-screen bg-[#070005] bg-gradient-to-b from-[#070005] to-[#0e0512] flex flex-col items-center justify-center text-white">
         <div className="bg-gradient-to-br from-purple-900/40 to-purple-700/10 rounded-xl p-8 max-w-md text-center border-2 border-purple-700/30 shadow-xl shadow-purple-900/20">
           <GiMineExplosion className="text-5xl text-purple-400 mx-auto mb-4 animate-pulse" />
-          <h3 className="text-2xl font-bold mb-2 font-display">Initializing Game</h3>
+          <h3 className="text-2xl font-bold mb-2 font-display">
+            Initializing Game
+          </h3>
           <p className="text-white/70 mb-6 font-sans">
             Setting up your off-chain mining session...
           </p>
           <div className="text-xs text-white/50 mt-4">
-            Session Active: {isSessionActive ? 'Yes' : 'No'}<br/>
-            Loading: {offChainLoading ? 'Yes' : 'No'}<br/>
-            {offChainError && <span className="text-red-400">Error: {offChainError}</span>}
+            Session Active: {isSessionActive ? "Yes" : "No"}
+            <br />
+            Loading: {offChainLoading ? "Yes" : "No"}
+            <br />
+            {offChainError && (
+              <span className="text-red-400">Error: {offChainError}</span>
+            )}
           </div>
         </div>
       </div>
@@ -269,22 +338,24 @@ export default function Mines() {
       <div className="min-h-screen bg-[#070005] bg-gradient-to-b from-[#070005] to-[#0e0512] flex flex-col items-center justify-center text-white">
         <div className="bg-gradient-to-br from-red-900/40 to-red-700/10 rounded-xl p-8 max-w-md text-center border-2 border-red-700/30 shadow-xl shadow-red-900/20">
           <GiMineExplosion className="text-5xl text-red-400 mx-auto mb-4" />
-          <h3 className="text-2xl font-bold mb-2 font-display">Session Error</h3>
+          <h3 className="text-2xl font-bold mb-2 font-display">
+            Session Error
+          </h3>
           <p className="text-white/70 mb-6 font-sans">
             Failed to initialize game session: {offChainError}
           </p>
           <div className="flex gap-2 justify-center">
-            <button 
+            <button
               onClick={() => {
                 setOffChainError(null);
                 initializeSession();
-              }} 
+              }}
               className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
             >
               Retry Session
             </button>
-            <button 
-              onClick={() => window.location.reload()} 
+            <button
+              onClick={() => window.location.reload()}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
             >
               Reload Page
@@ -304,7 +375,7 @@ export default function Mines() {
           <div className="absolute top-5 -right-32 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"></div>
           <div className="absolute top-28 left-1/3 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>
           <div className="absolute -bottom-20 left-1/4 w-48 h-48 bg-pink-500/5 rounded-full blur-3xl"></div>
-          
+
           <div className="relative">
             <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
               {/* Left Column - Game Info */}
@@ -313,18 +384,24 @@ export default function Mines() {
                   <div className="mr-3 p-3 bg-gradient-to-br from-purple-900/40 to-purple-700/10 rounded-lg shadow-lg shadow-purple-900/10 border border-purple-800/20">
                     <GiMineExplosion className="text-3xl text-purple-300" />
                   </div>
-              <div>
-                    <motion.div 
+                  <div>
+                    <motion.div
                       className="flex items-center gap-2"
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <p className="text-sm text-gray-400 font-sans">Games / Mines</p>
-                      <span className="text-xs px-2 py-0.5 bg-purple-900/30 rounded-full text-purple-300 font-display">Popular</span>
-                      <span className="text-xs px-2 py-0.5 bg-green-900/30 rounded-full text-green-300 font-display">Live</span>
+                      <p className="text-sm text-gray-400 font-sans">
+                        Games / Mines
+                      </p>
+                      <span className="text-xs px-2 py-0.5 bg-purple-900/30 rounded-full text-purple-300 font-display">
+                        Popular
+                      </span>
+                      <span className="text-xs px-2 py-0.5 bg-green-900/30 rounded-full text-green-300 font-display">
+                        Live
+                      </span>
                     </motion.div>
-                    <motion.h1 
+                    <motion.h1
                       className="text-3xl md:text-4xl font-bold font-display bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent"
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -334,17 +411,18 @@ export default function Mines() {
                     </motion.h1>
                   </div>
                 </div>
-                <motion.p 
+                <motion.p
                   className="text-white/70 mt-2 max-w-xl font-sans"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
                 >
-                  Unearth hidden gems while avoiding mines. Higher risk means higher rewards - can you beat the odds?
+                  Unearth hidden gems while avoiding mines. Higher risk means
+                  higher rewards - can you beat the odds?
                 </motion.p>
-                
+
                 {/* Game highlights */}
-                <motion.div 
+                <motion.div
                   className="flex flex-wrap gap-3 mt-4"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -364,12 +442,12 @@ export default function Mines() {
                   </div>
                 </motion.div>
               </div>
-              
+
               {/* Right Column - Stats and Controls */}
               <div className="md:w-3/4">
                 <div className="bg-gradient-to-br from-purple-900/20 to-purple-800/5 rounded-xl p-3 border border-purple-800/20 shadow-lg shadow-purple-900/10">
                   {/* Quick stats in top row */}
-                  <motion.div 
+                  <motion.div
                     className="grid grid-cols-3 gap-2 mb-4"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -379,27 +457,39 @@ export default function Mines() {
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600/20 mb-1">
                         <FaChartLine className="text-blue-400" />
                       </div>
-                      <div className="text-xs text-white/50 font-sans text-center">Total Bets</div>
-                      <div className="text-white font-display text-sm md:text-base">{gameStatistics.totalBets}</div>
+                      <div className="text-xs text-white/50 font-sans text-center">
+                        Total Bets
+                      </div>
+                      <div className="text-white font-display text-sm md:text-base">
+                        {gameStatistics.totalBets}
+                      </div>
                     </div>
-                    
+
                     <div className="flex flex-col items-center p-2 bg-black/20 rounded-lg">
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-600/20 mb-1">
                         <GiGoldBar className="text-yellow-400" />
                       </div>
-                      <div className="text-xs text-white/50 font-sans text-center">Volume</div>
-                      <div className="text-white font-display text-sm md:text-base">{gameStatistics.totalVolume}</div>
+                      <div className="text-xs text-white/50 font-sans text-center">
+                        Volume
+                      </div>
+                      <div className="text-white font-display text-sm md:text-base">
+                        {gameStatistics.totalVolume}
+                      </div>
                     </div>
-                    
+
                     <div className="flex flex-col items-center p-2 bg-black/20 rounded-lg">
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-red-600/20 mb-1">
                         <FaTrophy className="text-yellow-500" />
                       </div>
-                      <div className="text-xs text-white/50 font-sans text-center">Max Win</div>
-                      <div className="text-white font-display text-sm md:text-base">{gameStatistics.maxWin}</div>
+                      <div className="text-xs text-white/50 font-sans text-center">
+                        Max Win
+                      </div>
+                      <div className="text-white font-display text-sm md:text-base">
+                        {gameStatistics.maxWin}
+                      </div>
                     </div>
                   </motion.div>
-                  
+
                   {/* Quick actions */}
                   <motion.div
                     className="flex flex-wrap justify-between gap-2"
@@ -407,22 +497,22 @@ export default function Mines() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.4 }}
                   >
-                    <button 
-                      onClick={() => scrollToElement('strategy-guide')}
+                    <button
+                      onClick={() => scrollToElement("strategy-guide")}
                       className="flex items-center justify-center px-4 py-2 bg-gradient-to-r from-purple-800/40 to-purple-900/20 rounded-lg text-white font-medium text-sm hover:from-purple-700/40 hover:to-purple-800/20 transition-all duration-300"
                     >
                       <GiCardRandom className="mr-2" />
                       Strategy Guide
                     </button>
-                    <button 
-                      onClick={() => scrollToElement('probability')}
+                    <button
+                      onClick={() => scrollToElement("probability")}
                       className="flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-800/40 to-blue-900/20 rounded-lg text-white font-medium text-sm hover:from-blue-700/40 hover:to-blue-800/20 transition-all duration-300"
                     >
                       <HiOutlineChartBar className="mr-2" />
                       Probabilities
                     </button>
-                    <button 
-                      onClick={() => scrollToElement('history')}
+                    <button
+                      onClick={() => scrollToElement("history")}
                       className="flex items-center justify-center px-4 py-2 bg-gradient-to-r from-pink-800/40 to-pink-900/20 rounded-lg text-white font-medium text-sm hover:from-pink-700/40 hover:to-pink-800/20 transition-all duration-300"
                     >
                       <FaHistory className="mr-2" />
@@ -455,23 +545,23 @@ export default function Mines() {
         {/* Game Information Sections */}
         <div className="mt-10 px-4 md:px-8 lg:px-20">
           <MinesGameDetail gameData={gameData} />
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
             <MinesBettingTable bettingTableData={bettingTableData} />
             <MinesProbability winProbabilities={winProbabilities} />
           </div>
-          
+
           <div className="mt-6">
             <MinesHistory />
           </div>
-          
+
           <div className="mt-6">
             <MinesLeaderboard />
           </div>
 
           {/* Strategy Guide */}
           <div className="mt-8 bg-gradient-to-br from-[#290023]/80 to-[#150012]/90 border-2 border-purple-700/30 rounded-xl p-6 shadow-xl shadow-purple-900/20">
-            <MinesStrategyGuide 
+            <MinesStrategyGuide
               isExpanded={isStatsExpanded}
               onExpandToggle={() => setIsStatsExpanded(!isStatsExpanded)}
             />
@@ -480,12 +570,12 @@ export default function Mines() {
       </div>
 
       {/* AI Components */}
-      <AIAutoBetting 
-        isActive={isAIActive} 
+      <AIAutoBetting
+        isActive={isAIActive}
         onActivate={handleAIToggle}
-        onSettings={() => setShowAISettings(true)} 
+        onSettings={() => setShowAISettings(true)}
       />
-      
+
       <AISettingsModal
         isOpen={showAISettings}
         onClose={() => setShowAISettings(false)}

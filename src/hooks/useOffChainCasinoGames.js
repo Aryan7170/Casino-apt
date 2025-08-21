@@ -294,6 +294,13 @@ export function useOffChainCasino(userAddress = null) {
   // Initialize session automatically when hook loads
   useEffect(() => {
     const autoInit = async () => {
+      console.log('🎮 Auto-init effect triggered:', { 
+        gameSession: !!gameSession, 
+        isLoading, 
+        error, 
+        initAttempted 
+      });
+      
       if (!gameSession && !isLoading && !error && !initAttempted) {
         console.log('🚀 Auto-initializing off-chain session...');
         setInitAttempted(true);
@@ -303,6 +310,13 @@ export function useOffChainCasino(userAddress = null) {
         } catch (error) {
           console.error('❌ Auto-initialization failed:', error);
         }
+      } else {
+        console.log('🚫 Skipping auto-init:', {
+          hasSession: !!gameSession,
+          isLoading,
+          hasError: !!error,
+          alreadyAttempted: initAttempted
+        });
       }
     };
     

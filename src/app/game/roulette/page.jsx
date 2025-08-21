@@ -2528,7 +2528,7 @@ export default function GameRoulette() {
                 <Box>
                   {winnings > 0 ? (
                       <Button 
-                        onClick={() => handleWithdrawWinnings(winnings)}
+                        onClick={handleWithdrawWinnings}
                         sx={{
                           animation: 'pulse 1.5s infinite',
                           '@keyframes pulse': {
