@@ -6,13 +6,15 @@ import { parseEther, formatEther } from "viem";
  * Provides instant gameplay with off-chain balance management
  * Integrates with existing gasless infrastructure
  */
-export function useOffChainCasino(userAddress) {
+export function useOffChainCasino(userAddress = null) {
   // Game state
   const [offChainBalance, setOffChainBalance] = useState(0);
   const [gameSession, setGameSession] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [gameHistory, setGameHistory] = useState([]);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [lastResult, setLastResult] = useState(null);
 
   // Game server URL
   const gameServerUrl = process.env.NEXT_PUBLIC_GAME_SERVER_URL || 
@@ -70,6 +72,7 @@ export function useOffChainCasino(userAddress) {
     }
 
     setIsLoading(true);
+    setIsPlaying(true);
     setError(null);
 
     try {
@@ -91,6 +94,7 @@ export function useOffChainCasino(userAddress) {
 
       // Update local state
       setOffChainBalance(result.gameResult.newBalance);
+      setLastResult(result.gameResult);
       setGameSession(prev => ({
         ...prev,
         nonce: prev.nonce + 1,
@@ -106,6 +110,7 @@ export function useOffChainCasino(userAddress) {
       throw err;
     } finally {
       setIsLoading(false);
+      setIsPlaying(false);
     }
   }, [gameSession, userAddress, gameServerUrl]);
 
@@ -118,6 +123,7 @@ export function useOffChainCasino(userAddress) {
     }
 
     setIsLoading(true);
+    setIsPlaying(true);
     setError(null);
 
     try {
@@ -139,6 +145,7 @@ export function useOffChainCasino(userAddress) {
 
       // Update local state
       setOffChainBalance(result.gameResult.newBalance);
+      setLastResult(result.gameResult);
       setGameSession(prev => ({
         ...prev,
         nonce: prev.nonce + 1,
@@ -154,6 +161,7 @@ export function useOffChainCasino(userAddress) {
       throw err;
     } finally {
       setIsLoading(false);
+      setIsPlaying(false);
     }
   }, [gameSession, userAddress, gameServerUrl]);
 
@@ -166,6 +174,7 @@ export function useOffChainCasino(userAddress) {
     }
 
     setIsLoading(true);
+    setIsPlaying(true);
     setError(null);
 
     try {
@@ -187,6 +196,7 @@ export function useOffChainCasino(userAddress) {
 
       // Update local state
       setOffChainBalance(result.gameResult.newBalance);
+      setLastResult(result.gameResult);
       setGameSession(prev => ({
         ...prev,
         nonce: prev.nonce + 1,
@@ -202,6 +212,7 @@ export function useOffChainCasino(userAddress) {
       throw err;
     } finally {
       setIsLoading(false);
+      setIsPlaying(false);
     }
   }, [gameSession, userAddress, gameServerUrl]);
 
@@ -280,6 +291,8 @@ export function useOffChainCasino(userAddress) {
     isLoading,
     error,
     gameHistory,
+    isPlaying,
+    lastResult,
 
     // Game functions
     playRouletteOffChain,
@@ -296,3 +309,7 @@ export function useOffChainCasino(userAddress) {
     isSessionActive: !!gameSession,
   };
 }
+
+// Export both function names for compatibility
+export const useOffChainCasinoGames = useOffChainCasino;
+export default useOffChainCasino;
