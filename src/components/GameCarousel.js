@@ -32,17 +32,17 @@ const FEATURED_GAMES = [
     isHot: true,
   },
   {
-    id: "fortune-tiger",
-    title: "Fortune Tiger",
-    description: "Win big with the lucky tiger slots",
-    image: "/images/games/fortune-tiger.png",
-    path: "/game/fortune-tiger",
+    id: "mines",
+    title: "Mines",
+    description: "Unearth hidden gems while avoiding mines",
+    image: "/images/games/mines.png",
+    path: "/game/mines",
     players: 89,
-    categories: ["slots", "jackpot"],
-    badge: "JACKPOT",
-    badgeColor: "from-blue-500 to-purple-500",
+    categories: ["instant", "featured"],
+    badge: "HOT",
+    badgeColor: "from-purple-500 to-pink-500",
     isNew: false,
-    isHot: false,
+    isHot: true,
   },
   {
     id: "poker",
@@ -89,10 +89,11 @@ const FEATURED_GAMES = [
 const CATEGORIES = [
   { id: "all", label: "All Games" },
   { id: "featured", label: "Featured" },
+  { id: "slots", label: "Slots" },
   { id: "table", label: "Table Games" },
   { id: "card", label: "Card Games" },
-  { id: "slots", label: "Slots" },
   { id: "instant", label: "Instant Win" },
+  { id: "jackpot", label: "Jackpot" },
 ];
 
 const GameCarousel = () => {

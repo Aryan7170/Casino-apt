@@ -105,6 +105,17 @@ export default function Mines() {
     balance: offChainBalance,
   });
 
+  // Add debugging for initialization timing
+  useEffect(() => {
+    console.log("🎯 Mines useEffect - Session state changed:", {
+      gameSession: !!gameSession,
+      isSessionActive,
+      offChainLoading,
+      offChainError,
+      balance: offChainBalance,
+    });
+  }, [gameSession, isSessionActive, offChainLoading, offChainError, offChainBalance]);
+
   // Game State
   const [betSettings, setBetSettings] = useState({});
   const [activeTab, setActiveTab] = useState("Manual");
@@ -288,7 +299,7 @@ export default function Mines() {
   };
 
   // Show loading while off-chain session initializes - but only for the first few seconds
-  if (offChainLoading && !gameSession && !isSessionActive) {
+  if ((offChainLoading || (!gameSession && !offChainError)) && !isSessionActive) {
     return (
       <div className="min-h-screen bg-[#070005] bg-gradient-to-b from-[#070005] to-[#0e0512] flex flex-col items-center justify-center text-white">
         <div className="bg-gradient-to-br from-purple-900/40 to-purple-700/10 rounded-xl p-8 max-w-md text-center border-2 border-purple-700/30 shadow-xl shadow-purple-900/20">

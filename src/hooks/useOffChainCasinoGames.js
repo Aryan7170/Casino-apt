@@ -397,8 +397,12 @@ export function useOffChainCasino(userAddress = null) {
       }
     };
 
-    // Only run auto-init once when the hook mounts
-    autoInit();
+    // Delay auto-init slightly to ensure component is mounted
+    const timeoutId = setTimeout(() => {
+      autoInit();
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
   }, []); // Empty dependency array to run only once
 
   // Load game history when session is initialized
