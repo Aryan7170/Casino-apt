@@ -97,42 +97,13 @@ export default function Mines() {
   } = useOffChainCasinoGames();
 
   // Session auto-initializes via the hook - no manual initialization needed
-  
-  // Force initialization for debugging and fallback
-  useEffect(() => {
-    const initMinesSession = async () => {
-      console.log('🎯 Mines component mounted, checking session state:', {
-        gameSession: !!gameSession,
-        offChainLoading,
-        offChainError,
-        isSessionActive
-      });
-      
-      // If no session and not loading, try to initialize
-      if (!gameSession && !offChainLoading && !offChainError) {
-        console.log('� Manually triggering session initialization from mines component...');
-        try {
-          await initializeSession();
-          console.log('✅ Mines session initialization successful');
-        } catch (error) {
-          console.error('❌ Mines session initialization failed:', error);
-        }
-      }
-    };
-    
-    // Try immediate init
-    initMinesSession();
-    
-    // Also try after a delay in case the hook needs time to set up
-    const timer = setTimeout(() => {
-      if (!gameSession && !offChainLoading && !offChainError) {
-        console.log('🔄 Retrying session initialization after delay...');
-        initializeSession();
-      }
-    }, 2000);
-    
-    return () => clearTimeout(timer);
-  }, []); // Run once on mount
+  console.log("🎯 Mines component state:", {
+    gameSession: !!gameSession,
+    offChainLoading,
+    offChainError,
+    isSessionActive,
+    balance: offChainBalance,
+  });
 
   // Game State
   const [betSettings, setBetSettings] = useState({});
@@ -261,11 +232,20 @@ export default function Mines() {
 
   // Check wallet connection for off-chain games
   const checkWalletConnection = () => {
-    // For off-chain games, just check if session is active
-    if (!isSessionActive) {
-      alert("Game session not initialized. Please wait for initialization.");
+    // For off-chain games, check if session is active or if we have a balance
+    // Allow gameplay if session is initializing but we have some state
+    if (!isSessionActive && !gameSession && offChainLoading) {
+      // Show a non-blocking notification
+      console.log("Game session is still initializing, please wait...");
       return false;
     }
+    
+    if (!isSessionActive && !gameSession && !offChainLoading) {
+      // Session failed to initialize
+      console.error("Game session failed to initialize");
+      return false;
+    }
+    
     return true;
   };
 
@@ -307,8 +287,8 @@ export default function Mines() {
     element?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // Show loading while off-chain session initializes
-  if (offChainLoading) {
+  // Show loading while off-chain session initializes - but only for the first few seconds
+  if (offChainLoading && !gameSession && !isSessionActive) {
     return (
       <div className="min-h-screen bg-[#070005] bg-gradient-to-b from-[#070005] to-[#0e0512] flex flex-col items-center justify-center text-white">
         <div className="bg-gradient-to-br from-purple-900/40 to-purple-700/10 rounded-xl p-8 max-w-md text-center border-2 border-purple-700/30 shadow-xl shadow-purple-900/20">
@@ -323,6 +303,8 @@ export default function Mines() {
             Session Active: {isSessionActive ? "Yes" : "No"}
             <br />
             Loading: {offChainLoading ? "Yes" : "No"}
+            <br />
+            Balance: {offChainBalance}
             <br />
             {offChainError && (
               <span className="text-red-400">Error: {offChainError}</span>
@@ -533,13 +515,62 @@ export default function Mines() {
           {/* Betting Form */}
           <div className="w-full lg:w-1/3 xl:w-1/4">
             <div className="rounded-xl border-2 border-purple-700/30 bg-gradient-to-br from-[#290023]/80 to-[#150012]/90 p-5 shadow-xl shadow-purple-900/20">
+              {/* Session Status Indicator */}
+              <div className="mb-4 p-3 rounded-lg bg-black/20 border border-purple-600/30">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-white/70">Game Session:</span>
+                  <div className="flex items-center">
+                    <div className={`w-2 h-2 rounded-full mr-2 ${
+                      isSessionActive ? 'bg-green-400' : 
+                      offChainLoading ? 'bg-yellow-400 animate-pulse' : 
+                      'bg-red-400'
+                    }`}></div>
+                    <span className={`text-sm font-medium ${
+                      isSessionActive ? 'text-green-400' : 
+                      offChainLoading ? 'text-yellow-400' : 
+                      'text-red-400'
+                    }`}>
+                      {isSessionActive ? 'Active' : 
+                       offChainLoading ? 'Connecting...' : 
+                       'Not Connected'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <div className="text-xs text-white/50">
+                    Balance: {offChainBalance} APTC
+                  </div>
+                  {!isSessionActive && !offChainLoading && (
+                    <button
+                      onClick={() => {
+                        setOffChainError(null);
+                        initializeSession();
+                      }}
+                      className="text-xs px-2 py-1 bg-purple-600 hover:bg-purple-700 rounded transition-colors"
+                    >
+                      Retry
+                    </button>
+                  )}
+                </div>
+              </div>
+              
               <Tabs tabs={tabs} onTabChange={handleTabChange} />
             </div>
           </div>
 
           {/* Game Board */}
           <div className="w-full lg:w-2/3 xl:w-3/4 rounded-xl border-2 border-purple-700/30 bg-gradient-to-br from-[#290023]/80 to-[#150012]/90 p-6 md:p-8 shadow-xl shadow-purple-900/20">
-            <Game key={gameInstance} betSettings={betSettings} />
+            <Game 
+              key={gameInstance} 
+              betSettings={betSettings}
+              offChainGameProps={{
+                playMinesOffChain,
+                offChainBalance,
+                gameSession,
+                isSessionActive,
+                setOffChainError
+              }}
+            />
           </div>
         </div>
 

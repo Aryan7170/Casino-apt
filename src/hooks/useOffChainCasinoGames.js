@@ -17,64 +17,78 @@ export function useOffChainCasino(userAddress = null) {
   const [lastResult, setLastResult] = useState(null);
   const [initAttempted, setInitAttempted] = useState(false); // Track if initialization was attempted
 
-  console.log('🎯 Hook state:', { gameSession: !!gameSession, isLoading, error, offChainBalance, initAttempted });
+  console.log("🎯 Hook state:", {
+    gameSession: !!gameSession,
+    isLoading,
+    error,
+    offChainBalance,
+    initAttempted,
+  });
 
   // Game server URL - make it reactive to ensure proper dependency tracking
-  const gameServerUrl = process.env.NEXT_PUBLIC_GAME_SERVER_URL || 
+  const gameServerUrl =
+    process.env.NEXT_PUBLIC_GAME_SERVER_URL ||
     "https://casino-mjr4jx8js-aryan-duhoons-projects.vercel.app/api/game-server";
 
   /**
    * Initialize off-chain game session
    */
   const initializeSession = useCallback(async (retryCount = 0) => {
-    console.log(`🎲 Starting session initialization (attempt ${retryCount + 1})...`);
+    console.log(
+      `🎲 Starting session initialization (attempt ${retryCount + 1})...`
+    );
     setIsLoading(true);
     setError(null);
 
     try {
       // For off-chain games, use provided address or create anonymous session
-      const sessionAddress = userAddress || `anonymous_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
+      const sessionAddress =
+        userAddress ||
+        `anonymous_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
       console.log("🎯 Game server URL:", gameServerUrl);
       console.log("👤 Session address:", sessionAddress);
-      
+
       // Create request payload
       const requestPayload = {
         action: "initialize",
         userAddress: sessionAddress,
       };
-      
+
       console.log("📤 Request payload:", requestPayload);
-      
+
       // Use a more robust fetch with better error handling
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-      
+
       const response = await fetch(gameServerUrl, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json"
+          Accept: "application/json",
         },
         body: JSON.stringify(requestPayload),
         signal: controller.signal,
-        mode: 'cors', // Explicitly set CORS mode
-        credentials: 'omit' // Don't send credentials
+        mode: "cors", // Explicitly set CORS mode
+        credentials: "omit", // Don't send credentials
       });
 
       clearTimeout(timeoutId);
-      
+
       console.log("📡 Response status:", response.status);
-      console.log("📡 Response headers:", Object.fromEntries(response.headers.entries()));
-      
+      console.log(
+        "📡 Response headers:",
+        Object.fromEntries(response.headers.entries())
+      );
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const result = await response.json();
       console.log("📥 Response data:", result);
 
-      if (!result || typeof result !== 'object') {
+      if (!result || typeof result !== "object") {
         throw new Error("Invalid response format from server");
       }
 
@@ -83,7 +97,11 @@ export function useOffChainCasino(userAddress = null) {
       }
 
       // Validate required fields
-      if (!result.serverSeedHash || !result.clientSeed || result.balance === undefined) {
+      if (
+        !result.serverSeedHash ||
+        !result.clientSeed ||
+        result.balance === undefined
+      ) {
         throw new Error("Missing required fields in server response");
       }
 
@@ -95,22 +113,27 @@ export function useOffChainCasino(userAddress = null) {
       });
 
       setOffChainBalance(result.balance || 1000); // Starting balance
-      
+
       console.log("✅ Off-chain session initialized successfully:", result);
     } catch (err) {
-      console.error(`❌ Failed to initialize off-chain session (attempt ${retryCount + 1}):`, err);
-      
+      console.error(
+        `❌ Failed to initialize off-chain session (attempt ${
+          retryCount + 1
+        }):`,
+        err
+      );
+
       // Enhanced error information
-      if (err.name === 'AbortError') {
+      if (err.name === "AbortError") {
         console.error("🕐 Request timed out after 30 seconds");
         setError("Request timed out. Please check your internet connection.");
-      } else if (err.name === 'TypeError' && err.message.includes('fetch')) {
+      } else if (err.name === "TypeError" && err.message.includes("fetch")) {
         console.error("🌐 Network error - possibly CORS or connection issue");
         setError("Network error. Please check your internet connection.");
       } else {
         setError(err.message || "Unknown error occurred");
       }
-      
+
       // Retry up to 3 times with exponential backoff
       if (retryCount < 2) {
         const delay = Math.pow(2, retryCount) * 2000; // 2s, 4s, 8s
@@ -128,155 +151,164 @@ export function useOffChainCasino(userAddress = null) {
   /**
    * Play Roulette off-chain
    */
-  const playRouletteOffChain = useCallback(async (bets) => {
-    if (!gameSession) {
-      throw new Error("No active game session");
-    }
-
-    setIsLoading(true);
-    setIsPlaying(true);
-    setError(null);
-
-    try {
-      const response = await fetch(gameServerUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "playRoulette",
-          userAddress: gameSession.userAddress,
-          bets,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Game failed");
+  const playRouletteOffChain = useCallback(
+    async (bets) => {
+      if (!gameSession) {
+        throw new Error("No active game session");
       }
 
-      // Update local state
-      setOffChainBalance(result.gameResult.newBalance);
-      setLastResult(result.gameResult);
-      setGameSession(prev => ({
-        ...prev,
-        nonce: prev.nonce + 1,
-      }));
+      setIsLoading(true);
+      setIsPlaying(true);
+      setError(null);
 
-      // Add to history
-      setGameHistory(prev => [result.gameResult, ...prev.slice(0, 49)]); // Keep last 50
+      try {
+        const response = await fetch(gameServerUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "playRoulette",
+            userAddress: gameSession.userAddress,
+            bets,
+          }),
+        });
 
-      return result.gameResult;
-    } catch (err) {
-      console.error("Off-chain roulette failed:", err);
-      setError(err.message);
-      throw err;
-    } finally {
-      setIsLoading(false);
-      setIsPlaying(false);
-    }
-  }, [gameSession, gameServerUrl]);
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Game failed");
+        }
+
+        // Update local state
+        setOffChainBalance(result.gameResult.newBalance);
+        setLastResult(result.gameResult);
+        setGameSession((prev) => ({
+          ...prev,
+          nonce: prev.nonce + 1,
+        }));
+
+        // Add to history
+        setGameHistory((prev) => [result.gameResult, ...prev.slice(0, 49)]); // Keep last 50
+
+        return result.gameResult;
+      } catch (err) {
+        console.error("Off-chain roulette failed:", err);
+        setError(err.message);
+        throw err;
+      } finally {
+        setIsLoading(false);
+        setIsPlaying(false);
+      }
+    },
+    [gameSession, gameServerUrl]
+  );
 
   /**
    * Play Mines off-chain
    */
-  const playMinesOffChain = useCallback(async (gameData) => {
-    if (!gameSession) {
-      throw new Error("No active game session");
-    }
-
-    setIsLoading(true);
-    setIsPlaying(true);
-    setError(null);
-
-    try {
-      const response = await fetch(gameServerUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "playMines",
-          userAddress: gameSession.userAddress,
-          ...gameData,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Mines game failed");
+  const playMinesOffChain = useCallback(
+    async (gameData) => {
+      if (!gameSession) {
+        throw new Error("No active game session");
       }
 
-      // Update local state
-      setOffChainBalance(result.gameResult.newBalance);
-      setLastResult(result.gameResult);
-      setGameSession(prev => ({
-        ...prev,
-        nonce: prev.nonce + 1,
-      }));
+      setIsLoading(true);
+      setIsPlaying(true);
+      setError(null);
 
-      // Add to history
-      setGameHistory(prev => [result.gameResult, ...prev.slice(0, 49)]);
+      try {
+        const response = await fetch(gameServerUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "playMines",
+            userAddress: gameSession.userAddress,
+            ...gameData,
+          }),
+        });
 
-      return result.gameResult;
-    } catch (err) {
-      console.error("Off-chain mines failed:", err);
-      setError(err.message);
-      throw err;
-    } finally {
-      setIsLoading(false);
-      setIsPlaying(false);
-    }
-  }, [gameSession, gameServerUrl]);
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Mines game failed");
+        }
+
+        // Update local state
+        setOffChainBalance(result.gameResult.newBalance);
+        setLastResult(result.gameResult);
+        setGameSession((prev) => ({
+          ...prev,
+          nonce: prev.nonce + 1,
+        }));
+
+        // Add to history
+        setGameHistory((prev) => [result.gameResult, ...prev.slice(0, 49)]);
+
+        return result.gameResult;
+      } catch (err) {
+        console.error("Off-chain mines failed:", err);
+        setError(err.message);
+        throw err;
+      } finally {
+        setIsLoading(false);
+        setIsPlaying(false);
+      }
+    },
+    [gameSession, gameServerUrl]
+  );
 
   /**
    * Play Wheel off-chain
    */
-  const playWheelOffChain = useCallback(async (betData) => {
-    if (!gameSession) {
-      throw new Error("No active game session");
-    }
-
-    setIsLoading(true);
-    setIsPlaying(true);
-    setError(null);
-
-    try {
-      const response = await fetch(gameServerUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "playWheel",
-          userAddress: gameSession.userAddress,
-          ...betData,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Wheel game failed");
+  const playWheelOffChain = useCallback(
+    async (betData) => {
+      if (!gameSession) {
+        throw new Error("No active game session");
       }
 
-      // Update local state
-      setOffChainBalance(result.gameResult.newBalance);
-      setLastResult(result.gameResult);
-      setGameSession(prev => ({
-        ...prev,
-        nonce: prev.nonce + 1,
-      }));
+      setIsLoading(true);
+      setIsPlaying(true);
+      setError(null);
 
-      // Add to history
-      setGameHistory(prev => [result.gameResult, ...prev.slice(0, 49)]);
+      try {
+        const response = await fetch(gameServerUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "playWheel",
+            userAddress: gameSession.userAddress,
+            ...betData,
+          }),
+        });
 
-      return result.gameResult;
-    } catch (err) {
-      console.error("Off-chain wheel failed:", err);
-      setError(err.message);
-      throw err;
-    } finally {
-      setIsLoading(false);
-      setIsPlaying(false);
-    }
-  }, [gameSession, gameServerUrl]);
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Wheel game failed");
+        }
+
+        // Update local state
+        setOffChainBalance(result.gameResult.newBalance);
+        setLastResult(result.gameResult);
+        setGameSession((prev) => ({
+          ...prev,
+          nonce: prev.nonce + 1,
+        }));
+
+        // Add to history
+        setGameHistory((prev) => [result.gameResult, ...prev.slice(0, 49)]);
+
+        return result.gameResult;
+      } catch (err) {
+        console.error("Off-chain wheel failed:", err);
+        setError(err.message);
+        throw err;
+      } finally {
+        setIsLoading(false);
+        setIsPlaying(false);
+      }
+    },
+    [gameSession, gameServerUrl]
+  );
 
   /**
    * Get game history
@@ -312,10 +344,10 @@ export function useOffChainCasino(userAddress = null) {
     // 1. User approves tokens
     // 2. Contract transfers tokens to casino wallet
     // 3. Off-chain balance is increased
-    
+
     console.log("Deposit to off-chain:", amount);
     // For now, just add to balance (implement proper deposit logic)
-    setOffChainBalance(prev => prev + parseFloat(amount));
+    setOffChainBalance((prev) => prev + parseFloat(amount));
   }, []);
 
   /**
@@ -326,41 +358,45 @@ export function useOffChainCasino(userAddress = null) {
     // 1. Verify off-chain balance
     // 2. Process withdrawal request
     // 3. Transfer tokens back to user
-    
+
     console.log("Withdraw from off-chain:", amount);
     // For now, just subtract from balance (implement proper withdrawal logic)
-    setOffChainBalance(prev => Math.max(0, prev - parseFloat(amount)));
+    setOffChainBalance((prev) => Math.max(0, prev - parseFloat(amount)));
   }, []);
 
   // Initialize session automatically when hook loads
   useEffect(() => {
     const autoInit = async () => {
-      console.log('🎮 Auto-init effect triggered:', { 
-        gameSession: !!gameSession, 
-        isLoading, 
-        error, 
-        initAttempted 
+      console.log("🎮 Auto-init effect triggered:", {
+        gameSession: !!gameSession,
+        isLoading,
+        error,
+        initAttempted,
       });
-      
-      if (!gameSession && !isLoading && !error && !initAttempted) {
-        console.log('🚀 Auto-initializing off-chain session...');
+
+      if (!gameSession && !isLoading && !initAttempted) {
+        console.log("🚀 Auto-initializing off-chain session...");
         setInitAttempted(true);
         try {
           await initializeSession();
-          console.log('✅ Auto-initialization completed successfully');
+          console.log("✅ Auto-initialization completed successfully");
         } catch (error) {
-          console.error('❌ Auto-initialization failed:', error);
+          console.error("❌ Auto-initialization failed:", error);
+          // Reset initAttempted after failure so user can retry
+          setTimeout(() => {
+            setInitAttempted(false);
+          }, 5000);
         }
       } else {
-        console.log('🚫 Skipping auto-init:', {
+        console.log("🚫 Skipping auto-init:", {
           hasSession: !!gameSession,
           isLoading,
           hasError: !!error,
-          alreadyAttempted: initAttempted
+          alreadyAttempted: initAttempted,
         });
       }
     };
-    
+
     // Only run auto-init once when the hook mounts
     autoInit();
   }, []); // Empty dependency array to run only once

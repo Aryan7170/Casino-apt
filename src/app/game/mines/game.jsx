@@ -47,7 +47,7 @@ const SOUNDS = {
   bet: "/sounds/bet.mp3",
 };
 
-const Game = ({ betSettings = {} }) => {
+const Game = ({ betSettings = {}, offChainGameProps = null }) => {
   // Game Settings
   const defaultSettings = {
     betAmount: 50,
@@ -268,6 +268,18 @@ const Game = ({ betSettings = {} }) => {
     isConnected,
   } = useDelegationToolkit();
 
+  // Off-chain game props
+  const {
+    playMinesOffChain,
+    offChainBalance,
+    gameSession,
+    isSessionActive,
+    setOffChainError
+  } = offChainGameProps || {};
+
+  // Determine if we should use off-chain or on-chain
+  const useOffChain = !!offChainGameProps && isSessionActive;
+
   // Update state when bet settings change
   useEffect(() => {
     console.log("Game useEffect triggered with settings:", settings);
@@ -323,13 +335,42 @@ const Game = ({ betSettings = {} }) => {
       setBetAmount(betAmount);
       setIsAutoBetting(settings.isAutoBetting);
 
-      // Start the game (contract call)
-      console.log("Checking connection status:", { isConnected, address });
+      // Start the game (off-chain or on-chain)
+      console.log("Checking game mode:", { useOffChain, isConnected, address });
 
-      if (isConnected) {
+      if (useOffChain) {
+        // Use off-chain gaming
         (async () => {
           try {
-            console.log("Starting game with converted settings:", {
+            console.log("Starting off-chain mines game:", {
+              minesCount,
+              betAmount,
+            });
+            
+            const gameResult = await playMinesOffChain({
+              betAmount,
+              minesCount,
+              action: 'start'
+            });
+            
+            console.log("Off-chain game started successfully:", gameResult);
+            toast.success("Game started off-chain!");
+            setIsPlaying(true);
+            setHasPlacedBet(true);
+            console.log("Game state updated: isPlaying = true, hasPlacedBet = true");
+          } catch (e) {
+            console.error("Failed to start off-chain game:", e);
+            toast.error("Failed to start game: " + (e.message || e));
+            if (setOffChainError) {
+              setOffChainError(e.message || "Failed to start game");
+            }
+          }
+        })();
+      } else if (isConnected) {
+        // Use on-chain gaming
+        (async () => {
+          try {
+            console.log("Starting on-chain game with converted settings:", {
               minesCount,
               betAmount,
             });
@@ -342,20 +383,17 @@ const Game = ({ betSettings = {} }) => {
             );
             console.log("Game started successfully on-chain");
             toast.success("Game started on-chain!");
-            // Set isPlaying to true immediately after successful contract call
             setIsPlaying(true);
             setHasPlacedBet(true);
-            console.log(
-              "Game state updated: isPlaying = true, hasPlacedBet = true"
-            );
+            console.log("Game state updated: isPlaying = true, hasPlacedBet = true");
           } catch (e) {
-            console.error("Failed to start game:", e);
+            console.error("Failed to start on-chain game:", e);
             toast.error("Failed to start game: " + (e.message || e));
           }
         })();
       } else {
-        console.log("MetaMask not connected, showing error toast");
-        toast.error("Please connect MetaMask to play");
+        console.log("No gaming method available");
+        toast.error("Please connect wallet or wait for session initialization");
       }
 
       // Special message if AI-assisted auto betting
@@ -501,8 +539,35 @@ const Game = ({ betSettings = {} }) => {
 
     playSound("click");
 
-    // Call contract revealTile
-    if (isConnected) {
+    // Call contract revealTile or off-chain reveal
+    if (useOffChain) {
+      // Off-chain tile reveal
+      (async () => {
+        try {
+          const tileIndex = row * gridSize + col;
+          console.log("Revealing tile off-chain:", { tileIndex, row, col });
+          
+          const result = await playMinesOffChain({
+            action: 'reveal',
+            tileIndex,
+            row,
+            col
+          });
+          
+          console.log("Off-chain tile reveal result:", result);
+          // Handle the result based on what the server returns
+          // The server should tell us if it's a mine or safe tile
+          
+        } catch (e) {
+          console.error("Off-chain reveal error:", e);
+          toast.error("Failed to reveal tile: " + (e.message || e));
+          if (setOffChainError) {
+            setOffChainError(e.message || "Failed to reveal tile");
+          }
+        }
+      })();
+    } else if (isConnected) {
+      // On-chain tile reveal
       (async () => {
         try {
           const tileIndex = row * gridSize + col;
@@ -515,7 +580,7 @@ const Game = ({ betSettings = {} }) => {
         }
       })();
     } else {
-      toast.error("Please connect MetaMask to play");
+      toast.error("Please connect wallet or wait for session initialization");
     }
     const newGrid = [...grid];
     newGrid[row][col].isRevealed = true;
@@ -631,7 +696,28 @@ const Game = ({ betSettings = {} }) => {
     if (!isPlaying || gameOver || gameWon || revealedCount === 0) return;
     playSound("cashout");
     setIsPlaying(false);
-    if (isConnected) {
+    
+    if (useOffChain) {
+      // Off-chain cashout
+      (async () => {
+        try {
+          const result = await playMinesOffChain({
+            action: 'cashout',
+            multiplier,
+            profit
+          });
+          console.log("Off-chain cashout result:", result);
+          toast.success("Cashed out successfully!");
+        } catch (e) {
+          console.error("Off-chain cashout error:", e);
+          toast.error("Cashout failed: " + (e.message || e));
+          if (setOffChainError) {
+            setOffChainError(e.message || "Cashout failed");
+          }
+        }
+      })();
+    } else if (isConnected) {
+      // On-chain cashout
       (async () => {
         try {
           await dtCashOut(minesContractAddress, minesABI);
@@ -641,7 +727,7 @@ const Game = ({ betSettings = {} }) => {
         }
       })();
     } else {
-      toast.error("Please connect MetaMask to play");
+      toast.error("Please connect wallet or wait for session initialization");
     }
   };
 

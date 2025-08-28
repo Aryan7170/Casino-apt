@@ -2,6 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, CircularProgress, Tooltip, Fade } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { useAccount, useBalance } from 'wagmi';
+import { useToken } from '@/hooks/useToken';
+import { useOffChainCasinoGames } from '@/hooks/useOffChainCasinoGames';
 
 const BalanceContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -39,106 +42,111 @@ const DevModeBadge = styled(Box)({
 });
 
 const TokenBalance = () => {
-  const [address, setAddress] = useState(null);
-  const [isConnected, setIsConnected] = useState(false);
+  // Use Wagmi hooks properly
+  const { address, isConnected } = useAccount();
+  const { data: balance, isLoading: balanceLoading } = useBalance({
+    address: address,
+  });
+  
+  // Get APTC token balance
+  const { balance: aptcBalance, isLoading: aptcLoading } = useToken(address);
+  
+  // Get off-chain casino balance
+  const { offChainBalance, isLoading: offChainLoading } = useOffChainCasinoGames();
+
   const [balances, setBalances] = useState({
     APTC: '0',
     MNT: '0',
+    CASINO: '0',
   });
-  const [selectedToken, setSelectedToken] = useState('APTC');
+  const [selectedToken, setSelectedToken] = useState('CASINO');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
   const [mounted, setMounted] = useState(false);
   const isDev = process.env.NODE_ENV === 'development';
 
   useEffect(() => {
     setMounted(true);
 
-    // Don't try to use Wagmi in development
+    // In development, show mock balances
     if (isDev) {
       setLoading(false);
       setBalances({
         APTC: (Math.random() * 1000 + 100).toFixed(2),
         MNT: (Math.random() * 5 + 0.5).toFixed(4),
+        CASINO: (Math.random() * 500 + 50).toFixed(2),
       });
-      setIsConnected(true);
-      
-      // Set up dev wallet toggle event listener
-      const handleDevWalletToggle = () => {
-        setIsConnected(prev => !prev);
-      };
-      
-      window.addEventListener('dev-wallet-toggle', handleDevWalletToggle);
-      return () => {
-        window.removeEventListener('dev-wallet-toggle', handleDevWalletToggle);
-      };
+      return;
     }
 
-    // Safe way to use Wagmi hooks
-    const loadWalletData = async () => {
-      try {
-        // Dynamically import to avoid SSR issues
-        const { useAccount, useBalance } = await import('wagmi');
-        
-        // Get account data
-        const accountData = useAccount();
-        if (accountData) {
-          setAddress(accountData.address);
-          setIsConnected(accountData.isConnected);
-          
-          // Get token balances if connected
-          if (accountData.isConnected && accountData.address) {
-            try {
-              // Get native token balance (MNT)
-              const nativeBalance = useBalance({
-                address: accountData.address,
-              });
-              
-              // Get APTC token balance
-              const { default: useToken } = await import('@/hooks/useToken');
-              const tokenData = useToken(accountData.address);
-              
-              setBalances({
-                APTC: tokenData?.balance || '0',
-                MNT: nativeBalance?.data?.formatted || '0',
-              });
-            } catch (err) {
-              console.warn("Failed to load token balances:", err);
-            }
-          }
-        }
-        
-        setLoading(false);
-      } catch (err) {
-        console.warn("Failed to load wallet data:", err);
-        setError(true);
-        setLoading(false);
-        
-        // In case of error, show mock balance in development
-        if (process.env.NODE_ENV === 'development') {
-          setBalances({
-            APTC: (Math.random() * 1000 + 100).toFixed(2),
-            MNT: (Math.random() * 5 + 0.5).toFixed(4),
-          });
-          setIsConnected(true);
-        }
-      }
-    };
+    // Update balances when wallet data changes
+    const newBalances = { ...balances };
+    
+    // Update MNT balance (native token)
+    if (balance && isConnected) {
+      newBalances.MNT = parseFloat(balance.formatted).toFixed(4);
+    }
+    
+    // Update APTC balance (token)
+    if (aptcBalance && isConnected) {
+      newBalances.APTC = parseFloat(aptcBalance).toFixed(2);
+    }
+    
+    // Update casino balance (off-chain)
+    if (offChainBalance !== undefined) {
+      newBalances.CASINO = parseFloat(offChainBalance).toFixed(2);
+    }
+    
+    setBalances(newBalances);
 
-    // Try to load the wallet data
-    loadWalletData();
-  }, [isDev]);
+    // Set loading state based on any balance loading
+    setLoading(balanceLoading || aptcLoading || offChainLoading);
+  }, [isDev, isConnected, balance, balanceLoading, aptcBalance, aptcLoading, offChainBalance, offChainLoading]);
 
   // Toggle between tokens
   const toggleToken = () => {
-    setSelectedToken(prev => prev === 'APTC' ? 'MNT' : 'APTC');
+    const tokens = ['CASINO', 'APTC', 'MNT'];
+    const currentIndex = tokens.indexOf(selectedToken);
+    const nextIndex = (currentIndex + 1) % tokens.length;
+    setSelectedToken(tokens[nextIndex]);
   };
 
   if (!mounted) {
     return null;
   }
   
-  // Not connected, but still show component with message
+  // Show casino balance even if wallet not connected (for off-chain gaming)
+  if (!isConnected && !isDev && offChainBalance !== undefined) {
+    return (
+      <BalanceContainer onClick={toggleToken}>
+        <Typography
+          sx={{
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '0.875rem',
+            color: '#E0E0E0',
+            mr: 1,
+            fontWeight: 500,
+          }}
+        >
+          Casino:
+        </Typography>
+        <Typography
+          sx={{
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '1rem',
+            fontWeight: 600,
+            background: 'linear-gradient(90deg, #c69df2 0%, #a67de0 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            letterSpacing: '-0.01em',
+          }}
+        >
+          {parseFloat(offChainBalance).toFixed(2)} APTC
+        </Typography>
+      </BalanceContainer>
+    );
+  }
+  
+  // Not connected and no off-chain balance, show connect message
   if (!isConnected && !isDev) {
     return (
       <BalanceContainer sx={{ opacity: 0.7 }}>
@@ -156,27 +164,9 @@ const TokenBalance = () => {
     );
   }
 
-  // Handle error state
-  if (error) {
-    return (
-      <BalanceContainer>
-        <Typography
-          sx={{
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '0.875rem',
-            color: '#E0E0E0',
-            fontWeight: 500,
-          }}
-        >
-          {isDev ? `Dev Balance: ${balances.APTC} APTC` : "Connect wallet"}
-        </Typography>
-      </BalanceContainer>
-    );
-  }
-
   return (
     <Tooltip 
-      title={`Click to toggle between tokens`} 
+      title={`Click to toggle between balances: ${selectedToken === 'CASINO' ? 'Casino Balance' : selectedToken === 'APTC' ? 'APTC Token' : 'Native MNT'}`} 
       arrow 
       placement="bottom"
       TransitionComponent={Fade}
@@ -192,7 +182,7 @@ const TokenBalance = () => {
             fontWeight: 500,
           }}
         >
-          Balance:
+          {selectedToken === 'CASINO' ? 'Casino:' : 'Balance:'}
         </Typography>
         {loading ? (
           <CircularProgress size={16} sx={{ color: '#c69df2' }} />
@@ -204,13 +194,15 @@ const TokenBalance = () => {
                 fontFamily: 'Inter, sans-serif',
                 fontSize: '1rem',
                 fontWeight: 600,
-                background: 'linear-gradient(90deg, #c69df2 0%, #a67de0 100%)',
+                background: selectedToken === 'CASINO' 
+                  ? 'linear-gradient(90deg, #10b981 0%, #059669 100%)'
+                  : 'linear-gradient(90deg, #c69df2 0%, #a67de0 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 letterSpacing: '-0.01em',
               }}
             >
-              {balances[selectedToken]} {selectedToken}
+              {balances[selectedToken]} {selectedToken === 'CASINO' ? 'APTC' : selectedToken}
             </Typography>
           </TokenContainer>
         )}

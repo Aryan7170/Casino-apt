@@ -187,28 +187,31 @@ function handlePlayMines(req, res) {
     session.serverSeed,
     session.nonce
   );
-  
+
   // Generate mine positions based on random seed
   const minePositions = [];
   let tempRandom = random;
   for (let i = 0; i < minesCount; i++) {
     let position;
     do {
-      tempRandom = (tempRandom * 1103515245 + 12345) % (2 ** 31);
-      position = Math.floor((tempRandom / (2 ** 31)) * 25);
+      tempRandom = (tempRandom * 1103515245 + 12345) % 2 ** 31;
+      position = Math.floor((tempRandom / 2 ** 31) * 25);
     } while (minePositions.includes(position));
     minePositions.push(position);
   }
 
   // Check if revealed tiles hit mines
-  const hitMine = revealedTiles.some(tile => minePositions.includes(tile));
-  
+  const hitMine = revealedTiles.some((tile) => minePositions.includes(tile));
+
   // Calculate winnings
   let winnings = 0;
   if (!hitMine && revealedTiles.length > 0) {
     // Mines payout calculation: more revealed tiles = higher multiplier
     const safeSpots = 25 - minesCount;
-    const multiplier = Math.pow(safeSpots / (safeSpots - revealedTiles.length), 1.1);
+    const multiplier = Math.pow(
+      safeSpots / (safeSpots - revealedTiles.length),
+      1.1
+    );
     winnings = betAmount * multiplier;
   }
 
@@ -226,7 +229,7 @@ function handlePlayMines(req, res) {
     revealedTiles,
     nonce: session.nonce - 1,
     serverSeed: session.serverSeed,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
 
   // Store in history
@@ -262,7 +265,7 @@ function handlePlayWheel(req, res) {
     { color: "red", multiplier: 1, weight: 15 },
     { color: "blue", multiplier: 2, weight: 10 },
     { color: "green", multiplier: 5, weight: 4 },
-    { color: "gold", multiplier: 10, weight: 1 }
+    { color: "gold", multiplier: 10, weight: 1 },
   ];
 
   // Calculate result based on weighted random
@@ -299,7 +302,7 @@ function handlePlayWheel(req, res) {
     won: selectedColor === result.color,
     nonce: session.nonce - 1,
     serverSeed: session.serverSeed,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
 
   // Store in history

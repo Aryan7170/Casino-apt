@@ -1,5 +1,12 @@
 "use client";
-import React, { useState, useReducer, useMemo, useEffect, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useReducer,
+  useMemo,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
 import { Box, Typography, IconButton, CircularProgress } from "@mui/material";
 import Tooltip, { tooltipClasses } from "@mui/material/Tooltip";
 import { ThemeProvider, styled, createTheme } from "@mui/material/styles";
@@ -12,9 +19,7 @@ import currency from "currency.js";
 import TextFieldCurrency from "@/components/TextFieldCurrency";
 import Button from "@/components/Button";
 import { rouletteTutorial, rouletteOdds } from "./tutorials";
-import {
-  useContractDetails,
-} from "./contractDetails";
+import { useContractDetails } from "./contractDetails";
 import { usePublicClient } from "./ViemClient";
 import { getContract, parseEther, waitForTransactionReceipt } from "viem";
 import { muiStyles } from "./styles";
@@ -26,21 +31,41 @@ import { gameData, bettingTableData } from "./config/gameDetail";
 import { motion } from "framer-motion";
 import { useToken } from "@/hooks/useToken";
 import { useOffChainCasinoGames } from "@/hooks/useOffChainCasinoGames";
-import BettingHistory from '@/components/BettingHistory';
-import { FaVolumeMute, FaVolumeUp, FaChartLine, FaCoins, FaTrophy, FaDice, FaBalanceScale, FaRandom, FaPercentage, FaPlayCircle } from "react-icons/fa";
-import { GiCardRandom, GiDiceTarget, GiRollingDices, GiPokerHand } from "react-icons/gi";
-import RouletteLeaderboard from './components/RouletteLeaderboard';
-import StrategyGuide from './components/StrategyGuide';
-import RoulettePayout from './components/RoulettePayout';
-import WinProbabilities from './components/WinProbabilities';
-import RouletteHistory from './components/RouletteHistory';
-import { TreasuryUI } from '../../../components/TreasuryUI';
-import { TreasuryTest } from '../../../components/TreasuryTest';
-import { TreasuryManager } from '../../../components/TreasuryManager';
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { useDelegationToolkit } from '@/hooks/useDelegationToolkit';
-import useWalletStatus from '@/hooks/useWalletStatus';
-import { useEnhancedRoulette } from '@/hooks/useEnhancedRoulette';
+import BettingHistory from "@/components/BettingHistory";
+import {
+  FaVolumeMute,
+  FaVolumeUp,
+  FaChartLine,
+  FaCoins,
+  FaTrophy,
+  FaDice,
+  FaBalanceScale,
+  FaRandom,
+  FaPercentage,
+  FaPlayCircle,
+} from "react-icons/fa";
+import {
+  GiCardRandom,
+  GiDiceTarget,
+  GiRollingDices,
+  GiPokerHand,
+} from "react-icons/gi";
+import RouletteLeaderboard from "./components/RouletteLeaderboard";
+import StrategyGuide from "./components/StrategyGuide";
+import RoulettePayout from "./components/RoulettePayout";
+import WinProbabilities from "./components/WinProbabilities";
+import RouletteHistory from "./components/RouletteHistory";
+import { TreasuryUI } from "../../../components/TreasuryUI";
+import { TreasuryTest } from "../../../components/TreasuryTest";
+import { TreasuryManager } from "../../../components/TreasuryManager";
+import {
+  useReadContract,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
+import { useDelegationToolkit } from "@/hooks/useDelegationToolkit";
+import useWalletStatus from "@/hooks/useWalletStatus";
+import { useEnhancedRoulette } from "@/hooks/useEnhancedRoulette";
 
 const TooltipWide = styled(({ className, ...props }) => (
   <Tooltip {...props} classes={{ popper: className }} />
@@ -51,19 +76,24 @@ const TooltipWide = styled(({ className, ...props }) => (
 });
 
 const BetType = {
-  NUMBER: 0,    // Single number (35:1)
-  COLOR: 1,     // Red/Black (1:1)
-  ODDEVEN: 2,   // Odd/Even (1:1)
-  HIGHLOW: 3,   // 1-18/19-36 (1:1)
-  DOZEN: 4,     // 1-12, 13-24, 25-36 (2:1)
-  COLUMN: 5,    // First, Second, Third column (2:1)
-  SPLIT: 6,     // Two adjacent numbers (17:1)
-  STREET: 7,    // Three numbers horizontal (11:1)
-  CORNER: 8,    // Four numbers (8:1)
-  LINE: 9       // Six numbers (5:1)
+  NUMBER: 0, // Single number (35:1)
+  COLOR: 1, // Red/Black (1:1)
+  ODDEVEN: 2, // Odd/Even (1:1)
+  HIGHLOW: 3, // 1-18/19-36 (1:1)
+  DOZEN: 4, // 1-12, 13-24, 25-36 (2:1)
+  COLUMN: 5, // First, Second, Third column (2:1)
+  SPLIT: 6, // Two adjacent numbers (17:1)
+  STREET: 7, // Three numbers horizontal (11:1)
+  CORNER: 8, // Four numbers (8:1)
+  LINE: 9, // Six numbers (5:1)
 };
 
-function BetBox({ betValue = 0, betType = "", position = "top-right", ...props }) {
+function BetBox({
+  betValue = 0,
+  betType = "",
+  position = "top-right",
+  ...props
+}) {
   // Calculate position based on the position prop
   const getPosition = () => {
     switch (position) {
@@ -111,9 +141,9 @@ function BetBox({ betValue = 0, betType = "", position = "top-right", ...props }
         {...props}
       >
         <Typography
-          sx={{ 
-            fontSize: "13px", 
-            color: "black", 
+          sx={{
+            fontSize: "13px",
+            color: "black",
             fontWeight: "bold",
             textShadow: "0 0 2px rgba(255,255,255,0.5)",
           }}
@@ -151,8 +181,8 @@ function GridInside({
             "&:hover": {
               transform: "scale(1.02)",
               boxShadow: "0 5px 15px rgba(0, 0, 0, 0.3)",
-              zIndex: 2
-            }
+              zIndex: 2,
+            },
           }}
         >
           <Box
@@ -232,8 +262,8 @@ function GridInside({
               id="straight-bet"
               onClick={(e) => placeBet(e, "inside", (insideNumber - 1) * 4 + 1)}
             >
-              <Typography 
-                variant="h5" 
+              <Typography
+                variant="h5"
                 sx={{
                   position: "relative",
                   zIndex: 4,
@@ -381,8 +411,8 @@ function GridOutsideBet({ rightCard = false, active = false, ...props }) {
         transition: "all 0.3s ease",
         "&:hover": {
           transform: "translateY(-2px)",
-          boxShadow: "0 5px 15px rgba(0, 0, 0, 0.3)"
-        }
+          boxShadow: "0 5px 15px rgba(0, 0, 0, 0.3)",
+        },
       }}
       {...props}
     >
@@ -465,11 +495,17 @@ const notificationSteps = {
   PLACING_BET: 0,
   BET_PLACED: 1,
   GENERATING_VRF: 2,
-  RESULT_READY: 3
+  RESULT_READY: 3,
 };
 
 // Custom animated wheel component for visual feedback
-const RouletteWheel = ({ spinning, result, onSpinComplete, onSpinStart, onWin }) => {
+const RouletteWheel = ({
+  spinning,
+  result,
+  onSpinComplete,
+  onSpinStart,
+  onWin,
+}) => {
   const wheelRef = useRef(null);
   const [spinComplete, setSpinComplete] = useState(false);
   const [rotation, setRotation] = useState(0);
@@ -481,10 +517,10 @@ const RouletteWheel = ({ spinning, result, onSpinComplete, onSpinStart, onWin })
       const baseRotation = 3600; // 10 full rotations for effect
       const resultPosition = segmentAngle * result;
       const finalRotation = baseRotation + resultPosition;
-      
+
       setRotation(finalRotation);
       if (onSpinStart) onSpinStart();
-      
+
       setTimeout(() => {
         setSpinComplete(true);
         if (onSpinComplete) onSpinComplete();
@@ -495,45 +531,47 @@ const RouletteWheel = ({ spinning, result, onSpinComplete, onSpinStart, onWin })
       setSpinComplete(false);
     }
   }, [spinning, result, onSpinComplete, onSpinStart, onWin]);
-  
+
   return (
-    <Box 
-      sx={{ 
-        width: '200px', 
-        height: '200px', 
-        borderRadius: '50%',
-        position: 'relative',
-        overflow: 'hidden',
-        boxShadow: '0 0 20px rgba(0,0,0,0.5)',
-        margin: 'auto',
-        display: result >= 0 ? 'block' : 'none'
+    <Box
+      sx={{
+        width: "200px",
+        height: "200px",
+        borderRadius: "50%",
+        position: "relative",
+        overflow: "hidden",
+        boxShadow: "0 0 20px rgba(0,0,0,0.5)",
+        margin: "auto",
+        display: result >= 0 ? "block" : "none",
       }}
     >
       <Box
         ref={wheelRef}
         sx={{
-          width: '100%',
-          height: '100%',
-          backgroundImage: 'url(/images/roulette-wheel.png)',
-          backgroundSize: 'contain',
-          transformOrigin: 'center',
-          position: 'relative',
+          width: "100%",
+          height: "100%",
+          backgroundImage: "url(/images/roulette-wheel.png)",
+          backgroundSize: "contain",
+          transformOrigin: "center",
+          position: "relative",
           transform: `rotate(${rotation}deg)`,
-          transition: spinning ? 'transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'none'
+          transition: spinning
+            ? "transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)"
+            : "none",
         }}
       />
       {spinComplete && (
         <Box
           sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            color: 'white',
-            fontWeight: 'bold',
-            fontSize: '2rem',
-            textShadow: '0 0 10px rgba(0,0,0,0.8)',
-            zIndex: 10
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            color: "white",
+            fontWeight: "bold",
+            fontSize: "2rem",
+            textShadow: "0 0 10px rgba(0,0,0,0.8)",
+            zIndex: 10,
           }}
         >
           {result}
@@ -547,83 +585,112 @@ const RouletteWheel = ({ spinning, result, onSpinComplete, onSpinStart, onWin })
 const BettingStats = ({ history }) => {
   const stats = useMemo(() => {
     if (!history || history.length === 0) return null;
-    
+
     // Calculate win rate
-    const winCount = history.filter(bet => bet.won).length;
-    const winRate = history.length > 0 ? (winCount / history.length * 100).toFixed(1) : 0;
-    
+    const winCount = history.filter((bet) => bet.won).length;
+    const winRate =
+      history.length > 0 ? ((winCount / history.length) * 100).toFixed(1) : 0;
+
     // Calculate most common numbers
     const numberFrequency = {};
-    history.forEach(bet => {
+    history.forEach((bet) => {
       if (bet.roll >= 0) {
         numberFrequency[bet.roll] = (numberFrequency[bet.roll] || 0) + 1;
       }
     });
-    
+
     const mostCommonNumbers = Object.entries(numberFrequency)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3)
       .map(([number, count]) => ({ number: parseInt(number), count }));
-    
+
     // Calculate profit/loss
     const totalWagered = history.reduce((sum, bet) => sum + bet.amount, 0);
-    const totalWon = history.reduce((sum, bet) => sum + (bet.won ? bet.payout : 0), 0);
+    const totalWon = history.reduce(
+      (sum, bet) => sum + (bet.won ? bet.payout : 0),
+      0
+    );
     const profitLoss = totalWon - totalWagered;
-    
+
     return {
       winRate,
       mostCommonNumbers,
       totalWagered,
       totalWon,
       profitLoss,
-      sessionBets: history.length
+      sessionBets: history.length,
     };
   }, [history]);
-  
+
   if (!stats) return null;
-  
+
   return (
-    <Box sx={{ 
-      p: 2, 
-      border: '1px solid rgba(255,255,255,0.1)', 
-      borderRadius: '8px',
-      background: 'rgba(0,0,0,0.3)'
-    }}>
-      <Typography variant="h6" color="white" sx={{ mb: 2 }}>Session Statistics</Typography>
+    <Box
+      sx={{
+        p: 2,
+        border: "1px solid rgba(255,255,255,0.1)",
+        borderRadius: "8px",
+        background: "rgba(0,0,0,0.3)",
+      }}
+    >
+      <Typography variant="h6" color="white" sx={{ mb: 2 }}>
+        Session Statistics
+      </Typography>
       <Grid container spacing={2}>
         <Grid xs={6} md={4}>
-          <Typography variant="body2" color="text.secondary">Win Rate</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Win Rate
+          </Typography>
           <Typography variant="h5">{stats.winRate}%</Typography>
         </Grid>
         <Grid xs={6} md={4}>
-          <Typography variant="body2" color="text.secondary">Total Bets</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Total Bets
+          </Typography>
           <Typography variant="h5">{stats.sessionBets}</Typography>
         </Grid>
         <Grid xs={6} md={4}>
-          <Typography variant="body2" color="text.secondary">P/L</Typography>
-          <Typography variant="h5" color={stats.profitLoss >= 0 ? 'success.main' : 'error.main'}>
-            {stats.profitLoss >= 0 ? '+' : ''}{stats.profitLoss.toFixed(2)}
+          <Typography variant="body2" color="text.secondary">
+            P/L
+          </Typography>
+          <Typography
+            variant="h5"
+            color={stats.profitLoss >= 0 ? "success.main" : "error.main"}
+          >
+            {stats.profitLoss >= 0 ? "+" : ""}
+            {stats.profitLoss.toFixed(2)}
           </Typography>
         </Grid>
         <Grid xs={12}>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Hot Numbers</Typography>
-          <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Hot Numbers
+          </Typography>
+          <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
             {stats.mostCommonNumbers.map((item) => (
-              <Box 
-                key={item.number} 
-                sx={{ 
-                  width: 30, 
-                  height: 30, 
-                  borderRadius: '50%', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  backgroundColor: item.number === 0 ? 'game.green' : 
-                    [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36].includes(item.number) ? 'game.red' : 'dark.bg',
-                  border: '1px solid rgba(255,255,255,0.2)'
+              <Box
+                key={item.number}
+                sx={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor:
+                    item.number === 0
+                      ? "game.green"
+                      : [
+                          1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30,
+                          32, 34, 36,
+                        ].includes(item.number)
+                      ? "game.red"
+                      : "dark.bg",
+                  border: "1px solid rgba(255,255,255,0.2)",
                 }}
               >
-                <Typography variant="caption" fontWeight="bold">{item.number}</Typography>
+                <Typography variant="caption" fontWeight="bold">
+                  {item.number}
+                </Typography>
               </Box>
             ))}
           </Box>
@@ -654,9 +721,7 @@ export default function GameRoulette() {
     // ...other wallet status values
   } = useWalletStatus();
 
-  const {
-    dynamicPublicClient,
-  } = usePublicClient();
+  const { dynamicPublicClient } = usePublicClient();
 
   const {
     rouletteContractAddress,
@@ -664,9 +729,7 @@ export default function GameRoulette() {
     rouletteABI,
     tokenABI,
     contractConfig,
-
   } = useContractDetails();
-
 
   // Debug imports
   console.log("dynamicPublicClient", dynamicPublicClient);
@@ -674,18 +737,18 @@ export default function GameRoulette() {
   const RouletteHeader = () => {
     // Sample statistics
     const gameStatistics = {
-      totalBets: '1,856,342',
-      totalVolume: '8.3M APTC',
-      maxWin: '243,500 APTC'
+      totalBets: "1,856,342",
+      totalVolume: "8.3M APTC",
+      maxWin: "243,500 APTC",
     };
-    
+
     return (
       <div className="relative text-white px-4 md:px-8 lg:px-20 mb-8 pt-20 md:pt-24 mt-4">
         {/* Background Elements */}
         <div className="absolute top-5 -right-32 w-64 h-64 bg-red-500/10 rounded-full blur-3xl"></div>
         <div className="absolute top-28 left-1/3 w-32 h-32 bg-green-500/10 rounded-full blur-2xl"></div>
         <div className="absolute -bottom-20 left-1/4 w-48 h-48 bg-purple-500/5 rounded-full blur-3xl"></div>
-        
+
         <div className="relative">
           <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6">
             {/* Left Column - Game Info */}
@@ -695,17 +758,23 @@ export default function GameRoulette() {
                   <GiRollingDices className="text-3xl text-red-300" />
                 </div>
                 <div>
-                  <motion.div 
+                  <motion.div
                     className="flex items-center gap-2"
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <p className="text-sm text-gray-400 font-sans">Games / Roulette</p>
-                    <span className="text-xs px-2 py-0.5 bg-red-900/30 rounded-full text-red-300 font-display">Classic</span>
-                    <span className="text-xs px-2 py-0.5 bg-green-900/30 rounded-full text-green-300 font-display">Live</span>
+                    <p className="text-sm text-gray-400 font-sans">
+                      Games / Roulette
+                    </p>
+                    <span className="text-xs px-2 py-0.5 bg-red-900/30 rounded-full text-red-300 font-display">
+                      Classic
+                    </span>
+                    <span className="text-xs px-2 py-0.5 bg-green-900/30 rounded-full text-green-300 font-display">
+                      Live
+                    </span>
                   </motion.div>
-                  <motion.h1 
+                  <motion.h1
                     className="text-3xl md:text-4xl font-bold font-display bg-gradient-to-r from-red-300 to-amber-300 bg-clip-text text-transparent"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -715,17 +784,19 @@ export default function GameRoulette() {
                   </motion.h1>
                 </div>
               </div>
-              <motion.p 
+              <motion.p
                 className="text-white/70 mt-2 max-w-xl font-sans"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
-                Place your bets and experience the thrill of the spinning wheel. From simple red/black bets to complex number combinations, the choice is yours.
+                Place your bets and experience the thrill of the spinning wheel.
+                From simple red/black bets to complex number combinations, the
+                choice is yours.
               </motion.p>
-              
+
               {/* Game highlights */}
-              <motion.div 
+              <motion.div
                 className="flex flex-wrap gap-4 mt-4"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -745,12 +816,12 @@ export default function GameRoulette() {
                 </div>
               </motion.div>
             </div>
-            
+
             {/* Right Column - Stats and Controls */}
             <div className="md:w-1/2">
               <div className="bg-gradient-to-br from-red-900/20 to-red-800/5 rounded-xl p-4 border border-red-800/20 shadow-lg shadow-red-900/10">
                 {/* Quick stats in top row */}
-                <motion.div 
+                <motion.div
                   className="grid grid-cols-3 gap-2 mb-4"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -760,27 +831,39 @@ export default function GameRoulette() {
                     <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600/20 mb-1">
                       <FaChartLine className="text-blue-400" />
                     </div>
-                    <div className="text-xs text-white/50 font-sans text-center">Total Bets</div>
-                    <div className="text-white font-display text-sm md:text-base">{gameStatistics.totalBets}</div>
+                    <div className="text-xs text-white/50 font-sans text-center">
+                      Total Bets
+                    </div>
+                    <div className="text-white font-display text-sm md:text-base">
+                      {gameStatistics.totalBets}
+                    </div>
                   </div>
-                  
+
                   <div className="flex flex-col items-center p-2 bg-black/20 rounded-lg">
                     <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-600/20 mb-1">
                       <FaCoins className="text-yellow-400" />
                     </div>
-                    <div className="text-xs text-white/50 font-sans text-center">Volume</div>
-                    <div className="text-white font-display text-sm md:text-base">{gameStatistics.totalVolume}</div>
+                    <div className="text-xs text-white/50 font-sans text-center">
+                      Volume
+                    </div>
+                    <div className="text-white font-display text-sm md:text-base">
+                      {gameStatistics.totalVolume}
+                    </div>
                   </div>
-                  
+
                   <div className="flex flex-col items-center p-2 bg-black/20 rounded-lg">
                     <div className="flex items-center justify-center w-8 h-8 rounded-full bg-red-600/20 mb-1">
                       <FaTrophy className="text-yellow-500" />
                     </div>
-                    <div className="text-xs text-white/50 font-sans text-center">Max Win</div>
-                    <div className="text-white font-display text-sm md:text-base">{gameStatistics.maxWin}</div>
+                    <div className="text-xs text-white/50 font-sans text-center">
+                      Max Win
+                    </div>
+                    <div className="text-white font-display text-sm md:text-base">
+                      {gameStatistics.maxWin}
+                    </div>
                   </div>
                 </motion.div>
-                
+
                 {/* Quick actions */}
                 <motion.div
                   className="flex flex-wrap justify-between gap-2"
@@ -788,22 +871,22 @@ export default function GameRoulette() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.4 }}
                 >
-                  <button 
-                    onClick={() => scrollToElement('strategy')}
+                  <button
+                    onClick={() => scrollToElement("strategy")}
                     className="flex items-center justify-center px-4 py-2 bg-gradient-to-r from-red-800/40 to-red-900/20 rounded-lg text-white font-medium text-sm hover:from-red-700/40 hover:to-red-800/20 transition-all duration-300"
                   >
                     <GiCardRandom className="mr-2" />
                     Strategy Guide
                   </button>
-                  <button 
-                    onClick={() => scrollToElement('payouts')}
+                  <button
+                    onClick={() => scrollToElement("payouts")}
                     className="flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-800/40 to-blue-900/20 rounded-lg text-white font-medium text-sm hover:from-blue-700/40 hover:to-blue-800/20 transition-all duration-300"
                   >
                     <FaCoins className="mr-2" />
                     Payout Tables
                   </button>
-                  <button 
-                    onClick={() => scrollToElement('history')}
+                  <button
+                    onClick={() => scrollToElement("history")}
                     className="flex items-center justify-center px-4 py-2 bg-gradient-to-r from-purple-800/40 to-purple-900/20 rounded-lg text-white font-medium text-sm hover:from-purple-700/40 hover:to-purple-800/20 transition-all duration-300"
                   >
                     <FaChartLine className="mr-2" />
@@ -822,7 +905,10 @@ export default function GameRoulette() {
 
   const [events, dispatchEvents] = useReducer(eventReducer, []);
   const [bet, setBet] = useState(0);
-  const [inside, dispatchInside] = useReducer(arrayReducer, new Array(145).fill(0));
+  const [inside, dispatchInside] = useReducer(
+    arrayReducer,
+    new Array(145).fill(0)
+  );
   const [red, setRed] = useState(0);
   const [black, setBlack] = useState(0);
   const [odd, setOdd] = useState(0);
@@ -841,7 +927,7 @@ export default function GameRoulette() {
     "Placing Bet...",
     "Bet Placed Successfully!",
     "Generating VRF Outcome...",
-    "Result Ready!"
+    "Result Ready!",
   ]);
   const [selectedNumbers, setSelectedNumbers] = useState([]);
   const [currentBetType, setCurrentBetType] = useState(null);
@@ -855,24 +941,31 @@ export default function GameRoulette() {
   const [isDev, setIsDev] = useState(false);
   const [error, setError] = useState(null);
   const [pendingBets, setPendingBets] = useState([]);
-  const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
+  const [notification, setNotification] = useState({
+    open: false,
+    message: "",
+    severity: "info",
+  });
 
-  const { data: hash, isPending, writeContract: wagmiWriteContract } = useWriteContract();
+  const {
+    data: hash,
+    isPending,
+    writeContract: wagmiWriteContract,
+  } = useWriteContract();
 
   // Get contract details using the hook
 
-
   const checkTransactionStatus = async (hash) => {
     try {
-      const receipt = await dynamicPublicClient.waitForTransactionReceipt({ hash });
+      const receipt = await dynamicPublicClient.waitForTransactionReceipt({
+        hash,
+      });
       return receipt.status; // 'success' or 'reverted'
     } catch (error) {
       console.error("Error checking transaction status:", error);
-      return 'failed';
+      return "failed";
     }
   };
-
-  
 
   // Get wallet status and balance
   const { balance } = useToken(dtAddress);
@@ -886,7 +979,7 @@ export default function GameRoulette() {
     gameHistory: offChainHistory,
     playRouletteOffChain,
     isSessionActive,
-    initializeSession
+    initializeSession,
   } = useOffChainCasinoGames();
 
   // Session auto-initializes via the hook - no manual initialization needed
@@ -895,8 +988,15 @@ export default function GameRoulette() {
   const [lastSuccessfulBet, setLastSuccessfulBet] = useState(null);
 
   // Add wagmi hooks for contract interactions
-  const { writeContractAsync, data: wagmiWriteResult, error: wagmiWriteError, isPending: wagmiIsPending } = useWriteContract();
-  const { data: wagmiTransactionReceipt } = useWaitForTransactionReceipt({ hash: wagmiWriteResult?.hash });
+  const {
+    writeContractAsync,
+    data: wagmiWriteResult,
+    error: wagmiWriteError,
+    isPending: wagmiIsPending,
+  } = useWriteContract();
+  const { data: wagmiTransactionReceipt } = useWaitForTransactionReceipt({
+    hash: wagmiWriteResult?.hash,
+  });
 
   // Initialize Enhanced Roulette with gasless functionality
   const {
@@ -906,16 +1006,16 @@ export default function GameRoulette() {
     gasAllowanceRemaining,
     isWhitelisted,
     isLoading: gaslessLoading,
-    error: gaslessError
+    error: gaslessError,
   } = useEnhancedRoulette(rouletteContractAddress, rouletteABI, dtAddress);
 
   // Add debug logging for wallet state
   useEffect(() => {
-    console.log('Wallet Status:', {
+    console.log("Wallet Status:", {
       isConnected: true,
-      address: '',
+      address: "",
       balance,
-      correctNetwork
+      correctNetwork,
     });
   }, [balance, correctNetwork]);
 
@@ -932,7 +1032,9 @@ export default function GameRoulette() {
   const playSound = useCallback((ref) => {
     if (!ref?.current || ref.current.muted) return;
     ref.current.currentTime = 0;
-    ref.current.play().catch(error => console.error("Sound play failed:", error));
+    ref.current
+      .play()
+      .catch((error) => console.error("Sound play failed:", error));
   }, []);
 
   // Start background sounds as soon as component mounts
@@ -949,13 +1051,13 @@ export default function GameRoulette() {
           console.log(`${name} ref not available`);
           return;
         }
-        
+
         try {
           ref.current.volume = volume;
           // Load the audio
           await ref.current.load();
           console.log(`${name} loaded successfully`);
-          
+
           // Try to play
           const playPromise = ref.current.play();
           if (playPromise !== undefined) {
@@ -968,25 +1070,39 @@ export default function GameRoulette() {
                 // Add click event listener if not already attempted
                 if (!backgroundMusicAttempted && name === "Background Music") {
                   backgroundMusicAttempted = true;
-                  document.addEventListener('click', async () => {
-                    try {
-                      await ref.current.play();
-                      console.log(`${name} started after user interaction`);
-                    } catch (err) {
-                      console.log(`${name} failed after user interaction:`, err);
-                    }
-                  }, { once: true });
+                  document.addEventListener(
+                    "click",
+                    async () => {
+                      try {
+                        await ref.current.play();
+                        console.log(`${name} started after user interaction`);
+                      } catch (err) {
+                        console.log(
+                          `${name} failed after user interaction:`,
+                          err
+                        );
+                      }
+                    },
+                    { once: true }
+                  );
                 }
                 if (!ambientSoundsAttempted && name === "Ambient Sounds") {
                   ambientSoundsAttempted = true;
-                  document.addEventListener('click', async () => {
-                    try {
-                      await ref.current.play();
-                      console.log(`${name} started after user interaction`);
-                    } catch (err) {
-                      console.log(`${name} failed after user interaction:`, err);
-                    }
-                  }, { once: true });
+                  document.addEventListener(
+                    "click",
+                    async () => {
+                      try {
+                        await ref.current.play();
+                        console.log(`${name} started after user interaction`);
+                      } catch (err) {
+                        console.log(
+                          `${name} failed after user interaction:`,
+                          err
+                        );
+                      }
+                    },
+                    { once: true }
+                  );
                 }
               });
           }
@@ -1025,10 +1141,10 @@ export default function GameRoulette() {
       chipPlaceRef,
       menuClickRef,
       backgroundMusicRef,
-      ambientSoundsRef
+      ambientSoundsRef,
     ];
 
-    audioRefs.forEach(ref => {
+    audioRefs.forEach((ref) => {
       if (ref?.current) {
         ref.current.muted = isMuted;
         console.log(`Set muted=${isMuted} for audio element`);
@@ -1039,36 +1155,37 @@ export default function GameRoulette() {
   useEffect(() => {
     // Force production mode for contract interactions
     setIsDev(false);
-    console.log('Development mode:', process.env.NODE_ENV);
+    console.log("Development mode:", process.env.NODE_ENV);
   }, []);
 
   useEffect(() => {
     // Set up event listeners
     const setupEventListeners = () => {
       if (!dtAddress || !dtIsConnected) {
-        console.log('Wallet not connected, skipping event listeners');
+        console.log("Wallet not connected, skipping event listeners");
         return;
       }
 
-      console.log('Setting up contract event listeners...');
-      console.log('Contract address:', rouletteContractAddress);
-      console.log('Connected wallet:', dtAddress);
+      console.log("Setting up contract event listeners...");
+      console.log("Contract address:", rouletteContractAddress);
+      console.log("Connected wallet:", dtAddress);
 
       const winningsListener = dynamicPublicClient.watchContractEvent({
-      address: rouletteContractAddress,
-      abi: rouletteABI,
-      eventName: "RandomGenerated",
-      onLogs: (logs) => {
-          console.log('RandomGenerated event received:', logs);
+        address: rouletteContractAddress,
+        abi: rouletteABI,
+        eventName: "RandomGenerated",
+        onLogs: (logs) => {
+          console.log("RandomGenerated event received:", logs);
           try {
             // Safely parse the random number
             const randomNumberRaw = logs[0]?.args?.randomNumber;
-            const randomNumber = typeof randomNumberRaw === 'object' 
-              ? parseInt(randomNumberRaw.toString()) 
-              : parseInt(randomNumberRaw);
-            
+            const randomNumber =
+              typeof randomNumberRaw === "object"
+                ? parseInt(randomNumberRaw.toString())
+                : parseInt(randomNumberRaw);
+
             if (!isNaN(randomNumber)) {
-        setRollResult(randomNumber);
+              setRollResult(randomNumber);
               setNotificationIndex(notificationSteps.RESULT_READY);
               console.log(`Random Number Generated: ${randomNumber}`);
             } else {
@@ -1077,50 +1194,58 @@ export default function GameRoulette() {
           } catch (error) {
             console.error("Error processing random number:", error);
           }
-      },
-    });
+        },
+      });
 
       const betResultListener = dynamicPublicClient.watchContractEvent({
-      address: rouletteContractAddress,
-      abi: rouletteABI,
-      eventName: "BetResult",
-      onLogs: (logs) => {
-          console.log('BetResult event received:', logs);
+        address: rouletteContractAddress,
+        abi: rouletteABI,
+        eventName: "BetResult",
+        onLogs: (logs) => {
+          console.log("BetResult event received:", logs);
           try {
             if (!logs || !logs[0] || !logs[0].args) {
               console.error("Invalid logs in BetResult event:", logs);
               return;
             }
-            
+
             const { player, amount, won } = logs[0].args;
-            
+
             // Safely compare addresses
             const playerAddress = player ? player.toLowerCase() : null;
             const userAddress = dtAddress ? dtAddress.toLowerCase() : null;
-            
+
             if (userAddress && playerAddress === userAddress) {
               // Safely convert amount to number
               let amountNum = 0;
               try {
-                const amountStr = typeof amount === 'object' ? amount.toString() : String(amount);
+                const amountStr =
+                  typeof amount === "object"
+                    ? amount.toString()
+                    : String(amount);
                 amountNum = parseFloat(amountStr) / 1e18;
               } catch (e) {
                 console.error("Error parsing amount:", e);
                 amountNum = 0;
               }
-              
+
               setWinnings(won ? amountNum : 0);
-              
+
               // Add to betting history
-              setBettingHistory(prev => [{
-                type: currentBetType?.type || 'Unknown',
-                amount: amountNum,
-                won: Boolean(won),
-                payout: won ? amountNum : 0,
-                roll: rollResult,
-                timestamp: new Date().toISOString()
-              }, ...prev].slice(0, 10)); // Keep last 10 bets
-              
+              setBettingHistory((prev) =>
+                [
+                  {
+                    type: currentBetType?.type || "Unknown",
+                    amount: amountNum,
+                    won: Boolean(won),
+                    payout: won ? amountNum : 0,
+                    roll: rollResult,
+                    timestamp: new Date().toISOString(),
+                  },
+                  ...prev,
+                ].slice(0, 10)
+              ); // Keep last 10 bets
+
               console.log(`Bet Result - Won: ${won}, Amount: ${amountNum}`);
             }
           } catch (error) {
@@ -1134,18 +1259,21 @@ export default function GameRoulette() {
         abi: rouletteABI,
         eventName: "RandomNumberRequested",
         onLogs: (logs) => {
-          console.log('RandomNumberRequested event received:', logs);
+          console.log("RandomNumberRequested event received:", logs);
           try {
             setNotificationIndex(notificationSteps.GENERATING_VRF);
-            
+
             // Handle the request ID safely
             if (logs && logs[0] && logs[0].args) {
               const requestId = logs[0].args.requestId;
-              const safeRequestId = typeof requestId === 'object' 
-                ? (requestId.toString ? requestId.toString() : JSON.stringify(requestId)) 
-                : requestId;
+              const safeRequestId =
+                typeof requestId === "object"
+                  ? requestId.toString
+                    ? requestId.toString()
+                    : JSON.stringify(requestId)
+                  : requestId;
               console.log("VRF Request ID:", safeRequestId);
-      } else {
+            } else {
               console.log("VRF Request received but no request ID found");
             }
           } catch (error) {
@@ -1155,31 +1283,41 @@ export default function GameRoulette() {
       });
 
       return () => {
-        if (typeof winningsListener === 'function') winningsListener();
-        if (typeof betResultListener === 'function') betResultListener();
-        if (typeof vrfRequestListener === 'function') vrfRequestListener();
+        if (typeof winningsListener === "function") winningsListener();
+        if (typeof betResultListener === "function") betResultListener();
+        if (typeof vrfRequestListener === "function") vrfRequestListener();
       };
     };
 
     setupEventListeners();
-  }, [dtAddress, dtIsConnected, currentBetType, rollResult, setNotificationIndex, setRollResult, setWinnings, setBettingHistory, setCurrentBetType]);
+  }, [
+    dtAddress,
+    dtIsConnected,
+    currentBetType,
+    rollResult,
+    setNotificationIndex,
+    setRollResult,
+    setWinnings,
+    setBettingHistory,
+    setCurrentBetType,
+  ]);
 
   // Check screen size for responsive layout
   useEffect(() => {
     const checkScreenSize = () => {
       setIsSmallScreen(window.innerWidth < 768);
     };
-    
+
     checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    
-    return () => window.removeEventListener('resize', checkScreenSize);
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
-  
+
   // Track recent results
   useEffect(() => {
     if (rollResult >= 0) {
-      setRecentResults(prev => [rollResult, ...prev].slice(0, 10));
+      setRecentResults((prev) => [rollResult, ...prev].slice(0, 10));
     }
   }, [rollResult]);
 
@@ -1204,293 +1342,406 @@ export default function GameRoulette() {
   };
 
   // Update the revertEvent function
-  const revertEvent = useCallback((e) => {
-    if (events.length > 0) {
-      playSound(menuClickRef);
-      const lastEvent = events[events.length - 1];
-      
-      switch (lastEvent.type) {
+  const revertEvent = useCallback(
+    (e) => {
+      if (events.length > 0) {
+        playSound(menuClickRef);
+        const lastEvent = events[events.length - 1];
+
+        switch (lastEvent.type) {
+          case "red":
+            setRed(lastEvent.oldVal);
+            break;
+          case "black":
+            setBlack(lastEvent.oldVal);
+            break;
+          case "odd":
+            setOdd(lastEvent.oldVal);
+            break;
+          case "even":
+            setEven(lastEvent.oldVal);
+            break;
+          case "over":
+            setOver(lastEvent.oldVal);
+            break;
+          case "under":
+            setUnder(lastEvent.oldVal);
+            break;
+          case "dozens":
+            dispatchDozens({
+              type: "update",
+              ind: lastEvent.ind,
+              val: lastEvent.oldVal,
+            });
+            break;
+          case "columns":
+            dispatchColumns({
+              type: "update",
+              ind: lastEvent.ind,
+              val: lastEvent.oldVal,
+            });
+            break;
+          case "inside":
+            dispatchInside({
+              type: "update",
+              ind: lastEvent.ind,
+              val: lastEvent.oldVal,
+            });
+            break;
+        }
+
+        // Remove the last event from history
+        dispatchEvents({ type: "update", payload: events.slice(0, -1) });
+      }
+    },
+    [events, playSound, menuClickRef]
+  );
+
+  // Update the placeBet function to accumulate bets
+  // Update the placeBet function to accumulate bets
+  const placeBet = useCallback(
+    (e, type, ind = 0, newVal = bet, revert = false) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (isNaN(newVal)) {
+        return;
+      }
+
+      // Play chip sound when placing a bet
+      if (!revert && newVal > 0) {
+        playSound(chipPlaceRef);
+      }
+
+      let oldVal = 0;
+      let betType = 0;
+      let betValue = 0;
+      let numbers = [];
+
+      switch (type) {
         case "red":
-          setRed(lastEvent.oldVal);
+          oldVal = red;
+          const updatedRed = revert ? newVal : red + newVal;
+          if (red !== updatedRed) {
+            if (!revert) {
+              dispatchEvents({
+                type: "update",
+                payload: [...events, { type, oldVal, newVal: updatedRed, ind }],
+              });
+            }
+            setRed(updatedRed);
+            // Add to pending bets for red
+            if (!revert && newVal > 0) {
+              betType = 1; // COLOR
+              betValue = 0; // Red
+              numbers = []; // Simple bets have empty numbers array
+              setPendingBets((prev) => [
+                ...prev,
+                { betType, betValue, amount: newVal, numbers, id: Date.now() },
+              ]);
+            }
+          }
           break;
         case "black":
-          setBlack(lastEvent.oldVal);
+          oldVal = black;
+          const updatedBlack = revert ? newVal : black + newVal;
+          if (black !== updatedBlack) {
+            if (!revert) {
+              dispatchEvents({
+                type: "update",
+                payload: [
+                  ...events,
+                  { type, oldVal, newVal: updatedBlack, ind },
+                ],
+              });
+            }
+            setBlack(updatedBlack);
+            // Add to pending bets for black
+            if (!revert && newVal > 0) {
+              betType = 1; // COLOR
+              betValue = 1; // Black
+              numbers = []; // Simple bets have empty numbers array
+              setPendingBets((prev) => [
+                ...prev,
+                { betType, betValue, amount: newVal, numbers, id: Date.now() },
+              ]);
+            }
+          }
           break;
         case "odd":
-          setOdd(lastEvent.oldVal);
+          oldVal = odd;
+          const updatedOdd = revert ? newVal : odd + newVal;
+          if (odd !== updatedOdd) {
+            if (!revert) {
+              dispatchEvents({
+                type: "update",
+                payload: [...events, { type, oldVal, newVal: updatedOdd, ind }],
+              });
+            }
+            setOdd(updatedOdd);
+            // Add to pending bets for odd
+            if (!revert && newVal > 0) {
+              betType = 2; // ODDEVEN
+              betValue = 1; // Odd
+              numbers = []; // Simple bets have empty numbers array
+              setPendingBets((prev) => [
+                ...prev,
+                { betType, betValue, amount: newVal, numbers, id: Date.now() },
+              ]);
+            }
+          }
           break;
         case "even":
-          setEven(lastEvent.oldVal);
+          oldVal = even;
+          const updatedEven = revert ? newVal : even + newVal;
+          if (even !== updatedEven) {
+            if (!revert) {
+              dispatchEvents({
+                type: "update",
+                payload: [
+                  ...events,
+                  { type, oldVal, newVal: updatedEven, ind },
+                ],
+              });
+            }
+            setEven(updatedEven);
+            // Add to pending bets for even
+            if (!revert && newVal > 0) {
+              betType = 2; // ODDEVEN
+              betValue = 0; // Even
+              numbers = []; // Simple bets have empty numbers array
+              setPendingBets((prev) => [
+                ...prev,
+                { betType, betValue, amount: newVal, numbers, id: Date.now() },
+              ]);
+            }
+          }
           break;
         case "over":
-          setOver(lastEvent.oldVal);
+          oldVal = over;
+          const updatedOver = revert ? newVal : over + newVal;
+          if (over !== updatedOver) {
+            if (!revert) {
+              dispatchEvents({
+                type: "update",
+                payload: [
+                  ...events,
+                  { type, oldVal, newVal: updatedOver, ind },
+                ],
+              });
+            }
+            setOver(updatedOver);
+            // Add to pending bets for over
+            if (!revert && newVal > 0) {
+              betType = 3; // HIGHLOW
+              betValue = 1; // High (19-36)
+              numbers = []; // Simple bets have empty numbers array
+              setPendingBets((prev) => [
+                ...prev,
+                { betType, betValue, amount: newVal, numbers, id: Date.now() },
+              ]);
+            }
+          }
           break;
         case "under":
-          setUnder(lastEvent.oldVal);
+          oldVal = under;
+          const updatedUnder = revert ? newVal : under + newVal;
+          if (under !== updatedUnder) {
+            if (!revert) {
+              dispatchEvents({
+                type: "update",
+                payload: [
+                  ...events,
+                  { type, oldVal, newVal: updatedUnder, ind },
+                ],
+              });
+            }
+            setUnder(updatedUnder);
+            // Add to pending bets for under
+            if (!revert && newVal > 0) {
+              betType = 3; // HIGHLOW
+              betValue = 0; // Low (1-18)
+              numbers = []; // Simple bets have empty numbers array
+              setPendingBets((prev) => [
+                ...prev,
+                { betType, betValue, amount: newVal, numbers, id: Date.now() },
+              ]);
+            }
+          }
           break;
         case "dozens":
-          dispatchDozens({ type: "update", ind: lastEvent.ind, val: lastEvent.oldVal });
+          oldVal = dozens[ind];
+          const updatedDozen = revert ? newVal : dozens[ind] + newVal;
+          if (dozens[ind] !== updatedDozen) {
+            if (!revert) {
+              dispatchEvents({
+                type: "update",
+                payload: [
+                  ...events,
+                  { type, oldVal, newVal: updatedDozen, ind },
+                ],
+              });
+            }
+            dispatchDozens({ type: "update", ind, val: updatedDozen });
+            // Add to pending bets for dozens
+            if (!revert && newVal > 0) {
+              betType = 4; // DOZEN
+              betValue = ind; // 0, 1, or 2 for first, second, third dozen
+              numbers = []; // Simple bets have empty numbers array
+              setPendingBets((prev) => [
+                ...prev,
+                { betType, betValue, amount: newVal, numbers, id: Date.now() },
+              ]);
+            }
+          }
           break;
         case "columns":
-          dispatchColumns({ type: "update", ind: lastEvent.ind, val: lastEvent.oldVal });
+          oldVal = columns[ind];
+          const updatedColumn = revert ? newVal : columns[ind] + newVal;
+          if (columns[ind] !== updatedColumn) {
+            if (!revert) {
+              dispatchEvents({
+                type: "update",
+                payload: [
+                  ...events,
+                  { type, oldVal, newVal: updatedColumn, ind },
+                ],
+              });
+            }
+            dispatchColumns({ type: "update", ind, val: updatedColumn });
+            // Add to pending bets for columns
+            if (!revert && newVal > 0) {
+              betType = 5; // COLUMN
+              betValue = ind; // 0, 1, or 2 for first, second, third column
+              numbers = []; // Simple bets have empty numbers array
+              setPendingBets((prev) => [
+                ...prev,
+                { betType, betValue, amount: newVal, numbers, id: Date.now() },
+              ]);
+            }
+          }
           break;
         case "inside":
-          dispatchInside({ type: "update", ind: lastEvent.ind, val: lastEvent.oldVal });
+          oldVal = inside[ind];
+          const updatedInside = revert ? newVal : inside[ind] + newVal;
+          if (inside[ind] !== updatedInside) {
+            if (!revert) {
+              dispatchEvents({
+                type: "update",
+                payload: [
+                  ...events,
+                  { type, oldVal, newVal: updatedInside, ind },
+                ],
+              });
+            }
+            dispatchInside({ type: "update", ind, val: updatedInside });
+            // Add to pending bets for inside bets
+            if (!revert && newVal > 0) {
+              // Determine the type of inside bet based on the index
+              if (ind === 0) {
+                betType = 0; // NUMBER (straight up)
+                betValue = 0; // Number 0
+                numbers = []; // Empty array for NUMBER bet type
+              } else {
+                // For other numbers, determine bet type based on position
+                const number = Math.floor((ind - 1) / 4) + 1;
+                const position = (ind - 1) % 4;
+
+                switch (position) {
+                  case 0: // Straight up
+                    betType = 0; // NUMBER
+                    betValue = number;
+                    numbers = []; // Empty array for NUMBER bet type
+                    break;
+                  case 1: // Split left
+                    betType = 6; // SPLIT
+                    betValue = 0;
+                    numbers = [number, number - 1];
+                    break;
+                  case 2: // Split bottom
+                    betType = 6; // SPLIT
+                    betValue = 0;
+                    numbers = [number, number + 3];
+                    break;
+                  case 3: // Corner
+                    betType = 8; // CORNER
+                    betValue = 0;
+                    numbers = [number, number + 1, number + 3, number + 4];
+                    break;
+                }
+              }
+              setPendingBets((prev) => [
+                ...prev,
+                { betType, betValue, amount: newVal, numbers, id: Date.now() },
+              ]);
+            }
+          }
           break;
       }
-      
-      // Remove the last event from history
-      dispatchEvents({ type: "update", payload: events.slice(0, -1) });
-    }
-  }, [events, playSound, menuClickRef]);
-
-  // Update the placeBet function to accumulate bets
-  // Update the placeBet function to accumulate bets
-  const placeBet = useCallback((e, type, ind = 0, newVal = bet, revert = false) => {
-    if (e) {
-    e.preventDefault();
-    e.stopPropagation();
-    }
-    if (isNaN(newVal)) {
-      return;
-    }
-
-    // Play chip sound when placing a bet
-    if (!revert && newVal > 0) {
-      playSound(chipPlaceRef);
-    }
-
-    let oldVal = 0;
-    let betType = 0;
-    let betValue = 0;
-    let numbers = [];
-
-    switch (type) {
-      case "red":
-        oldVal = red;
-        const updatedRed = revert ? newVal : red + newVal;
-        if (red !== updatedRed) {
-        if (!revert) {
-            dispatchEvents({ type: "update", payload: [...events, { type, oldVal, newVal: updatedRed, ind }] });
-          }
-          setRed(updatedRed);
-          // Add to pending bets for red
-          if (!revert && newVal > 0) {
-            betType = 1; // COLOR
-            betValue = 0; // Red
-            numbers = []; // Simple bets have empty numbers array
-            setPendingBets(prev => [...prev, { betType, betValue, amount: newVal, numbers, id: Date.now() }]);
-          }
-        }
-        break;
-      case "black":
-        oldVal = black;
-        const updatedBlack = revert ? newVal : black + newVal;
-        if (black !== updatedBlack) {
-        if (!revert) {
-            dispatchEvents({ type: "update", payload: [...events, { type, oldVal, newVal: updatedBlack, ind }] });
-          }
-          setBlack(updatedBlack);
-          // Add to pending bets for black
-          if (!revert && newVal > 0) {
-            betType = 1; // COLOR
-            betValue = 1; // Black
-            numbers = []; // Simple bets have empty numbers array
-            setPendingBets(prev => [...prev, { betType, betValue, amount: newVal, numbers, id: Date.now() }]);
-          }
-        }
-        break;
-      case "odd":
-        oldVal = odd;
-        const updatedOdd = revert ? newVal : odd + newVal;
-        if (odd !== updatedOdd) {
-        if (!revert) {
-            dispatchEvents({ type: "update", payload: [...events, { type, oldVal, newVal: updatedOdd, ind }] });
-          }
-          setOdd(updatedOdd);
-          // Add to pending bets for odd
-          if (!revert && newVal > 0) {
-            betType = 2; // ODDEVEN
-            betValue = 1; // Odd
-            numbers = []; // Simple bets have empty numbers array
-            setPendingBets(prev => [...prev, { betType, betValue, amount: newVal, numbers, id: Date.now() }]);
-          }
-        }
-        break;
-      case "even":
-        oldVal = even;
-        const updatedEven = revert ? newVal : even + newVal;
-        if (even !== updatedEven) {
-        if (!revert) {
-            dispatchEvents({ type: "update", payload: [...events, { type, oldVal, newVal: updatedEven, ind }] });
-          }
-          setEven(updatedEven);
-          // Add to pending bets for even
-          if (!revert && newVal > 0) {
-            betType = 2; // ODDEVEN
-            betValue = 0; // Even
-            numbers = []; // Simple bets have empty numbers array
-            setPendingBets(prev => [...prev, { betType, betValue, amount: newVal, numbers, id: Date.now() }]);
-          }
-        }
-        break;
-      case "over":
-        oldVal = over;
-        const updatedOver = revert ? newVal : over + newVal;
-        if (over !== updatedOver) {
-        if (!revert) {
-            dispatchEvents({ type: "update", payload: [...events, { type, oldVal, newVal: updatedOver, ind }] });
-          }
-          setOver(updatedOver);
-          // Add to pending bets for over
-          if (!revert && newVal > 0) {
-            betType = 3; // HIGHLOW
-            betValue = 1; // High (19-36)
-            numbers = []; // Simple bets have empty numbers array
-            setPendingBets(prev => [...prev, { betType, betValue, amount: newVal, numbers, id: Date.now() }]);
-          }
-        }
-        break;
-      case "under":
-        oldVal = under;
-        const updatedUnder = revert ? newVal : under + newVal;
-        if (under !== updatedUnder) {
-        if (!revert) {
-            dispatchEvents({ type: "update", payload: [...events, { type, oldVal, newVal: updatedUnder, ind }] });
-          }
-          setUnder(updatedUnder);
-          // Add to pending bets for under
-          if (!revert && newVal > 0) {
-            betType = 3; // HIGHLOW
-            betValue = 0; // Low (1-18)
-            numbers = []; // Simple bets have empty numbers array
-            setPendingBets(prev => [...prev, { betType, betValue, amount: newVal, numbers, id: Date.now() }]);
-          }
-        }
-        break;
-      case "dozens":
-        oldVal = dozens[ind];
-        const updatedDozen = revert ? newVal : dozens[ind] + newVal;
-        if (dozens[ind] !== updatedDozen) {
-        if (!revert) {
-            dispatchEvents({ type: "update", payload: [...events, { type, oldVal, newVal: updatedDozen, ind }] });
-          }
-          dispatchDozens({ type: "update", ind, val: updatedDozen });
-          // Add to pending bets for dozens
-          if (!revert && newVal > 0) {
-            betType = 4; // DOZEN
-            betValue = ind; // 0, 1, or 2 for first, second, third dozen
-            numbers = []; // Simple bets have empty numbers array
-            setPendingBets(prev => [...prev, { betType, betValue, amount: newVal, numbers, id: Date.now() }]);
-          }
-        }
-        break;
-      case "columns":
-        oldVal = columns[ind];
-        const updatedColumn = revert ? newVal : columns[ind] + newVal;
-        if (columns[ind] !== updatedColumn) {
-        if (!revert) {
-            dispatchEvents({ type: "update", payload: [...events, { type, oldVal, newVal: updatedColumn, ind }] });
-          }
-          dispatchColumns({ type: "update", ind, val: updatedColumn });
-          // Add to pending bets for columns
-          if (!revert && newVal > 0) {
-            betType = 5; // COLUMN
-            betValue = ind; // 0, 1, or 2 for first, second, third column
-            numbers = []; // Simple bets have empty numbers array
-            setPendingBets(prev => [...prev, { betType, betValue, amount: newVal, numbers, id: Date.now() }]);
-          }
-        }
-        break;
-      case "inside":
-        oldVal = inside[ind];
-        const updatedInside = revert ? newVal : inside[ind] + newVal;
-        if (inside[ind] !== updatedInside) {
-        if (!revert) {
-            dispatchEvents({ type: "update", payload: [...events, { type, oldVal, newVal: updatedInside, ind }] });
-        }
-          dispatchInside({ type: "update", ind, val: updatedInside });
-          // Add to pending bets for inside bets
-          if (!revert && newVal > 0) {
-            // Determine the type of inside bet based on the index
-            if (ind === 0) {
-              betType = 0; // NUMBER (straight up)
-              betValue = 0; // Number 0
-              numbers = []; // Empty array for NUMBER bet type
-            } else {
-              // For other numbers, determine bet type based on position
-              const number = Math.floor((ind - 1) / 4) + 1;
-              const position = (ind - 1) % 4;
-              
-              switch (position) {
-                case 0: // Straight up
-                  betType = 0; // NUMBER
-                  betValue = number;
-                  numbers = []; // Empty array for NUMBER bet type
-                  break;
-                case 1: // Split left
-                  betType = 6; // SPLIT
-                  betValue = 0;
-                  numbers = [number, number - 1];
-                  break;
-                case 2: // Split bottom
-                  betType = 6; // SPLIT
-                  betValue = 0;
-                  numbers = [number, number + 3];
-                  break;
-                case 3: // Corner
-                  betType = 8; // CORNER
-                  betValue = 0;
-                  numbers = [number, number + 1, number + 3, number + 4];
-                  break;
-              }
-            }
-            setPendingBets(prev => [...prev, { betType, betValue, amount: newVal, numbers, id: Date.now() }]);
-          }
-      }
-        break;
-    }
-  }, [bet, events, red, black, odd, even, over, under, dozens, columns, inside, playSound, chipPlaceRef]);
+    },
+    [
+      bet,
+      events,
+      red,
+      black,
+      odd,
+      even,
+      over,
+      under,
+      dozens,
+      columns,
+      inside,
+      playSound,
+      chipPlaceRef,
+    ]
+  );
   // reset all the bets
-  const reset = useCallback((e) => {
-    if (e) e.preventDefault();
-    playSound(menuClickRef);
-    setRed(0);
-    setBlack(0);
-    setOdd(0);
-    setEven(0);
-    setOver(0);
-    setUnder(0);
-    dispatchDozens({ type: "reset" });
-    dispatchColumns({ type: "reset" });
-    dispatchInside({ type: "reset" });
-    dispatchEvents({ type: "reset" });
-    setRollResult(-1);
-    setWinnings(-1);
-    setPendingBets([]); // Clear pending bets
-  }, [playSound, menuClickRef]);
+  const reset = useCallback(
+    (e) => {
+      if (e) e.preventDefault();
+      playSound(menuClickRef);
+      setRed(0);
+      setBlack(0);
+      setOdd(0);
+      setEven(0);
+      setOver(0);
+      setUnder(0);
+      dispatchDozens({ type: "reset" });
+      dispatchColumns({ type: "reset" });
+      dispatchInside({ type: "reset" });
+      dispatchEvents({ type: "reset" });
+      setRollResult(-1);
+      setWinnings(-1);
+      setPendingBets([]); // Clear pending bets
+    },
+    [playSound, menuClickRef]
+  );
 
   // updating the bet size
-  const handleBetChange = useCallback((e) => {
-    setBet(parseFloat(e.target.value));
-    playSound(chipSelectRef);
-  }, [playSound, chipSelectRef]);
+  const handleBetChange = useCallback(
+    (e) => {
+      setBet(parseFloat(e.target.value));
+      playSound(chipSelectRef);
+    },
+    [playSound, chipSelectRef]
+  );
 
   // Helper function to convert bet type numbers to names
   const getBetTypeName = (betType) => {
     const betTypeMap = {
-      0: 'number',
-      1: 'red',
-      2: 'black', 
-      3: 'odd',
-      4: 'even',
-      5: 'high',
-      6: 'low',
-      7: 'dozen',
-      8: 'column',
-      9: 'split'
+      0: "number",
+      1: "red",
+      2: "black",
+      3: "odd",
+      4: "even",
+      5: "high",
+      6: "low",
+      7: "dozen",
+      8: "column",
+      9: "split",
     };
-    return betTypeMap[betType] || 'number';
+    return betTypeMap[betType] || "number";
   };
 
   // Function to close the notification
@@ -1503,17 +1754,24 @@ export default function GameRoulette() {
 
   const approveTokens = async (amount) => {
     try {
-       setNotification({ open: true, message: 'Checking allowance...', severity: 'info' });
+      setNotification({
+        open: true,
+        message: "Checking allowance...",
+        severity: "info",
+      });
 
       // Get the current chain ID to determine which client to use
       let chainId;
-      if (typeof window !== 'undefined' && window.ethereum) {
-        chainId = await window.ethereum.request({ method: 'eth_chainId' });
-        console.log('Current chainId:', chainId);
+      if (typeof window !== "undefined" && window.ethereum) {
+        chainId = await window.ethereum.request({ method: "eth_chainId" });
+        console.log("Current chainId:", chainId);
       }
 
       const approvalKey = `rouletteUnlimitedApproval_${dtAddress}_${chainId}`;
-      const approvalDataRaw = typeof window !== 'undefined' ? localStorage.getItem(approvalKey) : null;
+      const approvalDataRaw =
+        typeof window !== "undefined"
+          ? localStorage.getItem(approvalKey)
+          : null;
       let approvalData = null;
       if (approvalDataRaw) {
         try {
@@ -1525,55 +1783,96 @@ export default function GameRoulette() {
       const now = Date.now();
       const ONE_DAY_MS = 30 * 24 * 60 * 60 * 1000;
       // If unlimited approval is still valid, skip approval
-      if (approvalData && approvalData.timestamp && (now - approvalData.timestamp < ONE_DAY_MS)) {
-        setNotification({ open: true, message: 'Unlimited approval active for roulette.', severity: 'info' });
+      if (
+        approvalData &&
+        approvalData.timestamp &&
+        now - approvalData.timestamp < ONE_DAY_MS
+      ) {
+        setNotification({
+          open: true,
+          message: "Unlimited approval active for roulette.",
+          severity: "info",
+        });
         return true;
       }
-      setNotification({ open: true, message: 'Checking allowance...', severity: 'info' });
+      setNotification({
+        open: true,
+        message: "Checking allowance...",
+        severity: "info",
+      });
 
       // Get contract addresses for current network
       const contractAddresses = tokenContractAddress;
-      console.log('Using contract addresses:', contractAddresses);
+      console.log("Using contract addresses:", contractAddresses);
 
       // 1. Check current allowance using the appropriate client
       const currentAllowance = await dynamicPublicClient.readContract({
         address: tokenContractAddress,
         abi: tokenABI,
-        functionName: 'allowance',
+        functionName: "allowance",
         args: [dtAddress, rouletteContractAddress],
       });
 
       // 2. If allowance is less than max, request unlimited approval
-      const MAX_UINT256 = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+      const MAX_UINT256 = BigInt(
+        "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      );
       if (currentAllowance < MAX_UINT256) {
-        setNotification({ open: true, message: 'Requesting unlimited approval for 24 hours...', severity: 'info' });
-        
+        setNotification({
+          open: true,
+          message: "Requesting unlimited approval for 24 hours...",
+          severity: "info",
+        });
+
         try {
           // Use the enhanced gasless approval function
-          console.log('Using enhanced gasless approval');
-          const approvalResult = await approveTokensGasless(tokenContractAddress, tokenABI, MAX_UINT256);
-          
+          console.log("Using enhanced gasless approval");
+          const approvalResult = await approveTokensGasless(
+            tokenContractAddress,
+            tokenABI,
+            MAX_UINT256
+          );
+
           if (approvalResult.gasless) {
-            setNotification({ open: true, message: 'Unlimited approval granted for 24 hours (gasless)!', severity: 'success' });
+            setNotification({
+              open: true,
+              message: "Unlimited approval granted for 24 hours (gasless)!",
+              severity: "success",
+            });
           } else {
-            setNotification({ open: true, message: 'Unlimited approval granted for 24 hours!', severity: 'success' });
+            setNotification({
+              open: true,
+              message: "Unlimited approval granted for 24 hours!",
+              severity: "success",
+            });
           }
-          
+
           // Store approval timestamp with chain ID
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(approvalKey, JSON.stringify({ timestamp: now, chainId }));
+          if (typeof window !== "undefined") {
+            localStorage.setItem(
+              approvalKey,
+              JSON.stringify({ timestamp: now, chainId })
+            );
           }
         } catch (approvalError) {
-          console.error('Enhanced approval failed:', approvalError);
+          console.error("Enhanced approval failed:", approvalError);
           throw approvalError;
         }
       } else {
-        setNotification({ open: true, message: 'Allowance confirmed.', severity: 'info' });
+        setNotification({
+          open: true,
+          message: "Allowance confirmed.",
+          severity: "info",
+        });
       }
       return true;
     } catch (error) {
       console.error("Error in approveTokens function:", error);
-      setNotification({ open: true, message: `Approval failed: ${error.shortMessage || error.message}`, severity: 'error' });
+      setNotification({
+        open: true,
+        message: `Approval failed: ${error.shortMessage || error.message}`,
+        severity: "error",
+      });
       return false;
     }
   };
@@ -1581,7 +1880,10 @@ export default function GameRoulette() {
   // Modify the lockBet function to include approval
   const lockBet = async () => {
     if (!dtIsConnected || !dtAddress) {
-      console.error('Wallet connection check failed:', { dtIsConnected, dtAddress });
+      console.error("Wallet connection check failed:", {
+        dtIsConnected,
+        dtAddress,
+      });
       alert("Please connect your wallet first");
       return;
     }
@@ -1603,92 +1905,108 @@ export default function GameRoulette() {
     }
 
     try {
-      console.log('Starting lockBet process...');
-      console.log('Total bet amount:', total);
-      console.log('User address:', dtAddress);
-      console.log('Roulette contract address:', rouletteContractAddress);
-      console.log('Pending bets:', pendingBets);
-      console.log('Wagmi hooks state:', {
+      console.log("Starting lockBet process...");
+      console.log("Total bet amount:", total);
+      console.log("User address:", dtAddress);
+      console.log("Roulette contract address:", rouletteContractAddress);
+      console.log("Pending bets:", pendingBets);
+      console.log("Wagmi hooks state:", {
         writeContractAsync: typeof writeContractAsync,
         wagmiWriteError,
-        wagmiIsPending
+        wagmiIsPending,
       });
-      
+
       // Check if wagmi hooks are properly loaded
       if (!writeContractAsync) {
-        console.error('writeContractAsync is not available');
-        alert("Wallet connection not ready. Please refresh the page and try again.");
+        console.error("writeContractAsync is not available");
+        alert(
+          "Wallet connection not ready. Please refresh the page and try again."
+        );
         return;
       }
-      
+
       // Additional wallet connection checks
       if (typeof window !== "undefined" && window.ethereum) {
         try {
           // Check if wallet is connected and chain ID is available
-          const accounts = await window.ethereum.request({ method: "eth_accounts" });
-          const chainId = await window.ethereum.request({ method: "eth_chainId" });
-          
-          console.log('Wallet connection details:', {
+          const accounts = await window.ethereum.request({
+            method: "eth_accounts",
+          });
+          const chainId = await window.ethereum.request({
+            method: "eth_chainId",
+          });
+
+          console.log("Wallet connection details:", {
             accounts,
             chainId,
-            isConnected: accounts.length > 0
+            isConnected: accounts.length > 0,
           });
-          
+
           if (accounts.length === 0) {
-            throw new Error('No accounts found');
+            throw new Error("No accounts found");
           }
-          
+
           if (!chainId) {
-            throw new Error('Chain ID not available');
+            throw new Error("Chain ID not available");
           }
-          
         } catch (walletError) {
-          console.error('Wallet connection check failed:', walletError);
-          alert("Wallet connection issue. Please reconnect your wallet and try again.");
+          console.error("Wallet connection check failed:", walletError);
+          alert(
+            "Wallet connection issue. Please reconnect your wallet and try again."
+          );
           return;
         }
       }
-      
+
       // Use off-chain balance instead of on-chain
-      console.log('Checking off-chain balance...');
-      console.log('Total bet amount:', total);
-      console.log('Off-chain balance:', offChainBalance);
-      
+      console.log("Checking off-chain balance...");
+      console.log("Total bet amount:", total);
+      console.log("Off-chain balance:", offChainBalance);
+
       if (total > offChainBalance) {
-        setNotification({ open: true, message: 'Insufficient off-chain balance. Please deposit more tokens.', severity: 'error' });
+        setNotification({
+          open: true,
+          message:
+            "Insufficient off-chain balance. Please deposit more tokens.",
+          severity: "error",
+        });
         return;
       }
 
       if (!isSessionActive) {
-        setNotification({ open: true, message: 'Game session not active. Please wait for initialization.', severity: 'error' });
+        setNotification({
+          open: true,
+          message: "Game session not active. Please wait for initialization.",
+          severity: "error",
+        });
         return;
       }
 
       // Prepare bets for off-chain processing
-      const offChainBets = pendingBets.map(bet => ({
+      const offChainBets = pendingBets.map((bet) => ({
         type: getBetTypeName(bet.betType),
         value: bet.betValue,
         amount: parseFloat(bet.amount),
-        numbers: bet.numbers || []
+        numbers: bet.numbers || [],
       }));
 
-      console.log('Placing off-chain bets:', offChainBets);
+      console.log("Placing off-chain bets:", offChainBets);
 
       // Place bets off-chain
       const gameResult = await playRouletteOffChain(offChainBets);
-      
-      console.log('Off-chain game result:', gameResult);
-      
+
+      console.log("Off-chain game result:", gameResult);
+
       // Store the successful bet for "Go Again" functionality
       setLastSuccessfulBet({
         pendingBets: [...pendingBets], // Store a copy of the pending bets
-        events: [...events] // Store a copy of the events
+        events: [...events], // Store a copy of the events
       });
-      
+
       // Update UI with results
       setRollResult(gameResult.result);
       setWinnings(gameResult.totalWinnings);
-      
+
       // Clear pending bets after successful placement
       setPendingBets([]);
       console.log("Off-chain bets placed successfully");
@@ -1697,132 +2015,144 @@ export default function GameRoulette() {
 
       // Show notification
       if (gameResult.totalWinnings > 0) {
-        setNotification({ 
-          open: true, 
-          message: `You won ${gameResult.totalWinnings} tokens! New balance: ${gameResult.newBalance}`, 
-          severity: 'success' 
+        setNotification({
+          open: true,
+          message: `You won ${gameResult.totalWinnings} tokens! New balance: ${gameResult.newBalance}`,
+          severity: "success",
         });
       } else {
-        setNotification({ 
-          open: true, 
-          message: `Better luck next time! New balance: ${gameResult.newBalance}`, 
-          severity: 'info' 
+        setNotification({
+          open: true,
+          message: `Better luck next time! New balance: ${gameResult.newBalance}`,
+          severity: "info",
         });
       }
-      
+
       // Return early since off-chain bet is complete
       return;
-      
     } catch (error) {
       console.error("Error locking bet:", error);
-      setNotification({ open: true, message: `Failed to lock bet: ${error.message}`, severity: 'error' });
-      
+      setNotification({
+        open: true,
+        message: `Failed to lock bet: ${error.message}`,
+        severity: "error",
+      });
+
       // Clear pending bets on failure to prevent accumulation
       setPendingBets([]);
     }
   };
 
-  const handleWithdrawWinnings = useCallback(async (e) => {
-    if (e) e.preventDefault();
-    playSound(winSoundRef);
+  const handleWithdrawWinnings = useCallback(
+    async (e) => {
+      if (e) e.preventDefault();
+      playSound(winSoundRef);
 
-    try {
-      // For off-chain games, winnings are already credited to the balance
-      // Just show confirmation and reset winnings to show "Go Again" button
-      const collectedAmount = winnings;
-      
-      console.log("🎯 Before collecting - winnings:", winnings, "lastSuccessfulBet:", lastSuccessfulBet);
-      
-      // Reset winnings to 0 so "Go Again" button appears, but don't reset everything else
-      setWinnings(0);
-      
-      console.log("✅ After setWinnings(0) - should trigger Go Again button");
-      
-      console.log("Off-chain winnings collected:", collectedAmount);
-      setNotification({ 
-        open: true, 
-        message: `Collected ${collectedAmount} APTC! New balance: ${offChainBalance}`, 
-        severity: 'success' 
-      });
-      
-      // Force a small delay to ensure state update is processed
-      setTimeout(() => {
-        console.log("🔄 State after delay - winnings should be 0:", winnings);
-      }, 100);
-      
-    } catch (error) {
-      console.error("Error collecting winnings:", error);
-      setNotification({ 
-        open: true, 
-        message: `Failed to collect winnings: ${error.message}`, 
-        severity: 'error' 
-      });
-    }
-  }, [playSound, winnings, offChainBalance]);
+      try {
+        // For off-chain games, winnings are already credited to the balance
+        // Just show confirmation and reset winnings to show "Go Again" button
+        const collectedAmount = winnings;
+
+        console.log(
+          "🎯 Before collecting - winnings:",
+          winnings,
+          "lastSuccessfulBet:",
+          lastSuccessfulBet
+        );
+
+        // Reset winnings to 0 so "Go Again" button appears, but don't reset everything else
+        setWinnings(0);
+
+        console.log("✅ After setWinnings(0) - should trigger Go Again button");
+
+        console.log("Off-chain winnings collected:", collectedAmount);
+        setNotification({
+          open: true,
+          message: `Collected ${collectedAmount} APTC! New balance: ${offChainBalance}`,
+          severity: "success",
+        });
+
+        // Force a small delay to ensure state update is processed
+        setTimeout(() => {
+          console.log("🔄 State after delay - winnings should be 0:", winnings);
+        }, 100);
+      } catch (error) {
+        console.error("Error collecting winnings:", error);
+        setNotification({
+          open: true,
+          message: `Failed to collect winnings: ${error.message}`,
+          severity: "error",
+        });
+      }
+    },
+    [playSound, winnings, offChainBalance]
+  );
 
   // Go Again function for off-chain betting
   const goAgain = useCallback(async () => {
     if (!lastSuccessfulBet) {
-      console.log('No previous bet to replay');
+      console.log("No previous bet to replay");
       return;
     }
 
     if (wheelSpinning) {
-      console.log('Wheel is still spinning, cannot place new bet');
+      console.log("Wheel is still spinning, cannot place new bet");
       return;
     }
 
     try {
-      console.log('Replaying last successful bet:', lastSuccessfulBet);
-      
+      console.log("Replaying last successful bet:", lastSuccessfulBet);
+
       // Reset the game state first
       reset();
-      
+
       // Wait a moment for the reset to complete
       setTimeout(async () => {
         // Restore the pending bets from the last successful bet
         setPendingBets([...lastSuccessfulBet.pendingBets]);
-        
+
         // Restore the events (for UI display)
-        dispatchEvents({ type: "update", payload: [...lastSuccessfulBet.events] });
-        
+        dispatchEvents({
+          type: "update",
+          payload: [...lastSuccessfulBet.events],
+        });
+
         // Restore the bet amounts on the board for visual feedback
-        lastSuccessfulBet.events.forEach(event => {
-          switch(event.type) {
-            case 'red':
+        lastSuccessfulBet.events.forEach((event) => {
+          switch (event.type) {
+            case "red":
               setRed(event.newVal);
               break;
-            case 'black':
+            case "black":
               setBlack(event.newVal);
               break;
-            case 'odd':
+            case "odd":
               setOdd(event.newVal);
               break;
-            case 'even':
+            case "even":
               setEven(event.newVal);
               break;
-            case 'over':
+            case "over":
               setOver(event.newVal);
               break;
-            case 'under':
+            case "under":
               setUnder(event.newVal);
               break;
             // Add other bet types as needed
           }
         });
-        
+
         // Automatically place the bet after a short delay
         setTimeout(() => {
           lockBet();
         }, 500);
       }, 100);
-      
     } catch (error) {
-      console.error('Error in Go Again:', error);
-      setNotification({ 
-        open: true, 
-        message: `Failed to replay bet: ${error.message}`, 
-        severity: 'error' 
+      console.error("Error in Go Again:", error);
+      setNotification({
+        open: true,
+        message: `Failed to replay bet: ${error.message}`,
+        severity: "error",
       });
     }
   }, [lastSuccessfulBet, wheelSpinning, reset, lockBet]);
@@ -1831,16 +2161,21 @@ export default function GameRoulette() {
     if (isDev) {
       // Simulate contract write in dev mode
       // Note: wagmiIsPending is handled by the hook automatically
-      
+
       // Simulate a delay for the transaction
       return new Promise((resolve) => {
         setTimeout(() => {
-          const mockTxHash = '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+          const mockTxHash =
+            "0x" +
+            Array(64)
+              .fill(0)
+              .map(() => Math.floor(Math.random() * 16).toString(16))
+              .join("");
           resolve({ hash: mockTxHash });
         }, 2000);
       });
     }
-    
+
     try {
       const result = await writeContractAsync(config);
       return result;
@@ -1857,18 +2192,20 @@ export default function GameRoulette() {
         setTimeout(() => {
           const mockReceipt = {
             blockNumber: 12345678,
-            status: 'success',
-            transactionHash: hash
+            status: "success",
+            transactionHash: hash,
           };
           resolve(mockReceipt);
         }, 3000);
       });
     }
-    
+
     try {
       // Ensure hash is a string, not an object
-      const hashStr = typeof hash === 'object' && hash.hash ? hash.hash : hash;
-      const receipt = await dynamicPublicClient.waitForTransactionReceipt({ hash: hashStr });
+      const hashStr = typeof hash === "object" && hash.hash ? hash.hash : hash;
+      const receipt = await dynamicPublicClient.waitForTransactionReceipt({
+        hash: hashStr,
+      });
       return receipt;
     } catch (error) {
       console.error("Wait for transaction error:", error);
@@ -1879,20 +2216,27 @@ export default function GameRoulette() {
   const checkNetwork = async () => {
     if (typeof window !== "undefined" && window.ethereum) {
       try {
-        const chainId = await window.ethereum.request({ method: "eth_chainId" });
+        const chainId = await window.ethereum.request({
+          method: "eth_chainId",
+        });
         // Support Mantle Sepolia (0x138b) and Local Hardhat (0x7a69)
         // Comment out Pharos Devnet (0xc352) - using Mantle Sepolia instead
-        setCorrectNetwork(chainId === "0x138b" || chainId === "0x61" || chainId === "0x7a69" || chainId === "0xaa36a7");
+        setCorrectNetwork(
+          chainId === "0x138b" ||
+            chainId === "0x61" ||
+            chainId === "0x7a69" ||
+            chainId === "0xaa36a7"
+        );
       } catch (error) {
         console.error("Error checking network:", error);
         setCorrectNetwork(false);
       }
     }
   };
-  
+
   useEffect(() => {
     checkNetwork();
-    
+
     if (window.ethereum) {
       window.ethereum.on("chainChanged", checkNetwork);
       return () => {
@@ -1974,20 +2318,23 @@ export default function GameRoulette() {
   }, [red, black, odd, even, over, under, dozens, columns, inside]);
 
   // Update the clear bet function
-  const clearBet = useCallback((e) => {
-    if (e) e.preventDefault();
-    playSound(menuClickRef);
-    setRed(0);
-    setBlack(0);
-    setOdd(0);
-    setEven(0);
-    setOver(0);
-    setUnder(0);
-    dispatchDozens({ type: "reset" });
-    dispatchColumns({ type: "reset" });
-    dispatchInside({ type: "reset" });
-    dispatchEvents({ type: "reset" });
-  }, [playSound, menuClickRef]);
+  const clearBet = useCallback(
+    (e) => {
+      if (e) e.preventDefault();
+      playSound(menuClickRef);
+      setRed(0);
+      setBlack(0);
+      setOdd(0);
+      setEven(0);
+      setOver(0);
+      setUnder(0);
+      dispatchDozens({ type: "reset" });
+      dispatchColumns({ type: "reset" });
+      dispatchInside({ type: "reset" });
+      dispatchEvents({ type: "reset" });
+    },
+    [playSound, menuClickRef]
+  );
 
   //  Wrap treasury operations in useEffect
   // useEffect(() => {
@@ -2015,39 +2362,61 @@ export default function GameRoulette() {
   // Test contract connection
   const testContractConnection = async () => {
     try {
-      console.log('Testing contract connection...');
-      
+      console.log("Testing contract connection...");
+
       const contract = getContract({
         address: rouletteContractAddress,
         abi: rouletteABI,
         client: dynamicPublicClient,
       });
-      
+
       // Try to call a simple view function
       const currentRound = await contract.read.currentRound();
-      console.log('Contract connection successful. Current round:', currentRound.toString());
-      alert('Contract connection successful!');
-      
+      console.log(
+        "Contract connection successful. Current round:",
+        currentRound.toString()
+      );
+      alert("Contract connection successful!");
     } catch (error) {
-      console.error('Contract connection failed:', error);
+      console.error("Contract connection failed:", error);
       alert(`Contract connection failed: ${error.message}`);
     }
   };
 
   return (
     <ThemeProvider theme={theme}>
-      <div className="font-sans" style={{ backgroundColor: "#080005", minHeight: "100vh", overflowX: 'hidden', }}>
+      <div
+        className="font-sans"
+        style={{
+          backgroundColor: "#080005",
+          minHeight: "100vh",
+          overflowX: "hidden",
+        }}
+      >
         {/* Audio elements */}
         <audio ref={spinSoundRef} src="/sounds/ball-spin.mp3" preload="auto" />
         <audio ref={winSoundRef} src="/sounds/win-chips.mp3" preload="auto" />
-     //   <audio ref={chipSelectRef} src="/sounds/chip-select.mp3" preload="auto" />
+        //{" "}
+        <audio
+          ref={chipSelectRef}
+          src="/sounds/chip-select.mp3"
+          preload="auto"
+        />
         <audio ref={chipPlaceRef} src="/sounds/chip-put.mp3" preload="auto" />
         <audio ref={menuClickRef} src="/sounds/menu.mp3" preload="auto" />
-        <audio ref={backgroundMusicRef} src="/sounds/background-music.mp3" preload="auto" loop />
-        <audio ref={ambientSoundsRef} src="/sounds/ambient-sounds.mp3" preload="auto" loop />
-
+        <audio
+          ref={backgroundMusicRef}
+          src="/sounds/background-music.mp3"
+          preload="auto"
+          loop
+        />
+        <audio
+          ref={ambientSoundsRef}
+          src="/sounds/ambient-sounds.mp3"
+          preload="auto"
+          loop
+        />
         <RouletteHeader />
-
         <Box
           sx={{
             display: "flex",
@@ -2158,8 +2527,8 @@ export default function GameRoulette() {
           </Box> */}
 
           {/* Responsive Grid Layout */}
-          <Grid 
-            container 
+          <Grid
+            container
             sx={{ mt: { xs: 2, md: 10 }, mx: { xs: 1, sm: 5, md: 10 } }}
             columns={isSmallScreen ? 7 : 14}
           >
@@ -2391,66 +2760,84 @@ export default function GameRoulette() {
             sx={{
               mt: 2,
               display: "flex",
-              flexDirection: { xs: 'column', md: 'row' },
-              alignItems: { xs: 'center', md: 'flex-start' },
+              flexDirection: { xs: "column", md: "row" },
+              alignItems: { xs: "center", md: "flex-start" },
               justifyContent: "center",
               mb: 5,
               gap: 4,
             }}
           >
             <Box
-              sx={{ display: "flex", flexDirection: "column", mb: { xs: 3, md: 0 } }}
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                mb: { xs: 3, md: 0 },
+              }}
             >
               <Typography variant="h3" color="text.accent">
                 Roulette
               </Typography>
-              <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-              <TooltipWide title={<Typography>{rouletteTutorial}</Typography>}>
-                <Box
-                    sx={{ display: "flex", alignItems: "center", cursor: 'pointer' }}
-                  color="text.secondary"
+              <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
+                <TooltipWide
+                  title={<Typography>{rouletteTutorial}</Typography>}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      cursor: "pointer",
+                    }}
+                    color="text.secondary"
                     onClick={() => setShowHelp(!showHelp)}
-                >
-                  <Typography variant="h6">Tutorial</Typography>
-                  <InfoIcon sx={{ ml: 1 }} />
-                </Box>
-              </TooltipWide>
-              <TooltipWide
-                title={
-                  <Box sx={{ display: "flex", flexDirection: "column" }}>
-                    {rouletteOdds.map((v, ind) => (
-                      <Typography key={`tutorial-odds-${ind}`}>{v}</Typography>
-                    ))}
+                  >
+                    <Typography variant="h6">Tutorial</Typography>
+                    <InfoIcon sx={{ ml: 1 }} />
                   </Box>
-                }
-              >
-                <Box
-                    sx={{ display: "flex", alignItems: "center", cursor: 'pointer' }}
-                  color="text.secondary"
+                </TooltipWide>
+                <TooltipWide
+                  title={
+                    <Box sx={{ display: "flex", flexDirection: "column" }}>
+                      {rouletteOdds.map((v, ind) => (
+                        <Typography key={`tutorial-odds-${ind}`}>
+                          {v}
+                        </Typography>
+                      ))}
+                    </Box>
+                  }
                 >
-                  <Typography variant="h6">Odds</Typography>
-                  <InfoIcon sx={{ ml: 1 }} />
-                </Box>
-              </TooltipWide>
-            </Box>
-              
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      cursor: "pointer",
+                    }}
+                    color="text.secondary"
+                  >
+                    <Typography variant="h6">Odds</Typography>
+                    <InfoIcon sx={{ ml: 1 }} />
+                  </Box>
+                </TooltipWide>
+              </Box>
+
               {/* Animated Roulette Wheel */}
-              <RouletteWheel 
-                spinning={wheelSpinning} 
-                result={rollResult} 
+              <RouletteWheel
+                spinning={wheelSpinning}
+                result={rollResult}
                 onSpinComplete={handleSpinComplete}
                 onSpinStart={() => playSound(spinSoundRef)}
                 onWin={() => playSound(winSoundRef)}
               />
             </Box>
-            
+
             {/* Betting Controls */}
-            <Box sx={{ 
-              display: "flex", 
-              flexDirection: "column",
-              width: { xs: '100%', md: 'auto' },
-              maxWidth: { xs: '400px', md: 'none' }
-            }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                width: { xs: "100%", md: "auto" },
+                maxWidth: { xs: "400px", md: "none" },
+              }}
+            >
               <TextFieldCurrency
                 label="Bet Amount"
                 variant="standard"
@@ -2459,41 +2846,53 @@ export default function GameRoulette() {
               />
               <Box sx={{ mt: 2, mb: 1 }}>
                 <Typography variant="body1" color="white">
-                  On-Chain Balance:{' '}
+                  On-Chain Balance:{" "}
                   {balance ? (
-                    `${currency(parseFloat(balance), { pattern: "#", precision: 4 }).format()} APTC`
+                    `${currency(parseFloat(balance), {
+                      pattern: "#",
+                      precision: 4,
+                    }).format()} APTC`
                   ) : (
                     <CircularProgress size={16} />
                   )}
                 </Typography>
                 <Typography variant="body1" color="lightgreen" sx={{ mt: 1 }}>
-                  Off-Chain Balance:{' '}
+                  Off-Chain Balance:{" "}
                   {offChainLoading ? (
                     <CircularProgress size={16} />
                   ) : offChainError ? (
-                    <span style={{ color: 'red' }}>Error loading balance</span>
+                    <span style={{ color: "red" }}>Error loading balance</span>
                   ) : gameSession ? (
-                    `${currency(offChainBalance, { pattern: "#", precision: 4 }).format()} APTC`
+                    `${currency(offChainBalance, {
+                      pattern: "#",
+                      precision: 4,
+                    }).format()} APTC`
                   ) : (
-                    <span style={{ color: 'orange' }}>Initializing session...</span>
+                    <span style={{ color: "orange" }}>
+                      Initializing session...
+                    </span>
                   )}
                 </Typography>
               </Box>
               <Typography color="white" sx={{ opacity: 0.8 }}>
-                Current Bet Total: {currency(total, { pattern: "#" }).format()} APTC
+                Current Bet Total: {currency(total, { pattern: "#" }).format()}{" "}
+                APTC
               </Typography>
-              
+
               {/* Quick Bet Buttons */}
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
-                {[1, 5, 10, 25, 50, 100].map(amount => (
-                  <Button 
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 2 }}>
+                {[1, 5, 10, 25, 50, 100].map((amount) => (
+                  <Button
                     key={amount}
                     onClick={() => setBet(amount)}
-                    sx={{ 
-                      minWidth: '40px', 
-                      height: '30px', 
-                      py: 0, 
-                      backgroundColor: bet === amount ? 'primary.light' : 'rgba(255,255,255,0.1)'
+                    sx={{
+                      minWidth: "40px",
+                      height: "30px",
+                      py: 0,
+                      backgroundColor:
+                        bet === amount
+                          ? "primary.light"
+                          : "rgba(255,255,255,0.1)",
                     }}
                   >
                     {amount}
@@ -2501,7 +2900,7 @@ export default function GameRoulette() {
                 ))}
               </Box>
             </Box>
-            
+
             <Box
               sx={{
                 display: "flex",
@@ -2511,113 +2910,143 @@ export default function GameRoulette() {
                 mt: { xs: 0, md: 1 },
               }}
             >
-              <Box sx={{ display: 'flex', gap: 2 }}>
-              <Tooltip title={<Typography>Undo last bet</Typography>}>
-                <span>
-                  <IconButton
-                    disabled={events.length === 0 || submitDisabled}
-                    onClick={revertEvent}
-                  >
-                    <UndoIcon />
+              <Box sx={{ display: "flex", gap: 2 }}>
+                <Tooltip title={<Typography>Undo last bet</Typography>}>
+                  <span>
+                    <IconButton
+                      disabled={events.length === 0 || submitDisabled}
+                      onClick={revertEvent}
+                    >
+                      <UndoIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title={<Typography>Clear bet</Typography>}>
+                  <IconButton disabled={submitDisabled} onClick={clearBet}>
+                    <ClearIcon />
                   </IconButton>
-                </span>
-              </Tooltip>
-              <Tooltip title={<Typography>Clear bet</Typography>}>
-                <IconButton
-                  disabled={submitDisabled}
-                    onClick={clearBet}
-                >
-                  <ClearIcon />
-                </IconButton>
-              </Tooltip>
-            </Box>
-              
+                </Tooltip>
+              </Box>
+
               <Box sx={{ mt: 3 }}>
-              {rollResult >= 0 ? (
-                <Box>
-                  {(() => {
-                    console.log("🎲 Button render - winnings:", winnings, "lastSuccessfulBet:", !!lastSuccessfulBet);
-                    return winnings > 0 ? (
-                      <Button 
-                        onClick={handleWithdrawWinnings}
-                        sx={{
-                          animation: 'pulse 1.5s infinite',
-                          '@keyframes pulse': {
-                            '0%': { transform: 'scale(1)' },
-                            '50%': { transform: 'scale(1.05)' },
-                            '100%': { transform: 'scale(1)' },
-                          }
-                        }}
-                      >
-                        Collect {winnings} APTC
-                      </Button>
-                    ) : (
-                      <Button onClick={goAgain}>Go Again</Button>
-                    );
-                  })()}
-                    <Box sx={{ mt: 1, textAlign: 'center' }}>
+                {rollResult >= 0 ? (
+                  <Box>
+                    {(() => {
+                      console.log(
+                        "🎲 Button render - winnings:",
+                        winnings,
+                        "lastSuccessfulBet:",
+                        !!lastSuccessfulBet
+                      );
+                      return winnings > 0 ? (
+                        <Button
+                          onClick={handleWithdrawWinnings}
+                          sx={{
+                            animation: "pulse 1.5s infinite",
+                            "@keyframes pulse": {
+                              "0%": { transform: "scale(1)" },
+                              "50%": { transform: "scale(1.05)" },
+                              "100%": { transform: "scale(1)" },
+                            },
+                          }}
+                        >
+                          Collect {winnings} APTC
+                        </Button>
+                      ) : (
+                        <Button onClick={goAgain}>Go Again</Button>
+                      );
+                    })()}
+                    <Box sx={{ mt: 1, textAlign: "center" }}>
                       <Typography variant="h5">
-                        Result: <span style={{ 
-                          color: rollResult === 0 ? '#14D854' : 
-                                 [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36].includes(rollResult) ? '#d82633' : 'white'
-                        }}>{rollResult}</span>
-                    </Typography>
+                        Result:{" "}
+                        <span
+                          style={{
+                            color:
+                              rollResult === 0
+                                ? "#14D854"
+                                : [
+                                    1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23,
+                                    25, 27, 30, 32, 34, 36,
+                                  ].includes(rollResult)
+                                ? "#d82633"
+                                : "white",
+                          }}
+                        >
+                          {rollResult}
+                        </span>
+                      </Typography>
                       {winnings > 0 ? (
-                        <Typography variant="body1" color="success.main" sx={{ animation: 'fadeIn 1s', fontWeight: 'bold' }}>
+                        <Typography
+                          variant="body1"
+                          color="success.main"
+                          sx={{ animation: "fadeIn 1s", fontWeight: "bold" }}
+                        >
                           You won {winnings} APTC!
                         </Typography>
                       ) : (
-                        <Typography variant="body1" color="white" sx={{ opacity: 0.8 }}>
+                        <Typography
+                          variant="body1"
+                          color="white"
+                          sx={{ opacity: 0.8 }}
+                        >
                           Better luck next time!
                         </Typography>
                       )}
+                    </Box>
                   </Box>
-                </Box>
-              ) : correctNetwork ? (
-                <Box sx={{ display: "flex", flexDirection: "column" }}>
-                  <Button
-                    disabled={total === 0}
-                    loading={submitDisabled}
+                ) : correctNetwork ? (
+                  <Box sx={{ display: "flex", flexDirection: "column" }}>
+                    <Button
+                      disabled={total === 0}
+                      loading={submitDisabled}
                       onClick={lockBet}
-                  >
-                    Submit Bet
-                  </Button>
-                  {submitDisabled && rollResult < 0 && (
+                    >
+                      Submit Bet
+                    </Button>
+                    {submitDisabled && rollResult < 0 && (
                       <Typography color="white" sx={{ opacity: 0.8 }}>
-                      Die being rolled, please wait...
-                    </Typography>
-                  )}
-                </Box>
-              ) : (
-                <Box sx={{ display: "flex", flexDirection: "column" }}>
-                    <Button onClick={() => switchNetwork()}>Switch Network</Button>
-                </Box>
-              )}
+                        Die being rolled, please wait...
+                      </Typography>
+                    )}
+                  </Box>
+                ) : (
+                  <Box sx={{ display: "flex", flexDirection: "column" }}>
+                    <Button onClick={() => switchNetwork()}>
+                      Switch Network
+                    </Button>
+                  </Box>
+                )}
+              </Box>
             </Box>
-          </Box>
-            
+
             {/* Toggle between History and Stats */}
-            <Box sx={{ width: { xs: '100%', md: '300px' }, mt: { xs: 4, md: 0 } }}>
-              <Box sx={{ display: 'flex', mb: 1 }}>
-                <Button 
+            <Box
+              sx={{ width: { xs: "100%", md: "300px" }, mt: { xs: 4, md: 0 } }}
+            >
+              <Box sx={{ display: "flex", mb: 1 }}>
+                <Button
                   onClick={() => setShowBettingStats(false)}
-                  sx={{ 
-                    flex: 1, 
-                    borderBottom: !showBettingStats ? '2px solid #681DDB' : '2px solid transparent'
+                  sx={{
+                    flex: 1,
+                    borderBottom: !showBettingStats
+                      ? "2px solid #681DDB"
+                      : "2px solid transparent",
                   }}
                 >
                   History
                 </Button>
-                <Button 
+                <Button
                   onClick={() => setShowBettingStats(true)}
-                  sx={{ 
-                    flex: 1, 
-                    borderBottom: showBettingStats ? '2px solid #681DDB' : '2px solid transparent'
+                  sx={{
+                    flex: 1,
+                    borderBottom: showBettingStats
+                      ? "2px solid #681DDB"
+                      : "2px solid transparent",
                   }}
                 >
                   Stats
                 </Button>
-        </Box>
+              </Box>
 
               {showBettingStats ? (
                 <BettingStats history={bettingHistory} />
@@ -2626,73 +3055,76 @@ export default function GameRoulette() {
               )}
             </Box>
           </Box>
-          
+
           {/* Help Modal for Mobile */}
           {showHelp && (
             <Box
               sx={{
-                position: 'fixed',
+                position: "fixed",
                 top: 0,
                 left: 0,
                 right: 0,
                 bottom: 0,
-                backgroundColor: 'rgba(0,0,0,0.8)',
+                backgroundColor: "rgba(0,0,0,0.8)",
                 zIndex: 1000,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                p: 2
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                p: 2,
               }}
               onClick={() => setShowHelp(false)}
             >
               <Box
                 sx={{
-                  backgroundColor: 'bg.light',
+                  backgroundColor: "bg.light",
                   p: 3,
                   borderRadius: 2,
                   maxWidth: 600,
-                  maxHeight: '80vh',
-                  overflow: 'auto'
+                  maxHeight: "80vh",
+                  overflow: "auto",
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <Typography variant="h5" sx={{ mb: 2 }}>How to Play Roulette</Typography>
+                <Typography variant="h5" sx={{ mb: 2 }}>
+                  How to Play Roulette
+                </Typography>
                 <Typography paragraph>{rouletteTutorial}</Typography>
-                <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Payout Odds</Typography>
+                <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
+                  Payout Odds
+                </Typography>
                 {rouletteOdds.map((odd, index) => (
                   <Typography key={index} paragraph>
                     {odd}
                   </Typography>
                 ))}
-                <Button 
-                  onClick={() => setShowHelp(false)}
-                  sx={{ mt: 2 }}
-                >
+                <Button onClick={() => setShowHelp(false)} sx={{ mt: 2 }}>
                   Close
                 </Button>
               </Box>
             </Box>
           )}
-          
+
           {/* New enhanced sections */}
-          <Box sx={{ 
-            mt: 8, 
-            px: { xs: 2, md: 8 },
-            mx: 'auto',
-            maxWidth: '1600px'
-          }}>
+          <Box
+            sx={{
+              mt: 8,
+              px: { xs: 2, md: 8 },
+              mx: "auto",
+              maxWidth: "1600px",
+            }}
+          >
             {/* Section Header */}
-            <Typography 
-              variant="h4" 
-              sx={{ 
-                mb: 5, 
-                textAlign: 'center', 
-                fontWeight: 'bold',
-                background: 'linear-gradient(90deg, #d82633, #681DDB)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                letterSpacing: '1px',
-                textShadow: '0 4px 8px rgba(0,0,0,0.5)'
+            <Typography
+              variant="h4"
+              sx={{
+                mb: 5,
+                textAlign: "center",
+                fontWeight: "bold",
+                background: "linear-gradient(90deg, #d82633, #681DDB)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                letterSpacing: "1px",
+                textShadow: "0 4px 8px rgba(0,0,0,0.5)",
               }}
             >
               Master European Roulette
@@ -2704,65 +3136,66 @@ export default function GameRoulette() {
               <Grid xs={12} md={6}>
                 <Box
                   sx={{
-                    position: 'relative',
-                    width: '100%',
-                    paddingTop: { xs: '56.25%', md: '56.25%' },
-                    borderRadius: '16px',
-                    overflow: 'hidden',
-                    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
-                    border: '2px solid rgba(104, 29, 219, 0.4)',
-                    transition: 'all 0.3s ease-in-out',
-                    '&:hover': {
-                      transform: 'scale(1.02)',
-                      boxShadow: '0 25px 50px rgba(0, 0, 0, 0.7)',
-                      border: '2px solid rgba(216, 38, 51, 0.5)',
+                    position: "relative",
+                    width: "100%",
+                    paddingTop: { xs: "56.25%", md: "56.25%" },
+                    borderRadius: "16px",
+                    overflow: "hidden",
+                    boxShadow: "0 20px 40px rgba(0, 0, 0, 0.6)",
+                    border: "2px solid rgba(104, 29, 219, 0.4)",
+                    transition: "all 0.3s ease-in-out",
+                    "&:hover": {
+                      transform: "scale(1.02)",
+                      boxShadow: "0 25px 50px rgba(0, 0, 0, 0.7)",
+                      border: "2px solid rgba(216, 38, 51, 0.5)",
                     },
-                    '&::before': {
+                    "&::before": {
                       content: '""',
-                      position: 'absolute',
-                      top: '-3px',
-                      left: '-3px',
-                      right: '-3px',
-                      bottom: '-3px',
-                      borderRadius: '20px',
-                      background: 'linear-gradient(45deg, #d82633, #681DDB, #14D854, #d82633)',
-                      backgroundSize: '400% 400%',
+                      position: "absolute",
+                      top: "-3px",
+                      left: "-3px",
+                      right: "-3px",
+                      bottom: "-3px",
+                      borderRadius: "20px",
+                      background:
+                        "linear-gradient(45deg, #d82633, #681DDB, #14D854, #d82633)",
+                      backgroundSize: "400% 400%",
                       zIndex: -1,
-                      filter: 'blur(10px)',
+                      filter: "blur(10px)",
                       opacity: 0.7,
-                      animation: 'gradient 15s ease infinite',
-                      '@keyframes gradient': {
-                        '0%': { backgroundPosition: '0% 50%' },
-                        '50%': { backgroundPosition: '100% 50%' },
-                        '100%': { backgroundPosition: '0% 50%' }
-                      }
-                    }
+                      animation: "gradient 15s ease infinite",
+                      "@keyframes gradient": {
+                        "0%": { backgroundPosition: "0% 50%" },
+                        "50%": { backgroundPosition: "100% 50%" },
+                        "100%": { backgroundPosition: "0% 50%" },
+                      },
+                    },
                   }}
                 >
                   <Box
                     sx={{
-                      position: 'absolute',
+                      position: "absolute",
                       top: 0,
                       left: 0,
-                      width: '100%',
+                      width: "100%",
                       py: 1.5,
-                      background: 'linear-gradient(to bottom, rgba(9, 0, 5, 0.8), rgba(9, 0, 5, 0))',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      zIndex: 2
+                      background:
+                        "linear-gradient(to bottom, rgba(9, 0, 5, 0.8), rgba(9, 0, 5, 0))",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      zIndex: 2,
                     }}
-                  >
-                  </Box>
+                  ></Box>
                   <iframe
                     style={{
-                      position: 'absolute',
+                      position: "absolute",
                       top: 0,
                       left: 0,
-                      width: '100%',
-                      height: '100%',
-                      border: 'none',
-                      zIndex: 1
+                      width: "100%",
+                      height: "100%",
+                      border: "none",
+                      zIndex: 1,
                     }}
                     src={gameData.youtube}
                     title="Roulette Masterclass Tutorial"
@@ -2771,74 +3204,80 @@ export default function GameRoulette() {
                   />
                 </Box>
               </Grid>
-              
+
               {/* Description on right */}
               <Grid xs={12} md={6}>
-                                 <Box
-                   sx={{
-                     background: 'linear-gradient(135deg, rgba(9, 0, 5, 0.6) 0%, rgba(9, 0, 5, 0.3) 100%)',
-                     backdropFilter: 'blur(10px)',
-                     borderRadius: '16px',
-                     p: { xs: 2.5, md: 3 },
-                     minHeight: '280px',
-                     display: 'flex',
-                     flexDirection: 'column',
-                     justifyContent: 'center',
-                    border: '1px solid rgba(104, 29, 219, 0.2)',
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    '&::before': {
+                <Box
+                  sx={{
+                    background:
+                      "linear-gradient(135deg, rgba(9, 0, 5, 0.6) 0%, rgba(9, 0, 5, 0.3) 100%)",
+                    backdropFilter: "blur(10px)",
+                    borderRadius: "16px",
+                    p: { xs: 2.5, md: 3 },
+                    minHeight: "280px",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    border: "1px solid rgba(104, 29, 219, 0.2)",
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+                    position: "relative",
+                    overflow: "hidden",
+                    "&::before": {
                       content: '""',
-                      position: 'absolute',
+                      position: "absolute",
                       top: 0,
                       left: 0,
-                      width: '5px',
-                      height: '100%',
-                      background: 'linear-gradient(to bottom, #d82633, #681DDB)',
-                    }
+                      width: "5px",
+                      height: "100%",
+                      background:
+                        "linear-gradient(to bottom, #d82633, #681DDB)",
+                    },
                   }}
                 >
-                                     <Typography 
-                     variant="h6" 
-                     sx={{ 
-                       mb: 2,
-                       fontWeight: 'bold',
-                       background: 'linear-gradient(90deg, #FFFFFF, #FFA500)',
-                       WebkitBackgroundClip: 'text',
-                       WebkitTextFillColor: 'transparent',
-                       display: 'inline-block'
-                     }}
-                   >
-                     European Roulette
-                   </Typography>
-                  
-                                     {/* Only show first two paragraphs with condensed content */}
-                   <Typography 
-                     variant="body1" 
-                     sx={{ 
-                       mb: 2.5,
-                       lineHeight: 1.8,
-                       fontSize: '1rem',
-                       color: 'rgba(255, 255, 255, 0.92)',
-                       textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                     }}
-                   >
-                     European Roulette with a single zero and just 2.7% house edge - better odds than traditional casinos. Provably fair and powered by blockchain technology.
-                   </Typography>
-                   
-                   <Typography 
-                     variant="body1" 
-                     sx={{ 
-                       mb: 1,
-                       lineHeight: 1.8,
-                       fontSize: '1rem',
-                       color: 'rgba(255, 255, 255, 0.92)',
-                       textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                     }}
-                   >
-                     Bet on numbers, colors, or combinations for payouts up to 35:1. Every spin is secure and transparent on the blockchain.
-                   </Typography>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      mb: 2,
+                      fontWeight: "bold",
+                      background: "linear-gradient(90deg, #FFFFFF, #FFA500)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      display: "inline-block",
+                    }}
+                  >
+                    European Roulette
+                  </Typography>
+
+                  {/* Only show first two paragraphs with condensed content */}
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      mb: 2.5,
+                      lineHeight: 1.8,
+                      fontSize: "1rem",
+                      color: "rgba(255, 255, 255, 0.92)",
+                      textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+                    }}
+                  >
+                    European Roulette with a single zero and just 2.7% house
+                    edge - better odds than traditional casinos. Provably fair
+                    and powered by blockchain technology.
+                  </Typography>
+
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      mb: 1,
+                      lineHeight: 1.8,
+                      fontSize: "1rem",
+                      color: "rgba(255, 255, 255, 0.92)",
+                      textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+                    }}
+                  >
+                    Bet on numbers, colors, or combinations for payouts up to
+                    35:1. Every spin is secure and transparent on the
+                    blockchain.
+                  </Typography>
                 </Box>
               </Grid>
             </Grid>
@@ -2854,7 +3293,7 @@ export default function GameRoulette() {
                 <WinProbabilities />
               </Grid>
             </Grid>
-            
+
             {/* Second row - Roulette Payout (full width for clarity) */}
             <Grid container spacing={4} sx={{ mb: 6, pt: 4 }}>
               <Grid xs={12}>
@@ -2863,7 +3302,7 @@ export default function GameRoulette() {
                 </div>
               </Grid>
             </Grid>
-            
+
             {/* Third row - Roulette History and Leaderboard */}
             <Grid container spacing={4} sx={{ mb: 6, pt: 4 }}>
               <Grid xs={12} md={7}>
@@ -2875,46 +3314,55 @@ export default function GameRoulette() {
                 <RouletteLeaderboard />
               </Grid>
             </Grid>
-            
+
             {/* Decorative elements */}
             <Box
               sx={{
-                position: 'absolute',
-                top: '400px',
-                left: '-50px',
-                width: '200px',
-                height: '200px',
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(104, 29, 219, 0.4) 0%, rgba(104, 29, 219, 0) 70%)',
-                filter: 'blur(50px)',
+                position: "absolute",
+                top: "400px",
+                left: "-50px",
+                width: "200px",
+                height: "200px",
+                borderRadius: "50%",
+                background:
+                  "radial-gradient(circle, rgba(104, 29, 219, 0.4) 0%, rgba(104, 29, 219, 0) 70%)",
+                filter: "blur(50px)",
                 zIndex: -1,
               }}
             />
             <Box
               sx={{
-                position: 'absolute',
-                top: '800px',
-                right: '-100px',
-                width: '350px',
-                height: '350px',
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(216, 38, 51, 0.3) 0%, rgba(216, 38, 51, 0) 70%)',
-                filter: 'blur(70px)',
+                position: "absolute",
+                top: "800px",
+                right: "-100px",
+                width: "350px",
+                height: "350px",
+                borderRadius: "50%",
+                background:
+                  "radial-gradient(circle, rgba(216, 38, 51, 0.3) 0%, rgba(216, 38, 51, 0) 70%)",
+                filter: "blur(70px)",
                 zIndex: -1,
               }}
             />
           </Box>
         </Box>
-
         <Snackbar
           open={showNotification}
-          autoHideDuration={notificationIndex === notificationSteps.RESULT_READY ? 5000 : null}
+          autoHideDuration={
+            notificationIndex === notificationSteps.RESULT_READY ? 5000 : null
+          }
           onClose={handleCloseNotification}
           anchorOrigin={{ vertical: "top", horizontal: "center" }}
         >
           <Alert
             onClose={handleCloseNotification}
-            severity={notificationIndex === notificationSteps.RESULT_READY ? (winnings > 0 ? "success" : "error") : "info"}
+            severity={
+              notificationIndex === notificationSteps.RESULT_READY
+                ? winnings > 0
+                  ? "success"
+                  : "error"
+                : "info"
+            }
             sx={{ width: "100%" }}
           >
             {notificationMessages[notificationIndex]}
@@ -2927,15 +3375,14 @@ export default function GameRoulette() {
             )}
           </Alert>
         </Snackbar>
-
         {/* Sound control button - add near the top of the UI */}
-        <Box sx={{ position: 'fixed', top: 15, right: 15, zIndex: 100 }}>
-          <IconButton 
+        <Box sx={{ position: "fixed", top: 15, right: 15, zIndex: 100 }}>
+          <IconButton
             onClick={toggleSound}
-            sx={{ 
-              backgroundColor: 'rgba(0,0,0,0.5)', 
-              color: 'white',
-              '&:hover': { backgroundColor: 'rgba(0,0,0,0.7)' }
+            sx={{
+              backgroundColor: "rgba(0,0,0,0.5)",
+              color: "white",
+              "&:hover": { backgroundColor: "rgba(0,0,0,0.7)" },
             }}
             aria-label={isMuted ? "Unmute sound" : "Mute sound"}
           >
