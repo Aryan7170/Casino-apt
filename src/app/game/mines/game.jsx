@@ -274,7 +274,7 @@ const Game = ({ betSettings = {}, offChainGameProps = null }) => {
     offChainBalance,
     gameSession,
     isSessionActive,
-    setOffChainError
+    setOffChainError,
   } = offChainGameProps || {};
 
   // Determine if we should use off-chain or on-chain
@@ -346,18 +346,20 @@ const Game = ({ betSettings = {}, offChainGameProps = null }) => {
               minesCount,
               betAmount,
             });
-            
+
             const gameResult = await playMinesOffChain({
               betAmount,
               minesCount,
-              action: 'start'
+              action: "start",
             });
-            
+
             console.log("Off-chain game started successfully:", gameResult);
             toast.success("Game started off-chain!");
             setIsPlaying(true);
             setHasPlacedBet(true);
-            console.log("Game state updated: isPlaying = true, hasPlacedBet = true");
+            console.log(
+              "Game state updated: isPlaying = true, hasPlacedBet = true"
+            );
           } catch (e) {
             console.error("Failed to start off-chain game:", e);
             toast.error("Failed to start game: " + (e.message || e));
@@ -385,7 +387,9 @@ const Game = ({ betSettings = {}, offChainGameProps = null }) => {
             toast.success("Game started on-chain!");
             setIsPlaying(true);
             setHasPlacedBet(true);
-            console.log("Game state updated: isPlaying = true, hasPlacedBet = true");
+            console.log(
+              "Game state updated: isPlaying = true, hasPlacedBet = true"
+            );
           } catch (e) {
             console.error("Failed to start on-chain game:", e);
             toast.error("Failed to start game: " + (e.message || e));
@@ -546,18 +550,17 @@ const Game = ({ betSettings = {}, offChainGameProps = null }) => {
         try {
           const tileIndex = row * gridSize + col;
           console.log("Revealing tile off-chain:", { tileIndex, row, col });
-          
+
           const result = await playMinesOffChain({
-            action: 'reveal',
+            action: "reveal",
             tileIndex,
             row,
-            col
+            col,
           });
-          
+
           console.log("Off-chain tile reveal result:", result);
           // Handle the result based on what the server returns
           // The server should tell us if it's a mine or safe tile
-          
         } catch (e) {
           console.error("Off-chain reveal error:", e);
           toast.error("Failed to reveal tile: " + (e.message || e));
@@ -696,15 +699,15 @@ const Game = ({ betSettings = {}, offChainGameProps = null }) => {
     if (!isPlaying || gameOver || gameWon || revealedCount === 0) return;
     playSound("cashout");
     setIsPlaying(false);
-    
+
     if (useOffChain) {
       // Off-chain cashout
       (async () => {
         try {
           const result = await playMinesOffChain({
-            action: 'cashout',
+            action: "cashout",
             multiplier,
-            profit
+            profit,
           });
           console.log("Off-chain cashout result:", result);
           toast.success("Cashed out successfully!");

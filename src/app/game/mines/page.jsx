@@ -239,13 +239,13 @@ export default function Mines() {
       console.log("Game session is still initializing, please wait...");
       return false;
     }
-    
+
     if (!isSessionActive && !gameSession && !offChainLoading) {
       // Session failed to initialize
       console.error("Game session failed to initialize");
       return false;
     }
-    
+
     return true;
   };
 
@@ -520,19 +520,29 @@ export default function Mines() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-white/70">Game Session:</span>
                   <div className="flex items-center">
-                    <div className={`w-2 h-2 rounded-full mr-2 ${
-                      isSessionActive ? 'bg-green-400' : 
-                      offChainLoading ? 'bg-yellow-400 animate-pulse' : 
-                      'bg-red-400'
-                    }`}></div>
-                    <span className={`text-sm font-medium ${
-                      isSessionActive ? 'text-green-400' : 
-                      offChainLoading ? 'text-yellow-400' : 
-                      'text-red-400'
-                    }`}>
-                      {isSessionActive ? 'Active' : 
-                       offChainLoading ? 'Connecting...' : 
-                       'Not Connected'}
+                    <div
+                      className={`w-2 h-2 rounded-full mr-2 ${
+                        isSessionActive
+                          ? "bg-green-400"
+                          : offChainLoading
+                          ? "bg-yellow-400 animate-pulse"
+                          : "bg-red-400"
+                      }`}
+                    ></div>
+                    <span
+                      className={`text-sm font-medium ${
+                        isSessionActive
+                          ? "text-green-400"
+                          : offChainLoading
+                          ? "text-yellow-400"
+                          : "text-red-400"
+                      }`}
+                    >
+                      {isSessionActive
+                        ? "Active"
+                        : offChainLoading
+                        ? "Connecting..."
+                        : "Not Connected"}
                     </span>
                   </div>
                 </div>
@@ -553,22 +563,22 @@ export default function Mines() {
                   )}
                 </div>
               </div>
-              
+
               <Tabs tabs={tabs} onTabChange={handleTabChange} />
             </div>
           </div>
 
           {/* Game Board */}
           <div className="w-full lg:w-2/3 xl:w-3/4 rounded-xl border-2 border-purple-700/30 bg-gradient-to-br from-[#290023]/80 to-[#150012]/90 p-6 md:p-8 shadow-xl shadow-purple-900/20">
-            <Game 
-              key={gameInstance} 
+            <Game
+              key={gameInstance}
               betSettings={betSettings}
               offChainGameProps={{
                 playMinesOffChain,
                 offChainBalance,
                 gameSession,
                 isSessionActive,
-                setOffChainError
+                setOffChainError,
               }}
             />
           </div>
