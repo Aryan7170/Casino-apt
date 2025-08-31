@@ -13,10 +13,11 @@ export default function FortuneTigerPage() {
             Fortune Tiger
           </h1>
           <p className="text-white/70 text-lg mb-6">
-            This game is coming soon! We're working hard to bring you the best gaming experience.
+            This game is coming soon! We're working hard to bring you the best
+            gaming experience.
           </p>
         </div>
-        
+
         <div className="space-y-4">
           <GradientBorderButton
             onClick={() => router.push("/game/roulette")}
@@ -24,7 +25,7 @@ export default function FortuneTigerPage() {
           >
             Try Roulette Instead
           </GradientBorderButton>
-          
+
           <GradientBorderButton
             onClick={() => router.push("/game")}
             className="w-full"

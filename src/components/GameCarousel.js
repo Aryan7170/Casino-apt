@@ -280,7 +280,11 @@ const GameCarousel = () => {
 
                         <GradientBorderButton
                           className="w-full"
-                          onClick={() => router.push(game.path)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            console.log('🎮 Navigating to:', game.path);
+                            router.push(game.path);
+                          }}
                         >
                           Play Now
                         </GradientBorderButton>

@@ -28,7 +28,7 @@ export function useOffChainCasino(userAddress = null) {
   // Game server URL - make it reactive to ensure proper dependency tracking
   const gameServerUrl =
     process.env.NEXT_PUBLIC_GAME_SERVER_URL ||
-    "https://casino-mjr4jx8js-aryan-duhoons-projects.vercel.app/api/game-server";
+    "http://localhost:3000/api/game-server";
 
   /**
    * Initialize off-chain game session
@@ -59,7 +59,7 @@ export function useOffChainCasino(userAddress = null) {
 
       // Use a more robust fetch with better error handling
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
       const response = await fetch(gameServerUrl, {
         method: "POST",
@@ -69,17 +69,11 @@ export function useOffChainCasino(userAddress = null) {
         },
         body: JSON.stringify(requestPayload),
         signal: controller.signal,
-        mode: "cors", // Explicitly set CORS mode
-        credentials: "omit", // Don't send credentials
       });
 
       clearTimeout(timeoutId);
 
       console.log("📡 Response status:", response.status);
-      console.log(
-        "📡 Response headers:",
-        Object.fromEntries(response.headers.entries())
-      );
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -125,18 +119,18 @@ export function useOffChainCasino(userAddress = null) {
 
       // Enhanced error information
       if (err.name === "AbortError") {
-        console.error("🕐 Request timed out after 30 seconds");
-        setError("Request timed out. Please check your internet connection.");
+        console.error("🕐 Request timed out after 10 seconds");
+        setError("Request timed out. Please try again.");
       } else if (err.name === "TypeError" && err.message.includes("fetch")) {
-        console.error("🌐 Network error - possibly CORS or connection issue");
-        setError("Network error. Please check your internet connection.");
+        console.error("🌐 Network error - possibly connection issue");
+        setError("Network error. Please check your connection.");
       } else {
         setError(err.message || "Unknown error occurred");
       }
 
-      // Retry up to 3 times with exponential backoff
-      if (retryCount < 2) {
-        const delay = Math.pow(2, retryCount) * 2000; // 2s, 4s, 8s
+      // Retry up to 2 times with exponential backoff
+      if (retryCount < 1) {
+        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s
         console.log(`🔄 Retrying in ${delay}ms...`);
         setTimeout(() => {
           initializeSession(retryCount + 1);
@@ -146,7 +140,7 @@ export function useOffChainCasino(userAddress = null) {
     } finally {
       setIsLoading(false);
     }
-  }, []); // Remove gameServerUrl dependency since it's static
+  }, [gameServerUrl]);
 
   /**
    * Play Roulette off-chain

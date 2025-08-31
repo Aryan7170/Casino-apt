@@ -114,7 +114,13 @@ export default function Mines() {
       offChainError,
       balance: offChainBalance,
     });
-  }, [gameSession, isSessionActive, offChainLoading, offChainError, offChainBalance]);
+  }, [
+    gameSession,
+    isSessionActive,
+    offChainLoading,
+    offChainError,
+    offChainBalance,
+  ]);
 
   // Game State
   const [betSettings, setBetSettings] = useState({});
@@ -244,19 +250,17 @@ export default function Mines() {
   // Check wallet connection for off-chain games
   const checkWalletConnection = () => {
     // For off-chain games, check if session is active or if we have a balance
-    // Allow gameplay if session is initializing but we have some state
     if (!isSessionActive && !gameSession && offChainLoading) {
-      // Show a non-blocking notification
       console.log("Game session is still initializing, please wait...");
       return false;
     }
 
-    if (!isSessionActive && !gameSession && !offChainLoading) {
-      // Session failed to initialize
+    if (!isSessionActive && !gameSession && !offChainLoading && offChainError) {
       console.error("Game session failed to initialize");
       return false;
     }
 
+    // Allow gameplay if we have a session or balance
     return true;
   };
 
@@ -299,7 +303,7 @@ export default function Mines() {
   };
 
   // Show loading while off-chain session initializes - but only for the first few seconds
-  if ((offChainLoading || (!gameSession && !offChainError)) && !isSessionActive) {
+  if (offChainLoading && !isSessionActive && !offChainError) {
     return (
       <div className="min-h-screen bg-[#070005] bg-gradient-to-b from-[#070005] to-[#0e0512] flex flex-col items-center justify-center text-white">
         <div className="bg-gradient-to-br from-purple-900/40 to-purple-700/10 rounded-xl p-8 max-w-md text-center border-2 border-purple-700/30 shadow-xl shadow-purple-900/20">
@@ -310,17 +314,7 @@ export default function Mines() {
           <p className="text-white/70 mb-6 font-sans">
             Setting up your off-chain mining session...
           </p>
-          <div className="text-xs text-white/50 mt-4">
-            Session Active: {isSessionActive ? "Yes" : "No"}
-            <br />
-            Loading: {offChainLoading ? "Yes" : "No"}
-            <br />
-            Balance: {offChainBalance}
-            <br />
-            {offChainError && (
-              <span className="text-red-400">Error: {offChainError}</span>
-            )}
-          </div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400 mx-auto"></div>
         </div>
       </div>
     );
