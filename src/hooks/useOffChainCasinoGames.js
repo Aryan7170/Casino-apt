@@ -33,114 +33,117 @@ export function useOffChainCasino(userAddress = null) {
   /**
    * Initialize off-chain game session
    */
-  const initializeSession = useCallback(async (retryCount = 0) => {
-    console.log(
-      `🎲 Starting session initialization (attempt ${retryCount + 1})...`
-    );
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // For off-chain games, use provided address or create anonymous session
-      const sessionAddress =
-        userAddress ||
-        `anonymous_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-      console.log("🎯 Game server URL:", gameServerUrl);
-      console.log("👤 Session address:", sessionAddress);
-
-      // Create request payload
-      const requestPayload = {
-        action: "initialize",
-        userAddress: sessionAddress,
-      };
-
-      console.log("📤 Request payload:", requestPayload);
-
-      // Use a more robust fetch with better error handling
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-      const response = await fetch(gameServerUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(requestPayload),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      console.log("📡 Response status:", response.status);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      console.log("📥 Response data:", result);
-
-      if (!result || typeof result !== "object") {
-        throw new Error("Invalid response format from server");
-      }
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      // Validate required fields
-      if (
-        !result.serverSeedHash ||
-        !result.clientSeed ||
-        result.balance === undefined
-      ) {
-        throw new Error("Missing required fields in server response");
-      }
-
-      setGameSession({
-        userAddress: sessionAddress,
-        serverSeedHash: result.serverSeedHash,
-        clientSeed: result.clientSeed,
-        nonce: 0,
-      });
-
-      setOffChainBalance(result.balance || 1000); // Starting balance
-
-      console.log("✅ Off-chain session initialized successfully:", result);
-    } catch (err) {
-      console.error(
-        `❌ Failed to initialize off-chain session (attempt ${
-          retryCount + 1
-        }):`,
-        err
+  const initializeSession = useCallback(
+    async (retryCount = 0) => {
+      console.log(
+        `🎲 Starting session initialization (attempt ${retryCount + 1})...`
       );
+      setIsLoading(true);
+      setError(null);
 
-      // Enhanced error information
-      if (err.name === "AbortError") {
-        console.error("🕐 Request timed out after 10 seconds");
-        setError("Request timed out. Please try again.");
-      } else if (err.name === "TypeError" && err.message.includes("fetch")) {
-        console.error("🌐 Network error - possibly connection issue");
-        setError("Network error. Please check your connection.");
-      } else {
-        setError(err.message || "Unknown error occurred");
-      }
+      try {
+        // For off-chain games, use provided address or create anonymous session
+        const sessionAddress =
+          userAddress ||
+          `anonymous_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      // Retry up to 2 times with exponential backoff
-      if (retryCount < 1) {
-        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s
-        console.log(`🔄 Retrying in ${delay}ms...`);
-        setTimeout(() => {
-          initializeSession(retryCount + 1);
-        }, delay);
-        return;
+        console.log("🎯 Game server URL:", gameServerUrl);
+        console.log("👤 Session address:", sessionAddress);
+
+        // Create request payload
+        const requestPayload = {
+          action: "initialize",
+          userAddress: sessionAddress,
+        };
+
+        console.log("📤 Request payload:", requestPayload);
+
+        // Use a more robust fetch with better error handling
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+        const response = await fetch(gameServerUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(requestPayload),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        console.log("📡 Response status:", response.status);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        console.log("📥 Response data:", result);
+
+        if (!result || typeof result !== "object") {
+          throw new Error("Invalid response format from server");
+        }
+
+        if (result.error) {
+          throw new Error(result.error);
+        }
+
+        // Validate required fields
+        if (
+          !result.serverSeedHash ||
+          !result.clientSeed ||
+          result.balance === undefined
+        ) {
+          throw new Error("Missing required fields in server response");
+        }
+
+        setGameSession({
+          userAddress: sessionAddress,
+          serverSeedHash: result.serverSeedHash,
+          clientSeed: result.clientSeed,
+          nonce: 0,
+        });
+
+        setOffChainBalance(result.balance || 1000); // Starting balance
+
+        console.log("✅ Off-chain session initialized successfully:", result);
+      } catch (err) {
+        console.error(
+          `❌ Failed to initialize off-chain session (attempt ${
+            retryCount + 1
+          }):`,
+          err
+        );
+
+        // Enhanced error information
+        if (err.name === "AbortError") {
+          console.error("🕐 Request timed out after 10 seconds");
+          setError("Request timed out. Please try again.");
+        } else if (err.name === "TypeError" && err.message.includes("fetch")) {
+          console.error("🌐 Network error - possibly connection issue");
+          setError("Network error. Please check your connection.");
+        } else {
+          setError(err.message || "Unknown error occurred");
+        }
+
+        // Retry up to 2 times with exponential backoff
+        if (retryCount < 1) {
+          const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s
+          console.log(`🔄 Retrying in ${delay}ms...`);
+          setTimeout(() => {
+            initializeSession(retryCount + 1);
+          }, delay);
+          return;
+        }
+      } finally {
+        setIsLoading(false);
       }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [gameServerUrl]);
+    },
+    [gameServerUrl]
+  );
 
   /**
    * Play Roulette off-chain

@@ -282,7 +282,7 @@ const GameCarousel = () => {
                           className="w-full"
                           onClick={(e) => {
                             e.preventDefault();
-                            console.log('🎮 Navigating to:', game.path);
+                            console.log("🎮 Navigating to:", game.path);
                             router.push(game.path);
                           }}
                         >
