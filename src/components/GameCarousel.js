@@ -103,6 +103,7 @@ const GameCarousel = () => {
   const [activeCategory, setActiveCategory] = useState("all");
   const [visibleGames, setVisibleGames] = useState(FEATURED_GAMES);
   const [isDragging, setIsDragging] = useState(false);
+  const [dragStarted, setDragStarted] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
@@ -157,21 +158,40 @@ const GameCarousel = () => {
 
   // Mouse drag scrolling
   const handleMouseDown = (e) => {
+    // Don't start dragging if clicking on a button or interactive element
+    if (e.target.closest('button') || e.target.closest('a') || e.target.closest('[role="button"]')) {
+      return;
+    }
+    
     setIsDragging(true);
+    setDragStarted(false);
     setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
     setScrollLeft(scrollContainerRef.current.scrollLeft);
   };
 
   const handleMouseMove = (e) => {
     if (!isDragging) return;
-    e.preventDefault();
+    
     const x = e.pageX - scrollContainerRef.current.offsetLeft;
-    const walk = (x - startX) * 2; // Scroll speed multiplier
-    scrollContainerRef.current.scrollLeft = scrollLeft - walk;
+    const walk = Math.abs(x - startX);
+    
+    // Only start actual dragging after moving more than 5 pixels
+    if (walk > 5) {
+      setDragStarted(true);
+      e.preventDefault();
+      const scrollAmount = (x - startX) * 2; // Scroll speed multiplier
+      scrollContainerRef.current.scrollLeft = scrollLeft - scrollAmount;
+    }
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (e) => {
+    // If we actually dragged (not just clicked), prevent click events
+    if (dragStarted) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setIsDragging(false);
+    setDragStarted(false);
   };
 
   return (
@@ -279,14 +299,10 @@ const GameCarousel = () => {
                         </div>
 
                         <GradientBorderButton
-                          className="w-full relative z-20"
-                          style={{ 
-                            pointerEvents: 'auto', 
-                            cursor: 'pointer',
-                            position: 'relative',
-                            zIndex: 20
-                          }}
+                          className="w-full"
                           onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
                             console.log(`🎮 Play ${game.title} button clicked`);
                             router.push(game.path);
                           }}
@@ -350,16 +366,12 @@ const GameCarousel = () => {
       </div>
 
       {/* View all games button */}
-      <div className="text-center mt-10 relative z-30">
+      <div className="text-center mt-10">
         <GradientBorderButton 
-          className="px-8 relative z-30"
-          style={{ 
-            pointerEvents: 'auto', 
-            cursor: 'pointer',
-            position: 'relative',
-            zIndex: 30
-          }}
+          className="px-8"
           onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
             console.log("🎮 View All Games button clicked");
             router.push("/game");
           }}
