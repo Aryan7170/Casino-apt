@@ -74,7 +74,7 @@ const UpcomingTournaments = () => {
   };
   
   return (
-    <section className="py-16 px-4 md:px-8 lg:px-16">
+    <section id="tournaments" className="py-16 px-4 md:px-8 lg:px-16">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center">
@@ -82,14 +82,22 @@ const UpcomingTournaments = () => {
             <h2 className="text-2xl font-display font-bold text-white">Upcoming Tournaments</h2>
           </div>
           
-          <Link href="/tournaments">
-            <span className="text-white/70 hover:text-white text-sm flex items-center cursor-pointer">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log("🏆 View All Tournaments button clicked");
+              // For now just scroll to top, could be expanded to navigate to /tournaments
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="text-white/70 hover:text-white text-sm flex items-center cursor-pointer transition-colors"
+          >
+            <span className="flex items-center">
               View All
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
             </span>
-          </Link>
+          </button>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -148,7 +156,15 @@ const UpcomingTournaments = () => {
                   </div>
                   
                   {/* Register button */}
-                  <GradientBorderButton classes="w-full">
+                  <GradientBorderButton 
+                    classes="w-full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log(`🎯 Register for tournament: ${tournament.name}`);
+                      // For now just show alert, could be expanded to open registration modal
+                      alert(`Registration for "${tournament.name}" is coming soon! Tournament starts in ${formatTimeRemaining(tournament.startsIn)}.`);
+                    }}
+                  >
                     <div className="w-full text-center">Register Now</div>
                   </GradientBorderButton>
                 </div>

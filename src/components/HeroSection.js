@@ -51,13 +51,23 @@ export default function HeroSection() {
           
           {/* Additional Quick Links */}
           <div className="flex gap-3 mt-2 sm:mt-0">
-           
-            <a 
-              href="#tournaments" 
-              className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition-all text-sm font-medium text-white/90"
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log("🏆 Tournaments button clicked");
+                // Scroll to tournaments section on homepage
+                const tournamentsSection = document.getElementById('tournaments');
+                if (tournamentsSection) {
+                  tournamentsSection.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  // If section not found, this could be expanded to navigate to a tournaments page
+                  console.log("Tournaments section not found - could navigate to /tournaments");
+                }
+              }}
+              className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition-all text-sm font-medium text-white/90 cursor-pointer"
             >
               Tournaments
-            </a>
+            </button>
           </div>
         </div>
         

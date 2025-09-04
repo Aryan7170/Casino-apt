@@ -529,13 +529,18 @@ export default function Navbar() {
             </div>
             
             <div className="pt-2 mt-2 border-t border-purple-500/10">
-              <a 
-                href="#support" 
-                className="block py-2 px-3 text-white/80 hover:text-white hover:bg-purple-500/10 rounded-md"
-                onClick={() => setShowMobileMenu(false)}
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowMobileMenu(false);
+                  console.log("🆘 Support button clicked");
+                  // For now just show alert, could be expanded to open support modal or navigate to /support
+                  alert("Support feature coming soon! You can reach us at support@apt-casino.com");
+                }}
+                className="block w-full text-left py-2 px-3 text-white/80 hover:text-white hover:bg-purple-500/10 rounded-md cursor-pointer"
               >
                 Support
-              </a>
+              </button>
             </div>
           </div>
         </div>

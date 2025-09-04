@@ -23,11 +23,16 @@ export default function LaunchGameButton() {
     isMounted.current = true;
   }, []);
   return (
-    <a
-      className="text-white font-display cursor-pointer rounded-xl py-3 px-6 smooth-gradient"
-      type="button" href="/game"
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        console.log("🚀 Launch Game button clicked");
+        router.push("/game");
+      }}
+      className="text-white font-display cursor-pointer rounded-xl py-3 px-6 smooth-gradient hover:shadow-lg transition-all"
+      type="button"
     >
       Launch game
-    </a>
+    </button>
   );
 }
