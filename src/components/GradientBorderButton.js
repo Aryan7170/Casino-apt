@@ -4,6 +4,7 @@ import React from "react";
 export default function GradientBorderButton({ children, className = "", onClick, ...props }) {
   const handleClick = (e) => {
     if (onClick) {
+      e.stopPropagation(); // Prevent event bubbling
       onClick(e);
     }
   };

@@ -287,9 +287,7 @@ const GameCarousel = () => {
                             zIndex: 20
                           }}
                           onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            console.log(`🎮 Navigating to ${game.title} at ${game.path}`);
+                            console.log(`🎮 Play ${game.title} button clicked`);
                             router.push(game.path);
                           }}
                         >
@@ -362,9 +360,7 @@ const GameCarousel = () => {
             zIndex: 30
           }}
           onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log("🎮 Navigating to All Games");
+            console.log("🎮 View All Games button clicked");
             router.push("/game");
           }}
         >
