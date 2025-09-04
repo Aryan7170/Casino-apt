@@ -12,10 +12,35 @@ export function WalletStatusProvider({ children }) {
   const [error, setError] = useState(null);
   const [isDev] = useState(process.env.NODE_ENV === 'development');
   const [currentChain, setCurrentChain] = useState(null);
+  const [hasCheckedStoredConnection, setHasCheckedStoredConnection] = useState(false);
   
   // Use wagmi hooks directly
   const { address, isConnected } = useAccount();
   const { openConnectModal } = useConnectModal();
+  
+  // Check for previously stored connection on mount
+  useEffect(() => {
+    if (hasCheckedStoredConnection) return;
+    
+    const wasConnected = localStorage.getItem('walletConnected') === 'true';
+    const savedAddress = localStorage.getItem('walletAddress');
+    
+    console.log("🔗 Checking stored wallet connection:", {
+      wasConnected,
+      currentlyConnected: isConnected,
+      savedAddress: savedAddress ? `${savedAddress.slice(0, 6)}...` : null,
+      currentAddress: address ? `${address.slice(0, 6)}...` : null
+    });
+    
+    setHasCheckedStoredConnection(true);
+    
+    // If wallet was connected before but isn't now, attempt reconnection
+    if (wasConnected && !isConnected && !isDev) {
+      console.log("🔗 Attempting to restore wallet connection...");
+      // Note: Automatic reconnection is handled by RainbowKit/Wagmi
+      // We just need to track the state properly
+    }
+  }, [isConnected, address, hasCheckedStoredConnection, isDev]);
   
   // Check current chain
   useEffect(() => {
@@ -42,22 +67,30 @@ export function WalletStatusProvider({ children }) {
     }
   }, []);
   
-  // Function to connect wallet
+    // Function to connect wallet
   const connectWallet = useCallback(async () => {
     if (isDev) {
+      console.log("🔗 Development mode: Skipping real wallet connection");
       return true;
     }
     
+    setIsLoading(true);
+    setError(null);
+    
     try {
       if (openConnectModal) {
+        console.log("🔗 Opening RainbowKit connect modal");
         openConnectModal();
         return true;
+      } else {
+        throw new Error("RainbowKit connect modal not available");
       }
+    } catch (error) {
+      console.error("🔗 Wallet connection error:", error);
+      setError(error.message);
       return false;
-    } catch (err) {
-      console.error('Failed to open connect modal:', err);
-      setError('Failed to open wallet connection dialog');
-      return false;
+    } finally {
+      setIsLoading(false);
     }
   }, [isDev, openConnectModal]);
   
@@ -88,8 +121,28 @@ export function WalletStatusProvider({ children }) {
   
   // Update loading state when connection state changes
   useEffect(() => {
+    console.log("🔗 Wallet connection state changed:", {
+      isConnected,
+      address,
+      currentChain,
+      isDev
+    });
+    
     setIsLoading(false);
-  }, [isConnected]);
+    
+    // Store connection state in localStorage for persistence
+    if (typeof window !== 'undefined') {
+      if (isConnected && address) {
+        localStorage.setItem('walletConnected', 'true');
+        localStorage.setItem('walletAddress', address);
+        console.log("🔗 Wallet connection state saved to localStorage");
+      } else {
+        localStorage.removeItem('walletConnected');
+        localStorage.removeItem('walletAddress');
+        console.log("🔗 Wallet connection state cleared from localStorage");
+      }
+    }
+  }, [isConnected, address, currentChain, isDev]);
   
   // The value we'll provide to consumers
   const value = {

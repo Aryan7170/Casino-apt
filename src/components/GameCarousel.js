@@ -279,10 +279,17 @@ const GameCarousel = () => {
                         </div>
 
                         <GradientBorderButton
-                          className="w-full"
+                          className="w-full relative z-20"
+                          style={{ 
+                            pointerEvents: 'auto', 
+                            cursor: 'pointer',
+                            position: 'relative',
+                            zIndex: 20
+                          }}
                           onClick={(e) => {
                             e.preventDefault();
-                            console.log("🎮 Navigating to:", game.path);
+                            e.stopPropagation();
+                            console.log(`🎮 Navigating to ${game.title} at ${game.path}`);
                             router.push(game.path);
                           }}
                         >
@@ -290,7 +297,7 @@ const GameCarousel = () => {
                         </GradientBorderButton>
                       </div>
 
-                      <div className="absolute -right-2 bottom-0 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1">
+                      <div className="absolute -right-2 bottom-0 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1 pointer-events-none z-0">
                         <Image
                           src={game.image}
                           width={220}
@@ -298,7 +305,7 @@ const GameCarousel = () => {
                           quality={100}
                           priority
                           alt={`${game.title} game`}
-                          className="object-contain drop-shadow-lg"
+                          className="object-contain drop-shadow-lg pointer-events-none"
                           style={{ objectFit: "contain" }}
                         />
                       </div>
@@ -345,12 +352,24 @@ const GameCarousel = () => {
       </div>
 
       {/* View all games button */}
-      <div className="text-center mt-10">
-        <Link href="/game">
-          <GradientBorderButton className="px-8">
-            View All Games
-          </GradientBorderButton>
-        </Link>
+      <div className="text-center mt-10 relative z-30">
+        <GradientBorderButton 
+          className="px-8 relative z-30"
+          style={{ 
+            pointerEvents: 'auto', 
+            cursor: 'pointer',
+            position: 'relative',
+            zIndex: 30
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log("🎮 Navigating to All Games");
+            router.push("/game");
+          }}
+        >
+          View All Games
+        </GradientBorderButton>
       </div>
     </div>
   );

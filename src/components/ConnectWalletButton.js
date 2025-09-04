@@ -10,6 +10,15 @@ export default function ConnectWalletButton() {
 
   useEffect(() => {
     setIsClient(true);
+    
+    // Check for previously connected wallet
+    const wasConnected = localStorage.getItem('walletConnected') === 'true';
+    const savedAddress = localStorage.getItem('walletAddress');
+    
+    console.log("🔗 ConnectWalletButton mounted:", {
+      wasConnected,
+      savedAddress: savedAddress ? `${savedAddress.slice(0, 6)}...` : null
+    });
   }, []);
 
   const handleConnect = async () => {

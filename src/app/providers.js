@@ -135,6 +135,10 @@ export default function Providers({ children }) {
     // Reset connection error when component mounts
     setConnectionError(false);
     
+    // Check if wallet was previously connected
+    const wasConnected = localStorage.getItem('walletConnected') === 'true';
+    console.log("🔗 Checking previous wallet connection:", wasConnected);
+    
     // Setup global error handler for wallet connections
     const handleConnectionError = (error) => {
       console.warn("Wallet connection issue detected:", error);

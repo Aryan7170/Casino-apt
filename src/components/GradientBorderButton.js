@@ -2,9 +2,15 @@
 import React from "react";
 
 export default function GradientBorderButton({ children, className = "", onClick, ...props }) {
+  const handleClick = (e) => {
+    if (onClick) {
+      onClick(e);
+    }
+  };
+
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       className={`bg-gradient-to-r from-red-magic to-blue-magic hover:from-blue-magic hover:to-red-magic rounded-sm p-0.5 cursor-pointer ${className}`}
       {...props}
     >
