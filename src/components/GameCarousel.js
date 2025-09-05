@@ -258,10 +258,6 @@ const GameCarousel = () => {
           ref={scrollContainerRef}
           className="flex overflow-x-auto custom-scrollbar pb-4 pl-1 snap-x"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
         >
           <div className="flex gap-6 mx-auto">
             {visibleGames.length > 0 ? (
@@ -299,11 +295,17 @@ const GameCarousel = () => {
                         </div>
 
                         <GradientBorderButton
-                          className="w-full"
+                          className="w-full border-4 border-yellow-400"
+                          style={{ 
+                            backgroundColor: 'red !important',
+                            zIndex: 9999,
+                            position: 'relative'
+                          }}
                           onClick={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
-                            console.log(`🎮 Play ${game.title} button clicked`);
+                            console.log(`🎮 Play ${game.title} button clicked - attempting navigation to: ${game.path}`);
+                            alert(`Button clicked! Navigating to ${game.title} at ${game.path}`);
                             router.push(game.path);
                           }}
                         >
@@ -368,11 +370,17 @@ const GameCarousel = () => {
       {/* View all games button */}
       <div className="text-center mt-10">
         <GradientBorderButton 
-          className="px-8"
+          className="px-8 border-4 border-green-400"
+          style={{ 
+            backgroundColor: 'blue !important',
+            zIndex: 9999,
+            position: 'relative'
+          }}
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
-            console.log("🎮 View All Games button clicked");
+            console.log("🎮 View All Games button clicked - attempting navigation to: /game");
+            alert("View All Games button clicked! Navigating to /game");
             router.push("/game");
           }}
         >

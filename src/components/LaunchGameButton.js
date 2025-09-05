@@ -26,7 +26,8 @@ export default function LaunchGameButton() {
     <button
       onClick={(e) => {
         e.stopPropagation();
-        console.log("🚀 Launch Game button clicked");
+        console.log("🚀 Launch Game button clicked - attempting navigation to: /game");
+        alert("Launch Game button clicked! Navigating to /game");
         router.push("/game");
       }}
       className="text-white font-display cursor-pointer rounded-xl py-3 px-6 smooth-gradient hover:shadow-lg transition-all"
