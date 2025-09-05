@@ -159,10 +159,16 @@ const GameCarousel = () => {
   // Mouse drag scrolling
   const handleMouseDown = (e) => {
     // Don't start dragging if clicking on a button or interactive element
-    if (e.target.closest('button') || e.target.closest('a') || e.target.closest('[role="button"]')) {
+    if (
+      e.target.closest("button") ||
+      e.target.closest("a") ||
+      e.target.closest('[role="button"]') ||
+      e.target.tagName === 'BUTTON' ||
+      e.target.closest('.gradient-border-button')
+    ) {
       return;
     }
-    
+
     setIsDragging(true);
     setDragStarted(false);
     setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
@@ -171,10 +177,10 @@ const GameCarousel = () => {
 
   const handleMouseMove = (e) => {
     if (!isDragging) return;
-    
+
     const x = e.pageX - scrollContainerRef.current.offsetLeft;
     const walk = Math.abs(x - startX);
-    
+
     // Only start actual dragging after moving more than 5 pixels
     if (walk > 5) {
       setDragStarted(true);
@@ -258,6 +264,10 @@ const GameCarousel = () => {
           ref={scrollContainerRef}
           className="flex overflow-x-auto custom-scrollbar pb-4 pl-1 snap-x"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
         >
           <div className="flex gap-6 mx-auto">
             {visibleGames.length > 0 ? (
@@ -265,7 +275,7 @@ const GameCarousel = () => {
                 <div key={game.id} className="snap-start">
                   <div className="flex-shrink-0 w-[320px] sm:w-[400px] md:w-[520px] p-0.5 magic-gradient rounded-xl h-[300px] transform transition-all hover:scale-[1.02] shadow-lg hover:shadow-xl group">
                     <div className="bg-sharp-black flex p-6 md:p-8 w-full h-full rounded-xl relative overflow-hidden ">
-                      <div className="flex flex-col justify-between z-10 w-3/5">
+                      <div className="flex flex-col justify-between z-20 w-3/5 relative">
                         {/* Game badge */}
                         {game.badge && (
                           <span
@@ -294,23 +304,20 @@ const GameCarousel = () => {
                           </div>
                         </div>
 
-                        <GradientBorderButton
-                          className="w-full border-4 border-yellow-400"
-                          style={{ 
-                            backgroundColor: 'red !important',
-                            zIndex: 9999,
-                            position: 'relative'
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            console.log(`🎮 Play ${game.title} button clicked - attempting navigation to: ${game.path}`);
-                            alert(`Button clicked! Navigating to ${game.title} at ${game.path}`);
-                            router.push(game.path);
-                          }}
-                        >
-                          Play Now
-                        </GradientBorderButton>
+                        <div className="relative z-30">
+                          <Link href={game.path} className="block w-full">
+                            <GradientBorderButton
+                              className="w-full"
+                              onClick={(e) => {
+                                console.log(
+                                  `🎮 Play ${game.title} button clicked`
+                                );
+                              }}
+                            >
+                              Play Now
+                            </GradientBorderButton>
+                          </Link>
+                        </div>
                       </div>
 
                       <div className="absolute -right-2 bottom-0 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1 pointer-events-none z-0">
@@ -369,23 +376,18 @@ const GameCarousel = () => {
 
       {/* View all games button */}
       <div className="text-center mt-10">
-        <GradientBorderButton 
-          className="px-8 border-4 border-green-400"
-          style={{ 
-            backgroundColor: 'blue !important',
-            zIndex: 9999,
-            position: 'relative'
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            console.log("🎮 View All Games button clicked - attempting navigation to: /game");
-            alert("View All Games button clicked! Navigating to /game");
-            router.push("/game");
-          }}
-        >
-          View All Games
-        </GradientBorderButton>
+        <Link href="/game">
+          <GradientBorderButton
+            className="px-8"
+            onClick={(e) => {
+              console.log(
+                "🎮 View All Games button clicked"
+              );
+            }}
+          >
+            View All Games
+          </GradientBorderButton>
+        </Link>
       </div>
     </div>
   );

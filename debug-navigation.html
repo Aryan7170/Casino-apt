@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Navigation Debug Test</title>
+  </head>
+  <body>
+    <h1>Navigation Debug Test</h1>
+    <button onclick="testNavigation()">Test Navigation to Roulette</button>
+    <button onclick="testNavigationMines()">Test Navigation to Mines</button>
+    <button onclick="testNavigationGames()">Test Navigation to Games</button>
+
+    <div id="output"></div>
+
+    <script>
+      function testNavigation() {
+        console.log("Testing navigation to roulette...");
+        window.location.href = "http://localhost:3000/game/roulette";
+      }
+
+      function testNavigationMines() {
+        console.log("Testing navigation to mines...");
+        window.location.href = "http://localhost:3000/game/mines";
+      }
+
+      function testNavigationGames() {
+        console.log("Testing navigation to games...");
+        window.location.href = "http://localhost:3000/game";
+      }
+    </script>
+  </body>
+</html>

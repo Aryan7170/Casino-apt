@@ -7,39 +7,57 @@ export default function ButtonDebugger() {
   const [clickResults, setClickResults] = useState([]);
 
   const addResult = (result) => {
-    setClickResults(prev => [...prev, { 
-      ...result, 
-      timestamp: new Date().toLocaleTimeString() 
-    }]);
+    setClickResults((prev) => [
+      ...prev,
+      {
+        ...result,
+        timestamp: new Date().toLocaleTimeString(),
+      },
+    ]);
   };
 
   const testNavigation = async (path, buttonName) => {
     try {
-      addResult({ type: 'info', message: `Testing navigation to ${path}` });
+      addResult({ type: "info", message: `Testing navigation to ${path}` });
       router.push(path);
-      addResult({ type: 'success', message: `✅ ${buttonName} navigation successful` });
+      addResult({
+        type: "success",
+        message: `✅ ${buttonName} navigation successful`,
+      });
     } catch (error) {
-      addResult({ type: 'error', message: `❌ ${buttonName} failed: ${error.message}` });
+      addResult({
+        type: "error",
+        message: `❌ ${buttonName} failed: ${error.message}`,
+      });
     }
   };
 
   const testButtonClick = (buttonName) => {
-    addResult({ type: 'success', message: `✅ ${buttonName} button clicked successfully!` });
+    addResult({
+      type: "success",
+      message: `✅ ${buttonName} button clicked successfully!`,
+    });
   };
 
   return (
     <div className="min-h-screen bg-[#070005] text-white p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8 text-center">🔍 Button Debugger</h1>
-        
+        <h1 className="text-4xl font-bold mb-8 text-center">
+          🔍 Button Debugger
+        </h1>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Test Buttons */}
           <div className="space-y-6">
-            <h2 className="text-2xl font-semibold mb-4">Test Individual Buttons</h2>
-            
+            <h2 className="text-2xl font-semibold mb-4">
+              Test Individual Buttons
+            </h2>
+
             {/* Working Game Buttons */}
             <div className="bg-green-900/20 p-4 rounded-lg border border-green-600/30">
-              <h3 className="text-lg font-medium mb-3 text-green-400">✅ Working Games</h3>
+              <h3 className="text-lg font-medium mb-3 text-green-400">
+                ✅ Working Games
+              </h3>
               <div className="space-y-2">
                 <button
                   onClick={() => testNavigation("/game/roulette", "Roulette")}
@@ -58,7 +76,9 @@ export default function ButtonDebugger() {
 
             {/* Placeholder Game Buttons */}
             <div className="bg-yellow-900/20 p-4 rounded-lg border border-yellow-600/30">
-              <h3 className="text-lg font-medium mb-3 text-yellow-400">⚠️ Placeholder Games</h3>
+              <h3 className="text-lg font-medium mb-3 text-yellow-400">
+                ⚠️ Placeholder Games
+              </h3>
               <div className="space-y-2">
                 <button
                   onClick={() => testNavigation("/game/poker", "Poker")}
@@ -89,7 +109,9 @@ export default function ButtonDebugger() {
 
             {/* General Navigation */}
             <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-600/30">
-              <h3 className="text-lg font-medium mb-3 text-blue-400">🧭 General Navigation</h3>
+              <h3 className="text-lg font-medium mb-3 text-blue-400">
+                🧭 General Navigation
+              </h3>
               <div className="space-y-2">
                 <button
                   onClick={() => testNavigation("/game", "Games Page")}
@@ -108,7 +130,9 @@ export default function ButtonDebugger() {
 
             {/* Button Click Tests */}
             <div className="bg-purple-900/20 p-4 rounded-lg border border-purple-600/30">
-              <h3 className="text-lg font-medium mb-3 text-purple-400">🖱️ Button Functionality</h3>
+              <h3 className="text-lg font-medium mb-3 text-purple-400">
+                🖱️ Button Functionality
+              </h3>
               <div className="space-y-2">
                 <button
                   onClick={() => testButtonClick("Basic Button")}
@@ -134,19 +158,25 @@ export default function ButtonDebugger() {
             <h2 className="text-2xl font-semibold mb-4">📋 Test Results</h2>
             <div className="bg-black/40 p-4 rounded-lg h-96 overflow-y-auto border border-white/10">
               {clickResults.length === 0 ? (
-                <p className="text-gray-400 text-center">Click buttons to see results...</p>
+                <p className="text-gray-400 text-center">
+                  Click buttons to see results...
+                </p>
               ) : (
                 <div className="space-y-2">
                   {clickResults.map((result, index) => (
-                    <div 
+                    <div
                       key={index}
                       className={`p-2 rounded text-sm ${
-                        result.type === 'success' ? 'bg-green-900/30 text-green-300' :
-                        result.type === 'error' ? 'bg-red-900/30 text-red-300' :
-                        'bg-blue-900/30 text-blue-300'
+                        result.type === "success"
+                          ? "bg-green-900/30 text-green-300"
+                          : result.type === "error"
+                          ? "bg-red-900/30 text-red-300"
+                          : "bg-blue-900/30 text-blue-300"
                       }`}
                     >
-                      <span className="text-gray-400 text-xs">{result.timestamp}</span>
+                      <span className="text-gray-400 text-xs">
+                        {result.timestamp}
+                      </span>
                       <br />
                       {result.message}
                     </div>
@@ -154,7 +184,7 @@ export default function ButtonDebugger() {
                 </div>
               )}
             </div>
-            
+
             <button
               onClick={() => setClickResults([])}
               className="w-full mt-4 p-2 bg-red-600 hover:bg-red-700 rounded transition-colors"
@@ -168,11 +198,26 @@ export default function ButtonDebugger() {
         <div className="mt-8 bg-white/5 p-6 rounded-lg">
           <h3 className="text-xl font-semibold mb-4">📖 Instructions</h3>
           <div className="space-y-2 text-white/80">
-            <p>• <strong>Working Games:</strong> Should navigate to actual game pages (Roulette, Mines)</p>
-            <p>• <strong>Placeholder Games:</strong> Should show "Coming Soon" pages</p>
-            <p>• <strong>Button Clicks:</strong> Should register in the results panel</p>
-            <p>• <strong>Check Console:</strong> Open browser dev tools to see console logs</p>
-            <p>• <strong>Expected Behavior:</strong> All buttons should be clickable and responsive</p>
+            <p>
+              • <strong>Working Games:</strong> Should navigate to actual game
+              pages (Roulette, Mines)
+            </p>
+            <p>
+              • <strong>Placeholder Games:</strong> Should show "Coming Soon"
+              pages
+            </p>
+            <p>
+              • <strong>Button Clicks:</strong> Should register in the results
+              panel
+            </p>
+            <p>
+              • <strong>Check Console:</strong> Open browser dev tools to see
+              console logs
+            </p>
+            <p>
+              • <strong>Expected Behavior:</strong> All buttons should be
+              clickable and responsive
+            </p>
           </div>
         </div>
       </div>

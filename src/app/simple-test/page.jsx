@@ -9,7 +9,7 @@ export default function SimpleButtonTest() {
     <div className="min-h-screen bg-[#070005] text-white p-8">
       <div className="max-w-2xl mx-auto space-y-8">
         <h1 className="text-3xl font-bold text-center">Simple Button Test</h1>
-        
+
         {/* Test 1: Basic Button */}
         <div className="bg-white/5 p-6 rounded-lg">
           <h2 className="text-xl mb-4">Test 1: Basic HTML Button</h2>
@@ -55,7 +55,9 @@ export default function SimpleButtonTest() {
 
         {/* Test 4: GradientBorderButton with Navigation */}
         <div className="bg-white/5 p-6 rounded-lg">
-          <h2 className="text-xl mb-4">Test 4: GradientBorderButton + Navigation</h2>
+          <h2 className="text-xl mb-4">
+            Test 4: GradientBorderButton + Navigation
+          </h2>
           <GradientBorderButton
             className="w-full"
             onClick={(e) => {

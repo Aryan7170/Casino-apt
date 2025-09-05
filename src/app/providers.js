@@ -1,14 +1,14 @@
 "use client";
 
-import * as React from 'react';
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { WagmiProvider, http, createConfig } from 'wagmi';
-import '@rainbow-me/rainbowkit/styles.css';
-import { getDefaultConfig } from '@rainbow-me/rainbowkit';
-import { WalletStatusProvider } from '@/hooks/useWalletStatus';
-import { NotificationProvider } from '@/components/NotificationSystem';
-import { ThemeProvider } from 'next-themes';
+import * as React from "react";
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { WagmiProvider, http, createConfig } from "wagmi";
+import "@rainbow-me/rainbowkit/styles.css";
+import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { WalletStatusProvider } from "@/hooks/useWalletStatus";
+import { NotificationProvider } from "@/components/NotificationSystem";
+import { ThemeProvider } from "next-themes";
 
 // Development mode flag - set to false to enable real wallet connections
 const isDevelopmentMode = false;
@@ -28,7 +28,10 @@ const mantleSepolia = {
     public: { http: ["https://rpc.sepolia.mantle.xyz"] },
   },
   blockExplorers: {
-    default: { name: "Mantle Sepolia Explorer", url: "https://sepolia.mantlescan.xyz" },
+    default: {
+      name: "Mantle Sepolia Explorer",
+      url: "https://sepolia.mantlescan.xyz",
+    },
   },
   testnet: true,
 };
@@ -84,8 +87,12 @@ const ethereumSepolia = {
     symbol: "ETH",
   },
   rpcUrls: {
-    default: { http: ["https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3"] },
-    public: { http: ["https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3"] },
+    default: {
+      http: ["https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3"],
+    },
+    public: {
+      http: ["https://sepolia.infura.io/v3/56e934eec4ad458ea26313f91e15cec3"],
+    },
   },
   blockExplorers: {
     default: { name: "Etherscan Sepolia", url: "https://sepolia.etherscan.io" },
@@ -95,11 +102,12 @@ const ethereumSepolia = {
 
 // Hardcoded project ID as a fallback
 const fallbackProjectId = "64df6621925fa7d0680ba510ac3788df";
-const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || fallbackProjectId;
+const projectId =
+  process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || fallbackProjectId;
 
 // Create wagmi config
 export const config = getDefaultConfig({
-  appName: 'APT Casino',
+  appName: "APT Casino",
   projectId: projectId,
   chains: [mantleSepolia, pharosDevnet, binanceTestnet, ethereumSepolia], // Add Ethereum Sepolia here
   transports: {
@@ -109,9 +117,9 @@ export const config = getDefaultConfig({
     [ethereumSepolia.id]: http(ethereumSepolia.rpcUrls.default.http[0]), // Add Ethereum Sepolia transport
   },
   metadata: {
-    name: 'APT Casino',
-    description: 'A decentralized casino platform.',
-    url: 'http://localhost:3000', // <-- Set to base URL
+    name: "APT Casino",
+    description: "A decentralized casino platform.",
+    url: "http://localhost:3000", // <-- Set to base URL
     icons: [],
   },
 });
@@ -126,36 +134,40 @@ export default function Providers({ children }) {
 
   React.useEffect(() => {
     setMounted(true);
-    
+
     // Check for previously dismissed warning
-    if (isDevelopmentMode && localStorage.getItem('dev-warning-dismissed') === 'true') {
+    if (
+      isDevelopmentMode &&
+      localStorage.getItem("dev-warning-dismissed") === "true"
+    ) {
       setShowDevWarning(false);
     }
-    
+
     // Reset connection error when component mounts
     setConnectionError(false);
-    
+
     // Check if wallet was previously connected
-    const wasConnected = localStorage.getItem('walletConnected') === 'true';
+    const wasConnected = localStorage.getItem("walletConnected") === "true";
     console.log("🔗 Checking previous wallet connection:", wasConnected);
-    
+
     // Setup global error handler for wallet connections
     const handleConnectionError = (error) => {
       console.warn("Wallet connection issue detected:", error);
       setConnectionError(true);
     };
-    
+
     // Global error handler for uncaught errors and promise rejections
     const handleGlobalError = (event) => {
-      const errorMsg = event.reason?.message || event.message || '';
-      
-      if (errorMsg.includes('wallet') || 
-          errorMsg.includes('provider') ||
-          errorMsg.includes('chain') ||
-          errorMsg.includes('connection')) {
-            
+      const errorMsg = event.reason?.message || event.message || "";
+
+      if (
+        errorMsg.includes("wallet") ||
+        errorMsg.includes("provider") ||
+        errorMsg.includes("chain") ||
+        errorMsg.includes("connection")
+      ) {
         handleConnectionError(event.reason || event);
-        
+
         // Prevent the error from bubbling up
         if (event.preventDefault) {
           event.preventDefault();
@@ -163,52 +175,57 @@ export default function Providers({ children }) {
         if (event.stopPropagation) {
           event.stopPropagation();
         }
-        
+
         return true;
       }
-      
+
       return false;
     };
 
     // Add wallet connection event listeners
     const handleWalletConnect = () => {
-      console.log('Wallet connected');
+      console.log("Wallet connected");
       setConnectionError(false);
     };
 
     const handleWalletDisconnect = () => {
-      console.log('Wallet disconnected');
+      console.log("Wallet disconnected");
       setConnectionError(true);
     };
 
     const handleChainChange = (chainId) => {
-      console.log('Chain changed:', chainId);
+      console.log("Chain changed:", chainId);
       // Check if the new chain is supported
-      const supportedChainIds = [mantleSepolia.id, pharosDevnet.id, binanceTestnet.id, ethereumSepolia.id];
+      const supportedChainIds = [
+        mantleSepolia.id,
+        pharosDevnet.id,
+        binanceTestnet.id,
+        ethereumSepolia.id,
+      ];
       if (!supportedChainIds.includes(Number(chainId))) {
         setConnectionError(true);
       } else {
         setConnectionError(false);
       }
     };
-    
-    window.addEventListener('unhandledrejection', handleGlobalError);
-    window.addEventListener('error', handleGlobalError);
+
+    window.addEventListener("unhandledrejection", handleGlobalError);
+    window.addEventListener("error", handleGlobalError);
 
     if (window.ethereum) {
-      window.ethereum.on('connect', handleWalletConnect);
-      window.ethereum.on('disconnect', handleWalletDisconnect);
-      window.ethereum.on('chainChanged', handleChainChange);
+      window.ethereum.on("connect", handleWalletConnect);
+      window.ethereum.on("disconnect", handleWalletDisconnect);
+      window.ethereum.on("chainChanged", handleChainChange);
     }
-    
+
     return () => {
-      window.removeEventListener('unhandledrejection', handleGlobalError);
-      window.removeEventListener('error', handleGlobalError);
-      
+      window.removeEventListener("unhandledrejection", handleGlobalError);
+      window.removeEventListener("error", handleGlobalError);
+
       if (window.ethereum) {
-        window.ethereum.removeListener('connect', handleWalletConnect);
-        window.ethereum.removeListener('disconnect', handleWalletDisconnect);
-        window.ethereum.removeListener('chainChanged', handleChainChange);
+        window.ethereum.removeListener("connect", handleWalletConnect);
+        window.ethereum.removeListener("disconnect", handleWalletDisconnect);
+        window.ethereum.removeListener("chainChanged", handleChainChange);
       }
     };
   }, []);

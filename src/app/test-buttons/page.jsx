@@ -13,8 +13,10 @@ export default function TestButtons() {
   return (
     <div className="min-h-screen bg-[#070005] text-white p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center">Button Test Page</h1>
-        
+        <h1 className="text-3xl font-bold mb-8 text-center">
+          Button Test Page
+        </h1>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Basic Button Test */}
           <div className="bg-white/5 p-6 rounded-lg">
@@ -71,7 +73,7 @@ export default function TestButtons() {
           {/* Tournaments Button Test */}
           <div className="bg-white/5 p-6 rounded-lg">
             <h2 className="text-xl font-semibold mb-4">Tournaments Style</h2>
-            <button 
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 console.log("🏆 Tournaments test button clicked");
@@ -98,7 +100,8 @@ export default function TestButtons() {
         <div className="mt-8 bg-white/5 p-6 rounded-lg">
           <h2 className="text-xl font-semibold mb-4">Instructions</h2>
           <p className="text-white/70">
-            Click each button to test if they're working properly. Check the browser console for logs and alerts should appear.
+            Click each button to test if they're working properly. Check the
+            browser console for logs and alerts should appear.
           </p>
         </div>
       </div>

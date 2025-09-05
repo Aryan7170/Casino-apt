@@ -26,7 +26,9 @@ export default function LaunchGameButton() {
     <button
       onClick={(e) => {
         e.stopPropagation();
-        console.log("🚀 Launch Game button clicked - attempting navigation to: /game");
+        console.log(
+          "🚀 Launch Game button clicked - attempting navigation to: /game"
+        );
         alert("Launch Game button clicked! Navigating to /game");
         router.push("/game");
       }}
