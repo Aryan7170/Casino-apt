@@ -155,10 +155,16 @@ export function WalletStatusProvider({ children }) {
         localStorage.setItem("walletConnected", "true");
         localStorage.setItem("walletAddress", address);
         console.log("🔗 Wallet connection state saved to localStorage");
+        
+        // Also store in sessionStorage for immediate access
+        sessionStorage.setItem("walletConnected", "true");
+        sessionStorage.setItem("walletAddress", address);
       } else {
         localStorage.removeItem("walletConnected");
         localStorage.removeItem("walletAddress");
-        console.log("🔗 Wallet connection state cleared from localStorage");
+        sessionStorage.removeItem("walletConnected");
+        sessionStorage.removeItem("walletAddress");
+        console.log("🔗 Wallet connection state cleared from storage");
       }
     }
   }, [isConnected, address, currentChain, isDev]);

@@ -11,6 +11,7 @@ import { styled } from "@mui/material/styles";
 import { useAccount, useBalance } from "wagmi";
 import { useToken } from "@/hooks/useToken";
 import { useOffChainCasinoGames } from "@/hooks/useOffChainCasinoGames";
+import useOffChainBalance from "@/hooks/useOffChainBalance";
 
 const BalanceContainer = styled(Box)(({ theme }) => ({
   display: "flex",
@@ -59,9 +60,9 @@ const TokenBalance = () => {
   // Get APTC token balance
   const { balance: aptcBalance, isLoading: aptcLoading, error: aptcError } = useToken(address);
 
-  // Get off-chain casino balance
-  const { offChainBalance, isLoading: offChainLoading } =
-    useOffChainCasinoGames();
+  // Get off-chain casino balance - use the simplified hook
+  const { offChainBalance, isLoading: offChainLoading, error: offChainError } =
+    useOffChainBalance();
 
   const [balances, setBalances] = useState({
     APTC: "0",
@@ -105,8 +106,16 @@ const TokenBalance = () => {
     }
 
     // Update casino balance (off-chain)
-    if (offChainBalance !== undefined) {
-      newBalances.CASINO = parseFloat(offChainBalance).toFixed(2);
+    if (offChainBalance !== undefined && !offChainError) {
+      const balance = typeof offChainBalance === 'object' && offChainBalance.balance !== undefined 
+        ? offChainBalance.balance 
+        : typeof offChainBalance === 'number' 
+          ? offChainBalance 
+          : 0;
+      newBalances.CASINO = parseFloat(balance).toFixed(2);
+    } else if (offChainError) {
+      console.warn("Off-chain balance error:", offChainError);
+      newBalances.CASINO = "0.00";
     }
 
     setBalances(newBalances);
@@ -119,7 +128,7 @@ const TokenBalance = () => {
       isConnected,
       address: address ? `${address.slice(0, 6)}...` : null,
       balances: newBalances,
-      errors: { balanceError, aptcError },
+      errors: { balanceError, aptcError, offChainError },
     });
   }, [
     isDev,
@@ -133,6 +142,7 @@ const TokenBalance = () => {
     aptcError,
     offChainBalance,
     offChainLoading,
+    offChainError,
   ]);
 
   // Toggle between tokens
@@ -149,6 +159,12 @@ const TokenBalance = () => {
 
   // Show casino balance even if wallet not connected (for off-chain gaming)
   if (!isConnected && !isDev && offChainBalance !== undefined) {
+    const balance = typeof offChainBalance === 'object' && offChainBalance.balance !== undefined 
+      ? offChainBalance.balance 
+      : typeof offChainBalance === 'number' 
+        ? offChainBalance 
+        : 0;
+        
     return (
       <BalanceContainer onClick={toggleToken}>
         <Typography
@@ -173,7 +189,7 @@ const TokenBalance = () => {
             letterSpacing: "-0.01em",
           }}
         >
-          {parseFloat(offChainBalance).toFixed(2)} APTC
+          {parseFloat(balance).toFixed(2)} APTC
         </Typography>
       </BalanceContainer>
     );

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useCallback } from 'react';
-import { useAccount, useReconnect } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 
 /**
  * Hook to handle automatic wallet reconnection
@@ -8,7 +9,7 @@ import { useAccount, useReconnect } from 'wagmi';
  */
 export function useWalletReconnect() {
   const { isConnected, address } = useAccount();
-  const { reconnect, connectors } = useReconnect();
+  const { openConnectModal } = useConnectModal();
 
   const attemptReconnection = useCallback(async () => {
     // Check if we should attempt reconnection
@@ -23,13 +24,31 @@ export function useWalletReconnect() {
     });
 
     // If we were connected before but aren't now, try to reconnect
-    if (wasConnected && !isConnected && connectors.length > 0) {
+    if (wasConnected && !isConnected) {
       console.log("🔄 Attempting automatic wallet reconnection...");
       
       try {
-        // Try to reconnect with the first available connector
-        await reconnect({ connectors });
-        console.log("🔄 Wallet reconnection attempted");
+        // Check if MetaMask is available and has accounts
+        if (typeof window !== 'undefined' && window.ethereum) {
+          const accounts = await window.ethereum.request({ 
+            method: 'eth_accounts' 
+          });
+          
+          if (accounts && accounts.length > 0) {
+            console.log("🔄 Found existing accounts, wallet should reconnect automatically");
+            // If accounts exist, the connection should restore automatically
+            // Wait a bit and check again
+            setTimeout(() => {
+              if (!isConnected) {
+                console.log("🔄 Auto-reconnection failed, may need manual intervention");
+              }
+            }, 2000);
+          } else {
+            console.log("🔄 No accounts found, clearing stored connection");
+            localStorage.removeItem("walletConnected");
+            localStorage.removeItem("walletAddress");
+          }
+        }
       } catch (error) {
         console.warn("🔄 Wallet reconnection failed:", error);
         // Clear stored connection if reconnection fails
@@ -37,14 +56,14 @@ export function useWalletReconnect() {
         localStorage.removeItem("walletAddress");
       }
     }
-  }, [isConnected, address, reconnect, connectors]);
+  }, [isConnected, address]);
 
   // Attempt reconnection on mount
   useEffect(() => {
     // Wait a bit for the providers to initialize
     const timer = setTimeout(() => {
       attemptReconnection();
-    }, 1000);
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, [attemptReconnection]);

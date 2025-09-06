@@ -9,6 +9,7 @@ import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { WalletStatusProvider } from "@/hooks/useWalletStatus";
 import { NotificationProvider } from "@/components/NotificationSystem";
 import { ThemeProvider } from "next-themes";
+import WalletPersistence from "@/components/WalletPersistence";
 
 // Development mode flag - set to false to enable real wallet connections
 const isDevelopmentMode = false;
@@ -105,66 +106,80 @@ const fallbackProjectId = "64df6621925fa7d0680ba510ac3788df";
 const projectId =
   process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || fallbackProjectId;
 
-// Create wagmi config
-export const config = getDefaultConfig({
-  appName: "APT Casino",
-  projectId: projectId,
-  chains: [mantleSepolia, pharosDevnet, binanceTestnet, ethereumSepolia], // Add Ethereum Sepolia here
-  transports: {
-    [mantleSepolia.id]: http(mantleSepolia.rpcUrls.default.http[0]),
-    [pharosDevnet.id]: http(pharosDevnet.rpcUrls.default.http[0]),
-    [binanceTestnet.id]: http(binanceTestnet.rpcUrls.default.http[0]), // Add Binance Testnet transport
-    [ethereumSepolia.id]: http(ethereumSepolia.rpcUrls.default.http[0]), // Add Ethereum Sepolia transport
-  },
-  metadata: {
-    name: "APT Casino",
-    description: "A decentralized casino platform.",
-    url: "http://localhost:3000", // <-- Set to base URL
-    icons: [],
-  },
-  ssr: true, // Enable server-side rendering support
-  storage: {
-    // Use localStorage for wallet connection persistence
-    getItem: (key) => {
-      if (typeof window !== 'undefined') {
-        return localStorage.getItem(key);
-      }
-      return null;
-    },
-    setItem: (key, value) => {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(key, value);
-      }
-    },
-    removeItem: (key) => {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem(key);
-      }
-    },
-  },
-});
+// Create singleton wagmi config to prevent multiple WalletConnect initializations
+let wagmiConfig = null;
 
-// Create React Query client with better caching
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60 * 1000, // 1 minute
-      cacheTime: 5 * 60 * 1000, // 5 minutes
-      retry: 3,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: true,
+function createWagmiConfig() {
+  if (wagmiConfig) {
+    return wagmiConfig;
+  }
+
+  wagmiConfig = getDefaultConfig({
+    appName: "APT Casino",
+    projectId: projectId,
+    chains: [mantleSepolia, pharosDevnet, binanceTestnet, ethereumSepolia],
+    transports: {
+      [mantleSepolia.id]: http(mantleSepolia.rpcUrls.default.http[0]),
+      [pharosDevnet.id]: http(pharosDevnet.rpcUrls.default.http[0]),
+      [binanceTestnet.id]: http(binanceTestnet.rpcUrls.default.http[0]),
+      [ethereumSepolia.id]: http(ethereumSepolia.rpcUrls.default.http[0]),
     },
-  },
-});
+    walletConnectProjectId: projectId,
+    metadata: {
+      name: "APT Casino",
+      description: "A decentralized casino platform.",
+      url: typeof window !== 'undefined' ? window.location.origin : "http://localhost:3000",
+      icons: [],
+    },
+    enableWalletConnect: true,
+    enableInjected: true,
+    enableCoinbase: true,
+    ssr: true,
+  });
+
+  return wagmiConfig;
+}
+
+export const config = createWagmiConfig();
+
+// Create singleton React Query client
+let queryClientInstance = null;
+
+function createQueryClient() {
+  if (queryClientInstance) {
+    return queryClientInstance;
+  }
+
+  queryClientInstance = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000, // 1 minute
+        cacheTime: 5 * 60 * 1000, // 5 minutes
+        retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: true,
+      },
+    },
+  });
+
+  return queryClientInstance;
+}
+
+const queryClient = createQueryClient();
 
 export default function Providers({ children }) {
   const [mounted, setMounted] = React.useState(false);
   const [showDevWarning, setShowDevWarning] = React.useState(isDevelopmentMode);
   const [connectionError, setConnectionError] = React.useState(false);
+  const [initialized, setInitialized] = React.useState(false);
 
   React.useEffect(() => {
+    // Prevent multiple initializations
+    if (initialized) return;
+    
     setMounted(true);
+    setInitialized(true);
 
     // Check for previously dismissed warning
     if (
@@ -262,7 +277,7 @@ export default function Providers({ children }) {
         window.ethereum.removeListener("chainChanged", handleChainChange);
       }
     };
-  }, []);
+  }, [initialized]); // Add initialized to dependency array
 
   // Show warning if no project ID
   if (!projectId && !isDevelopmentMode) {
@@ -274,11 +289,17 @@ export default function Providers({ children }) {
 
   // Normal production mode with wallet providers and our custom provider
   return (
-    <WagmiProvider config={config}>
+    <WagmiProvider config={config} reconnectOnMount={true}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>
+        <RainbowKitProvider 
+          coolMode
+          initialChain={mantleSepolia}
+          showRecentTransactions={true}
+          modalSize="compact"
+        >
           <NotificationProvider>
             <WalletStatusProvider>
+              <WalletPersistence />
               <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
                 {children}
               </ThemeProvider>

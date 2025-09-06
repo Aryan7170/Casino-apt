@@ -2,11 +2,13 @@
 import { useAccount, useBalance } from 'wagmi';
 import { useToken } from '@/hooks/useToken';
 import useWalletStatus from '@/hooks/useWalletStatus';
+import useOffChainBalance from '@/hooks/useOffChainBalance';
 
 export default function WalletDebugPanel() {
   const { address, isConnected, isConnecting, isDisconnected } = useAccount();
   const { data: balance } = useBalance({ address });
   const { balance: tokenBalance, error: tokenError } = useToken(address);
+  const { offChainBalance, isLoading: offChainLoading, error: offChainError } = useOffChainBalance();
   const walletStatus = useWalletStatus();
 
   const isDev = process.env.NODE_ENV === 'development';
@@ -34,6 +36,13 @@ export default function WalletDebugPanel() {
           {tokenBalance ? `${tokenBalance} APTC` : tokenError ? 'Error' : 'Loading...'}
         </span></div>
         
+        <div>Casino: <span className="text-yellow-400">
+          {offChainLoading ? 'Loading...' : offChainError ? `Error: ${offChainError}` : 
+            typeof offChainBalance === 'object' && offChainBalance.balance !== undefined
+              ? `${offChainBalance.balance} APTC (Games: ${offChainBalance.gamesPlayed || 0})`
+              : `${offChainBalance || 0} APTC`}
+        </span></div>
+        
         <div>LocalStorage: <span className="text-orange-400">
           {typeof window !== 'undefined' && localStorage.getItem('walletConnected') === 'true' ? 'Connected' : 'Not Connected'}
         </span></div>
@@ -50,6 +59,9 @@ export default function WalletDebugPanel() {
             balance,
             tokenBalance,
             tokenError,
+            offChainBalance,
+            offChainLoading,
+            offChainError,
             walletStatus,
             localStorage: typeof window !== 'undefined' ? {
               walletConnected: localStorage.getItem('walletConnected'),
