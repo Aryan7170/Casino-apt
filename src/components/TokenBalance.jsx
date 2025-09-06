@@ -50,12 +50,14 @@ const DevModeBadge = styled(Box)({
 const TokenBalance = () => {
   // Use Wagmi hooks properly
   const { address, isConnected } = useAccount();
-  const { data: balance, isLoading: balanceLoading } = useBalance({
+  const { data: balance, isLoading: balanceLoading, error: balanceError } = useBalance({
     address: address,
+    watch: true,
+    enabled: Boolean(address && isConnected),
   });
 
   // Get APTC token balance
-  const { balance: aptcBalance, isLoading: aptcLoading } = useToken(address);
+  const { balance: aptcBalance, isLoading: aptcLoading, error: aptcError } = useToken(address);
 
   // Get off-chain casino balance
   const { offChainBalance, isLoading: offChainLoading } =
@@ -89,13 +91,17 @@ const TokenBalance = () => {
     const newBalances = { ...balances };
 
     // Update MNT balance (native token)
-    if (balance && isConnected) {
+    if (balance && isConnected && !balanceError) {
       newBalances.MNT = parseFloat(balance.formatted).toFixed(4);
+    } else if (!isConnected || balanceError) {
+      newBalances.MNT = "0";
     }
 
     // Update APTC balance (token)
-    if (aptcBalance && isConnected) {
+    if (aptcBalance && isConnected && !aptcError) {
       newBalances.APTC = parseFloat(aptcBalance).toFixed(2);
+    } else if (!isConnected || aptcError) {
+      newBalances.APTC = "0";
     }
 
     // Update casino balance (off-chain)
@@ -106,14 +112,25 @@ const TokenBalance = () => {
     setBalances(newBalances);
 
     // Set loading state based on any balance loading
-    setLoading(balanceLoading || aptcLoading || offChainLoading);
+    setLoading((balanceLoading || aptcLoading || offChainLoading) && isConnected);
+    
+    // Log balance updates for debugging
+    console.log("💰 Balance update:", {
+      isConnected,
+      address: address ? `${address.slice(0, 6)}...` : null,
+      balances: newBalances,
+      errors: { balanceError, aptcError },
+    });
   }, [
     isDev,
     isConnected,
+    address,
     balance,
     balanceLoading,
+    balanceError,
     aptcBalance,
     aptcLoading,
+    aptcError,
     offChainBalance,
     offChainLoading,
   ]);

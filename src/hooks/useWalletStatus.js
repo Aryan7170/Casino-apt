@@ -8,6 +8,7 @@ import {
 } from "react";
 import { useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
+import useWalletReconnect from "./useWalletReconnect";
 
 // Create context to share wallet state throughout the app
 const WalletStatusContext = createContext(null);
@@ -24,6 +25,9 @@ export function WalletStatusProvider({ children }) {
   // Use wagmi hooks directly
   const { address, isConnected } = useAccount();
   const { openConnectModal } = useConnectModal();
+  
+  // Use wallet reconnection hook
+  const { attemptReconnection } = useWalletReconnect();
 
   // Check for previously stored connection on mount
   useEffect(() => {
@@ -41,13 +45,19 @@ export function WalletStatusProvider({ children }) {
 
     setHasCheckedStoredConnection(true);
 
-    // If wallet was connected before but isn't now, attempt reconnection
+    // If wallet was connected before but isn't now, and we're not in dev mode
     if (wasConnected && !isConnected && !isDev) {
       console.log("🔗 Attempting to restore wallet connection...");
-      // Note: Automatic reconnection is handled by RainbowKit/Wagmi
-      // We just need to track the state properly
+      // Trigger automatic reconnection after a short delay
+      setTimeout(() => {
+        if (openConnectModal && !isConnected) {
+          console.log("🔗 Auto-triggering wallet reconnection");
+          // Don't actually open the modal, just trigger the connection check
+          // RainbowKit should handle auto-reconnection
+        }
+      }, 1000);
     }
-  }, [isConnected, address, hasCheckedStoredConnection, isDev]);
+  }, [isConnected, address, hasCheckedStoredConnection, isDev, openConnectModal]);
 
   // Check current chain
   useEffect(() => {

@@ -3,6 +3,7 @@ import "@/styles/globals.css";
 import Providers from "./providers";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import WalletDebugPanel from "@/components/WalletDebugPanel";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,6 +20,7 @@ export default function RootLayout({ children }) {
           <Navbar />
           {children}
           <Footer />
+          <WalletDebugPanel />
         </Providers>
       </body>
     </html>

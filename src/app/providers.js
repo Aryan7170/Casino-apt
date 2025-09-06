@@ -122,10 +122,41 @@ export const config = getDefaultConfig({
     url: "http://localhost:3000", // <-- Set to base URL
     icons: [],
   },
+  ssr: true, // Enable server-side rendering support
+  storage: {
+    // Use localStorage for wallet connection persistence
+    getItem: (key) => {
+      if (typeof window !== 'undefined') {
+        return localStorage.getItem(key);
+      }
+      return null;
+    },
+    setItem: (key, value) => {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(key, value);
+      }
+    },
+    removeItem: (key) => {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(key);
+      }
+    },
+  },
 });
 
-// Create React Query client
-const queryClient = new QueryClient();
+// Create React Query client with better caching
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000, // 1 minute
+      cacheTime: 5 * 60 * 1000, // 5 minutes
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+    },
+  },
+});
 
 export default function Providers({ children }) {
   const [mounted, setMounted] = React.useState(false);
@@ -186,11 +217,14 @@ export default function Providers({ children }) {
     const handleWalletConnect = () => {
       console.log("Wallet connected");
       setConnectionError(false);
+      localStorage.setItem("walletConnected", "true");
     };
 
     const handleWalletDisconnect = () => {
       console.log("Wallet disconnected");
       setConnectionError(true);
+      localStorage.removeItem("walletConnected");
+      localStorage.removeItem("walletAddress");
     };
 
     const handleChainChange = (chainId) => {

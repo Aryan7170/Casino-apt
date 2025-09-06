@@ -111,6 +111,7 @@ export const useToken = (address) => {
     isError,
     isLoading: isBalanceLoading,
     error: readError,
+    refetch,
   } = useReadContract({
     address: contractConfig?.address,
     abi: contractConfig?.abi || STANDARD_ERC20_ABI,
@@ -118,6 +119,10 @@ export const useToken = (address) => {
     args: [address],
     enabled: Boolean(isValidAddressParam && isValidContractConfig),
     watch: true,
+    retry: 3,
+    retryDelay: 1000,
+    staleTime: 30 * 1000, // 30 seconds
+    cacheTime: 60 * 1000, // 1 minute
     onSuccess: (data) => {
       console.log("Token balance fetched successfully:", {
         address: contractConfig?.address,
