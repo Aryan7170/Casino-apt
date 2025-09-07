@@ -1,11 +1,4 @@
 "use client";
-import { useState, useEffect, useCallback } from 'react';
-import { useAccount } from 'wagmi';
-
-/**
- * Simplified off-chain balance hook that focuses on fetching balance
- * without the complex game logic
- */
 import { useState, useEffect, useRef } from 'react';
 
 /**
