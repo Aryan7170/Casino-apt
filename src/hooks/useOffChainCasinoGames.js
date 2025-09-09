@@ -28,7 +28,7 @@ export function useOffChainCasino(userAddress = null) {
   // Game server URL - make it reactive to ensure proper dependency tracking
   const gameServerUrl =
     process.env.NEXT_PUBLIC_GAME_SERVER_URL ||
-    "http://localhost:3000/api/game-server";
+    "http://localhost:3001";
 
   /**
    * Initialize off-chain game session
@@ -50,10 +50,10 @@ export function useOffChainCasino(userAddress = null) {
         console.log("🎯 Game server URL:", gameServerUrl);
         console.log("👤 Session address:", sessionAddress);
 
-        // Create request payload
+        // Create request payload for the new API structure
         const requestPayload = {
-          action: "initialize",
-          userAddress: sessionAddress,
+          playerAddress: sessionAddress,
+          gameType: "mines", // Default to mines for now
         };
 
         console.log("📤 Request payload:", requestPayload);
@@ -62,7 +62,7 @@ export function useOffChainCasino(userAddress = null) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-        const response = await fetch(gameServerUrl, {
+        const response = await fetch(`${gameServerUrl}/api/game/init`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -93,21 +93,22 @@ export function useOffChainCasino(userAddress = null) {
 
         // Validate required fields
         if (
+          !result.sessionId ||
           !result.serverSeedHash ||
-          !result.clientSeed ||
-          result.balance === undefined
+          result.currentBalance === undefined
         ) {
           throw new Error("Missing required fields in server response");
         }
 
         setGameSession({
           userAddress: sessionAddress,
+          sessionId: result.sessionId,
           serverSeedHash: result.serverSeedHash,
-          clientSeed: result.clientSeed,
+          serverAddress: result.serverAddress,
           nonce: 0,
         });
 
-        setOffChainBalance(result.balance || 1000); // Starting balance
+        setOffChainBalance(result.currentBalance || 1000); // Use server balance
 
         console.log("✅ Off-chain session initialized successfully:", result);
       } catch (err) {
